@@ -71,17 +71,17 @@ class ValidationUI(QtWidgets.QWidget):
         for eachSourceNode in sourceNodes:
             self.validator.addNodeToValidate(eachSourceNode)
 
-            w = cuit_treewidgetitems.SourceTreeWidgetItem(sourceNode=eachSourceNode)
+            w = cuit_treewidgetitems.SourceTreeWidgetItem(node=eachSourceNode)
             self.validatorTreeWidget.addTopLevelItem(w)
 
             # Populate the rows
             for eachChild in eachSourceNode.iterNodes():
                 if isinstance(eachChild, ValidityNode):
-                    ctw = cuit_treewidgetitems.ValidityTreeWidgetItem(validityNode=eachChild)
+                    ctw = cuit_treewidgetitems.ValidityTreeWidgetItem(node=eachChild)
                     w.addChild(ctw)
 
                 if isinstance(eachChild, DefaultNode):
-                    dvtwi = cuit_treewidgetitems.DefaultTreeWidgetItem(defaultNode=eachChild)
+                    dvtwi = cuit_treewidgetitems.DefaultTreeWidgetItem(node=eachChild)
                     dvtwi.reportStatus = "Failed"
                     w.addChild(dvtwi)
 
