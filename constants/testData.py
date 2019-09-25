@@ -1,0 +1,9 @@
+SRC_NODENAME = "myCtrl_ctrl"
+SRC_ATTRNAME = "showCloth"
+SRC_ATTRVALUE = True
+
+VALIDITY_NODENAME = "geo_hrc"
+VALIDITY_ATTRNAME = "visiblity"
+VALIDITY_ATTRVALUE = True
+
+VALIDATOR_NAME = "TestValidator"
