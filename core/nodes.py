@@ -72,10 +72,9 @@ class SourceNode(ValidationNode):
     def toData(self):
         data = dict()
         data[c_serialization.KEY_NODENAME] = self._name
-        data[c_serialization.KEY_DESTNODES] = list()
-
+        data[c_serialization.KEY_VAILIDITYNODES] = list()
         for eachNode in self.iterNodes():
-            data[c_serialization.KEY_DESTNODES].append(eachNode.toData())
+            data[c_serialization.KEY_VAILIDITYNODES].append(eachNode.toData())
 
         return data
 
@@ -85,7 +84,7 @@ class SourceNode(ValidationNode):
 
         :param data: `dict`
         """
-        nodeData = data.get(c_serialization.KEY_DESTNODES, list())
+        nodeData = data.get(c_serialization.KEY_VAILIDITYNODES, list())
         validityNodes = list()
         for vd in nodeData:
             validityNode = ValidationNode(name=vd[c_serialization.KEY_NODENAME],
@@ -216,3 +215,10 @@ class DefaultNode(ValidationNode):
     @defaultValue.setter
     def defaultValue(self, value):
         self._defaultValue = value
+
+    def toData(self):
+        data = dict()
+        data[c_serialization.KEY_NODENAME] = self._name
+        data[c_serialization.KEY_DEFAULTVALUE] = self._defaultValue
+
+        return data

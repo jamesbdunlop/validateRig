@@ -32,7 +32,7 @@ class Test_Validator(unittest.TestCase):
 
         self.expectedToData = {c_serialization.KEY_VALIDATOR_NAME: c_testdata.VALIDATOR_NAME,
                                c_serialization.KEY_VALIDATOR_SOURCENODES: [
-                                   {c_serialization.KEY_DESTNODES: [
+                                   {c_serialization.KEY_VAILIDITYNODES: [
                                        {
                                         c_serialization.KEY_NODENAME: self.ValidityNodeName,
                                         c_serialization.KEY_ATTRIBUTENAME: self.ValidityNodeAttrName,

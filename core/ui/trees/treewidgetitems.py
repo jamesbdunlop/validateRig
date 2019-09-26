@@ -42,5 +42,8 @@ class DefaultTreeWidgetItem(TreeWidgetItem):
         assert isinstance(node, DefaultNode), "defaultNode is not an instance of DefaultNode!"
         super(DefaultTreeWidgetItem, self).__init__(node=node, *args, **kwargs)
         self.setData(1, QtCore.Qt.DisplayRole, self._node.name)
-        self.setData(2, QtCore.Qt.DisplayRole, self._node.defaultValue)
+        self.setData(2, QtCore.Qt.DisplayRole, str(self._node.defaultValue))
+        self.setData(3, QtCore.Qt.DisplayRole, "----")
+        self.setData(4, QtCore.Qt.DisplayRole, "----")
+        self.setData(5, QtCore.Qt.DisplayRole, "----")
         self.setData(6, QtCore.Qt.DisplayRole, self.reportStatus)

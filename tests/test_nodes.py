@@ -31,7 +31,7 @@ class Test_Nodes(unittest.TestCase):
 
         self.expectedToData = {
             c_serialization.KEY_NODENAME: self.sourceNodeName,
-            c_serialization.KEY_DESTNODES: [{
+            c_serialization.KEY_VAILIDITYNODES: [{
                          c_serialization.KEY_NODENAME: self.ValidityNodeName,
                          c_serialization.KEY_ATTRIBUTENAME: self.ValidityNodeAttrName,
                          c_serialization.KEY_ATTRIBUTEVALUE: self.ValidityNodeAttrValue,

@@ -1,6 +1,9 @@
 import sys
+import pprint
 from PyQt5 import QtWidgets, QtCore, QtGui
 from core import validator as c_validator
+from core import parser as c_parser
+from constants import constants
 from core.nodes import SourceNode, ValidityNode, DefaultNode
 from core.ui.trees import treewidgetitems as cuit_treewidgetitems
 
@@ -20,7 +23,8 @@ class ValidationUI(QtWidgets.QWidget):
         self.setAcceptDrops(True)
 
         # The base validator application
-        self.validator = c_validator.Validator(name="Base Validator")
+        self.validatorName = "Base Validator"
+        self.validator = c_validator.Validator(name=self.validatorName)
 
         # The main treeViewWidget for creating data
         self.mainLayout = QtWidgets.QVBoxLayout(self)
@@ -41,6 +45,7 @@ class ValidationUI(QtWidgets.QWidget):
         self.buttonLayout = QtWidgets.QHBoxLayout()
         self.load = QtWidgets.QPushButton("load")
         self.save = QtWidgets.QPushButton("save")
+        self.save.clicked.connect(self._save)
         self.run = QtWidgets.QPushButton("run")
         self.buttonLayout.addWidget(self.load)
         self.buttonLayout.addWidget(self.save)
@@ -56,13 +61,18 @@ class ValidationUI(QtWidgets.QWidget):
                               attributeName="showCloth", attributeValue=True,
                               srcAttributeName="visibility", srcAttributeValue=True)
         dvNode = DefaultNode(name="rotateOrder", defaultValue="xyz")
+        dvNode1 = DefaultNode(name="translate", defaultValue=[0, 0, 0])
+        dvNode2 = DefaultNode(name="rotate", defaultValue=[90, 0, 0])
         sn1.addNodeToCheck(vdNode)
         sn1.addNodeToCheck(dvNode)
-        sn2 = SourceNode(name="master_ctrl2")
-        vdNode2 = ValidityNode(name="geo_hrc2",
-                              attributeName="showCloth2", attributeValue=True,
-                              srcAttributeName="visibility2", srcAttributeValue=True)
-        dvNode2 = DefaultNode(name="rotateOrder2", defaultValue="xyz2")
+        sn1.addNodeToCheck(dvNode1)
+        sn1.addNodeToCheck(dvNode2)
+
+        sn2 = SourceNode(name="body_ctrl")
+        vdNode2 = ValidityNode(name="jacket_geo",
+                               attributeName="showJacket", attributeValue=True,
+                               srcAttributeName="visibility", srcAttributeValue=True)
+        dvNode2 = DefaultNode(name="rotateOrder", defaultValue="zxy")
         sn2.addNodeToCheck(vdNode2)
         sn2.addNodeToCheck(dvNode2)
         sourceNodes = [sn1, sn2]
@@ -86,6 +96,25 @@ class ValidationUI(QtWidgets.QWidget):
                     w.addChild(dvtwi)
 
             w.setExpanded(True)
+
+    def dragEnterEvent(self, QDragEnterEvent):
+        super(ValidationUI, self).dragEnterEvent(QDragEnterEvent)
+        dataAsText = QDragEnterEvent.mimeData().text()
+        if dataAsText.endswith(constants.JSON_EXT):
+            return QDragEnterEvent.accept()
+
+    def dropEvent(self, QDropEvent):
+        super(ValidationUI, self).dropEvent(QDropEvent)
+        dataAsText = QDropEvent.mimeData().text()
+        if dataAsText.endswith(constants.JSON_EXT):
+            data = c_parser.read(dataAsText.replace("file:///", ""))
+            pprint.pprint(data)
+
+    def _save(self):
+        fp = "C:/Temp/test.json"
+        status = self.validator.to_fileJSON(filePath=fp)
+        if status:
+            print("Successfully saved %s" % fp)
 
 
 if __name__ == "__main__":

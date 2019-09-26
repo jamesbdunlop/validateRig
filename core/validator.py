@@ -72,7 +72,6 @@ class Validator:
         data[c_serialization.KEY_VALIDATOR_SOURCENODES] = list()
         for eachSourceNode in self.iterNodes():
             data[c_serialization.KEY_VALIDATOR_SOURCENODES].append(eachSourceNode.toData())
-
         return data
 
     @classmethod
@@ -89,8 +88,10 @@ class Validator:
         return cls.fromData(cls, data)
 
     def to_fileJSON(self, filePath):
+        logger.info("Writing validator to: %s" % filePath)
+        self.toData()
         c_parser.write(filepath=filePath, data=self.toData())
-
+        logger.info("Successfully wrote validator to: %s" % filePath)
         return True
 
 
