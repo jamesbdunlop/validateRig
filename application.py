@@ -10,7 +10,7 @@ from core.ui.trees import treewidgetitems as cuit_treewidgetitems
 # collapse ALL
 # expand ALL
 # QMainWindow with load save options
-# search replace names? For namespaces? Or a nameSpace field?
+# Search replace names? For namespaces? Or a nameSpace field?
 # Validate buttons
 # Shows errors. checkboxes? row colors?
 
@@ -111,10 +111,15 @@ class ValidationUI(QtWidgets.QWidget):
             pprint.pprint(data)
 
     def _save(self):
-        fp = "C:/Temp/test.json"
-        status = self.validator.to_fileJSON(filePath=fp)
-        if status:
-            print("Successfully saved %s" % fp)
+        fd = QtWidgets.QFileDialog()
+        fd.exec_()
+        if fd.accepted():
+            fp = "C:/Temp/test.json"
+            print(fd.accepted)
+
+            status = self.validator.to_fileJSON(filePath=fp)
+            if status:
+                print("Successfully saved %s" % fp)
 
 
 if __name__ == "__main__":
