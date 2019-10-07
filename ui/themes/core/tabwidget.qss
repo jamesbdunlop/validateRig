@@ -1,0 +1,50 @@
+QTabWidget:tab-bar {
+ background: $level00;
+
+ border: 2px;
+ border-radius: 6px;
+ border-color: $level00;
+
+ color: $fontColor;
+ font-family: $fontFamily;
+ font-size: $fontTabSize;
+}
+
+QTabBar:tab {
+ background: $level00;
+
+ border: 2px;
+ border-radius: 3px;
+ border-color: $level00;
+
+ color: $fontColor;
+ font-family: $fontFamily;
+ font-size: $fontTabSize;
+
+ min-width: 8ex;
+}
+
+QTabBar:tab:hover {
+ background: $level03;
+
+ border: 2px;
+ border-radius: 3px;
+ border-color: $level00;
+
+ color: $fontSelectedColor;
+ font-family: $fontFamily;
+ font-size: $fontHoverSize;
+}
+
+QTabBar:tab:selected {
+ background: $level04;
+
+ border: 2px;
+ border-radius: 3px;
+ border-color: $level00;
+
+ color: $fontSelectedColor;
+ font-family: $fontFamily;
+ font-size: $fontTabSize;
+ font-weight: bold;
+}

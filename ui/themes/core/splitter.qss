@@ -1,0 +1,22 @@
+QSplitter:handle {
+    background: $level02;
+    image: url(:/media/iconmonstr-arrow-17-240.png);
+}
+
+QSplitter:handle:horizontal {
+    width: 6px;
+}
+
+QSplitter:handle:vertical {
+    height: 6px;
+}
+
+QSplitter:handle:pressed {
+    background: $hiLight;
+    image: url(:/media/iconmonstr-arrow-17-240.png);
+}
+
+Splitter:handle:hover {
+
+    image: url(:/media/iconmonstr-arrow-17-240.png);
+}

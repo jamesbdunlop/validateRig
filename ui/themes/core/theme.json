@@ -1,0 +1,15 @@
+{
+  "iconPack": "core",
+  "fontFamily": "Madan",
+  "fontBaseSize": "12px",
+  "fontHoverSize": "14px",
+  "fontTabSize": "11px",
+  "fontColor": "#DCDCDC",
+
+  "level00": "#1F1F1F",
+  "level01": "#474747",
+  "level02": "#7A7A7A",
+  "level03": "#ADADAD",
+  "level04": "#D6D6D6",
+  "hiLight": "#8495A9"
+}

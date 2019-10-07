@@ -1,0 +1,25 @@
+QMenu {
+ background: $level00;
+ color: $fontColor;
+ font-family: $fontFamily;
+ font-size: $fontSize;
+}
+
+QMenu:separator {
+ background: $level00;
+}
+
+QMenu:item {
+ background: $level01;
+ border: 1px;
+ border-radius: 6px;
+ border-color: $level00;
+}
+
+QMenu:item:selected {
+ background: $hiLight;
+}
+
+QMenu:item:selected:pressed {
+ background: $level03;
+}

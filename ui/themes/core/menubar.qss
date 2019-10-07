@@ -1,0 +1,27 @@
+QMenuBar {
+ background: $level01;
+
+ color: $fontColor;
+ font-family: $fontFamily;
+ font-size: $fontSize;
+
+ border: 1px;
+ border-radius: 6px;
+ border-color: $level00;
+}
+
+QMenuBar::item {
+ background: $level01;
+}
+
+QMenuBar::item:selected {
+ background: $hiLight;
+
+ border: 1px;
+ border-radius: 6px;
+ border-color: $level00;
+
+}
+QMenuBar:item:selected:pressed {
+ background: $level02;
+}

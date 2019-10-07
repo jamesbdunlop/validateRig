@@ -1,0 +1,7 @@
+QMainWindow {
+    background-color: $level00;
+
+    color: $fontColor;
+    font-family: $fontFamily;
+    font-size: $fontSize;
+}

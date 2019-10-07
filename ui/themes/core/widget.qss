@@ -1,0 +1,13 @@
+QWidget[darkWidget="true"]{
+ background: $level00;
+ color: $fontColor;
+ font-family: $fontFamily;
+ font-size: $fontSize;
+}
+
+QWidget{
+ background: $level01;
+ color: $fontColor;
+ font-family: $fontFamily;
+ font-size: $fontSize;
+}

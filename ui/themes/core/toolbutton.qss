@@ -1,0 +1,20 @@
+QToolButton{
+    background: $level00;
+
+    border: 1px;
+    border-radius: 16px;
+    border-color: $level00;
+
+    color: $fontColor;
+    font-family: $fontFamily;
+    font-size: $fontSize;
+}
+
+QToolButton:hover {
+    background: $hiLight;
+
+    border: 1px;
+    border-radius: 16px;
+    border-color: $level00;
+}
+

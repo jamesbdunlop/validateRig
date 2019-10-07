@@ -1,0 +1,32 @@
+QListView {
+ background: $level00;
+ alternate-background-color: $level02;
+ selection-background-color: $level02;
+ show-decoration-selected: 1;
+}
+
+QListView:item {
+ border: 1px solid $level00;
+}
+
+QListView:item:hover {
+ background: $level04;
+ border: 1px solid $level04;
+ border-radius: 6px;
+ color: $fontSelectedColor;
+
+}
+
+QListView:item:selected {
+ background: $level03;
+ border: 2px solid $level04;
+ color: $fontSelectedColor;
+ border-radius: 6px;
+}
+
+QListView:item:selected:active{
+ background: $level03;
+ border: 2px solid $level04;
+ border-radius: 6px;
+ color: $fontSelectedColor;
+}

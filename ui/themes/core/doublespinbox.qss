@@ -1,0 +1,22 @@
+QDoubleSpinBox {
+ background: $level00;
+ border: 1px solid $level02;
+ border-radius: 6px;
+
+ color: $fontColor;
+ font-family: $fontFamily;
+ font-size: $fontSize;
+ font-style: bold;
+}
+
+QDoubleSpinBox:hover {
+ background: $level04;
+ color: $level01;
+}
+
+QDoubleSpinBox:selected {
+ border: 1px solid $level03;
+ color: $level00;
+}
+
+

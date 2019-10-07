@@ -1,0 +1,33 @@
+QLineEdit {
+ background-color: $level00;
+ selection-background-color: $level04;
+
+ border: 2px;
+ border-radius: 16px;
+ border-color: $level00;
+
+ color: $fontColor;
+ font-family: $fontFamily;
+ font-size: $fontSize;
+}
+
+QLineEdit:!selected {
+ background: $level00;
+
+ border: 2px;
+ border-radius: 16px;
+ border-color: $level00;
+ padding: 0 8px;
+}
+
+QLineEdit:read-only {
+ background: $level02;
+
+ color: $fontColor;
+ font-family: $fontFamily;
+ font-size: $fontSize;
+
+ border: 2px;
+ border-radius: 16px;
+ border-color: $level00;
+}

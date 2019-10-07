@@ -1,0 +1,28 @@
+QDockWidget {
+ background: $level00;
+
+ border: 2px;
+ border-radius: 13px;
+ border-color: $level00;
+
+ color: $fontColor;
+ font-family: $fontFamily;
+ font-size: $fontSize;
+}
+
+QDockWidget:title{
+ background: $level00;
+
+ border: 1px;
+ border-radius: 6px;
+ border-color: $level00;
+
+ font-weight: bold;
+ padding: -2, 2, 2, 2;
+}
+
+QDockWidget:title:hover{
+ background: $level02;
+}
+
+

@@ -1,0 +1,5 @@
+QHeaderView:section{
+ background: $level00;
+ border: 2px solid $level01;
+ border-radius: 6px;
+}

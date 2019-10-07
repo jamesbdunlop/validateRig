@@ -1,0 +1,37 @@
+QPushButton {
+ height: 20px;
+ padding: 6px;
+
+ border: 1px;
+ border-radius: 6px;
+ border-color: $level00;
+
+ color: $fontColor;
+ font-family: $fontFamily;
+ font-size: $fontSize;
+ text-align: center;
+}
+
+QPushButton:!pressed {
+ background: $level02;
+ border: 1px;
+ border-radius: 6px;
+ border-color: $level00;
+}
+
+QPushButton:hover {
+ background: $hiLight;
+ color: $level01;
+ font-size: $fontHoverSize;
+
+ border: 2px;
+ border-radius: 6px;
+ border-color: $level00;
+}
+
+QPushButton:hover:pressed {
+ background: $level04;
+ border: 1px;
+ border-radius: 6px;
+ border-color:  $level00;
+}

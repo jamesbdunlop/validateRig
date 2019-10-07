@@ -1,0 +1,49 @@
+/*-------------
+GENERIC
+-------------*/
+QGroupBox {
+ background: $level00;
+
+ border: 1px solid;
+ border-radius: 6px;
+ border-color: $level00;
+
+ font-size: $fontSize;
+ font-weight: Bold;
+
+ padding: $fontSize, 1, 1, 1;
+ margin-top: 2ex;
+}
+
+QGroupBox:title {
+ subcontrol-position: top left;
+ subcontrol-origin: margin;
+ background: $level00;
+
+ border: 2px solid;
+ border-radius: 6px;
+ border-color: $level00;
+
+ color: $fontColor;
+ font-family: $fontFamily;
+ font-size: $fontSize;
+}
+
+QGroupBox:indicator {
+ width: 13px;
+ height: 13px;
+}
+
+QGroupBox:indicator:unchecked {
+ image: url(:media/iconmonstr-checkbox-11-240.png);
+ border: 1px solid;
+ border-radius: 6px;
+ border-color: $level02;
+}
+
+QGroupBox:indicator:checked {
+ image: url(:media/iconmonstr-checkbox-11-240.png);
+ border: 1px solid;
+ border-radius: 6px;
+ background: $level04;
+}

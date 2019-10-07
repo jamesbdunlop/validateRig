@@ -2,17 +2,18 @@ import sys
 import os
 import pprint
 from PyQt5 import QtWidgets
+from ui.themes import factory as uit_factory
 from core import validator as c_validator
 from core import parser as c_parser
 from constants import constants
 from constants import serialization as c_serialization
-from core.nodes import SourceNode, ConnectionValidityNode, DefaultValueNode
+from core.nodes import SourceNode
 from ui.trees import treewidgetitems as cuit_treewidgetitems
 from ui.dialogs import saveToJSONFile as uid_saveJSON
 
 
 class ValidationUI(QtWidgets.QWidget):
-    def __init__(self, title=constants.UINAME, parent=None):
+    def __init__(self, title=constants.UINAME, theme="core", themecolor="", parent=None):
         super(ValidationUI, self).__init__(parent=parent)
         """
         TO DO
@@ -24,10 +25,19 @@ class ValidationUI(QtWidgets.QWidget):
         """
         self.setWindowTitle(title)
         self.setObjectName("validator_mainWindow")
+        self.theme = theme
+        self.themeColor = themecolor
+        self.sheet = uit_factory.getThemeData(self.theme, self.themeColor)
+        self.setStyleSheet(self.sheet)
+
         self.setAcceptDrops(True)
         self._validators = list()                   # list of tuples of validators and widgets (Validator, QTreeWidget)
 
         self.mainLayout = QtWidgets.QVBoxLayout(self)
+        self.mainLayout.setObjectName("mainLayout")
+
+        self.treeWidgetLayout = QtWidgets.QVBoxLayout()
+        self.treeWidgetLayout.setObjectName("widgetLayout")
 
         # Buttons
         self.buttonLayout = QtWidgets.QHBoxLayout()
@@ -44,6 +54,7 @@ class ValidationUI(QtWidgets.QWidget):
         self.buttonLayout.addWidget(self.saveButton)
         self.buttonLayout.addWidget(self.runButton)
 
+        self.mainLayout.addLayout(self.treeWidgetLayout)
         self.mainLayout.addLayout(self.buttonLayout)
 
         self.resize(800, 600)
@@ -52,12 +63,11 @@ class ValidationUI(QtWidgets.QWidget):
         # The main treeViewWidget for creating data
         widget = QtWidgets.QTreeWidget()
         widget.resizeColumnToContents(True)
-        widget.setAlternatingRowColors(True)
         widget.setAcceptDrops(True)
-        widget.setColumnCount(7)
+        widget.setColumnCount(8)
         widget.setHeaderLabels(constants.HEADER_LABELS)
 
-        self.mainLayout.addWidget((widget))
+        self.treeWidgetLayout.addWidget(widget)
 
         return widget
 
@@ -89,12 +99,15 @@ class ValidationUI(QtWidgets.QWidget):
             data[vd[c_serialization.KEY_VALIDATOR_NAME]] = vd
 
         dialog = uid_saveJSON.SaveJSONToFileDialog(parent=None)
+        dialog.setStyleSheet(self.sheet)
         if dialog.exec():
             for eachFile in dialog.selectedFiles():
                 c_parser.write(filepath=eachFile, data=data)
 
     def _load(self):
+        # TODO make this a class like the save dialog
         dialog = QtWidgets.QFileDialog()
+        dialog.setStyleSheet(self.sheet)
         dialog.setNameFilter("*{}".format(constants.JSON_EXT))
         dialog.setViewMode(QtWidgets.QFileDialog.Detail)
         if dialog.exec():
@@ -166,6 +179,8 @@ class ValidationUI(QtWidgets.QWidget):
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    myWin = ValidationUI.from_fileJSON("T:/software/validateRig/core/tests/validatorTestData.json")
+
+    myWin = ValidationUI.from_fileJSON(filepath="T:/software/validateRig/core/tests/validatorTestData.json")
     myWin.show()
+
     app.exec_()

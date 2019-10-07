@@ -1,0 +1,60 @@
+QRadioButton {
+    background: $level00;
+
+    height: 20px;
+    padding: 6px;
+
+    border: 1px;
+    border-radius: 6px;
+    border-color: $level00;
+
+    color: $fontColor;
+    font-family: $fontFamily;
+    font-size: $fontSize;
+    text-align: right;
+}
+
+QRadioButton:!pressed {
+    background: $level02;
+
+    border: 1px;
+    border-radius: 6px;
+    border-color: $level00;
+}
+
+QRadioButton:hover {
+    background: $hiLight;
+
+    border-style: outset;
+    border: 1px;
+    border-radius: 6px;
+
+    font-size: $fontHoverSize;
+}
+
+QRadioButton:hover:pressed {
+    background: $level04;
+    border-color: $level00;
+}
+
+
+/*INDICATOR*/
+QRadioButton::indicator {
+    background: $level00;
+
+    width: 18px;
+    height: 18px;
+
+    border: 1px;
+    border-radius: 8px;
+    border-color: $level00;
+}
+
+QRadioButton::indicator::unchecked {
+    image: url(:/media/iconmonstr-checkbox-11-240.png);
+}
+
+QRadioButton::indicator::checked {
+    image: url(:/media/iconmonstr-checkbox-11-240.png);
+    background: $level04;
+}

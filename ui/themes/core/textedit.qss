@@ -1,0 +1,32 @@
+QTextEdit {
+    background-color: $level03;
+    selection-background-color: $level01;
+
+    border: 2px;
+    border-radius: 16px;
+    border-color: $level00;
+
+    color: $fontColor;
+    font-family: $fontFamily;
+    font-size: $fontSize;
+}
+QTextEdit:!selected {
+    background: $level00;
+
+    border: 2px;
+    border-radius: 16px;
+    border-color: $level00;
+    padding: 0 8px;
+}
+
+QTextEdit:read-only {
+    background: $level03;
+
+    color: $fontColor;
+    font-family: $fontFamily;
+    font-size: $fontSize;
+
+    border: 2px;
+    border-radius: 16px;
+    border-color: $level00;
+}

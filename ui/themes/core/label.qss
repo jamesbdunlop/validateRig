@@ -1,0 +1,13 @@
+QLabel {
+    background: $level02;
+
+    color: $fontColor;
+    font-family: $fontFamily;
+    font-size: $fontSize;
+    font-weight: Bold;
+
+    border: 0px solid;
+    border-style: inset;
+    border-radius: 13px;
+    border-color: $level00;
+}
