@@ -57,7 +57,7 @@ class ValidationUI(QtWidgets.QWidget):
         self.mainLayout.addLayout(self.treeWidgetLayout)
         self.mainLayout.addLayout(self.buttonLayout)
 
-        self.resize(800, 600)
+        self.resize(1200, 800)
 
     def _createValidatorTreeWidget(self):
         # The main treeViewWidget for creating data
