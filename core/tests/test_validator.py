@@ -31,17 +31,23 @@ class Test_Validator(unittest.TestCase):
         self.validator = c_validator.Validator(name=c_testdata.VALIDATOR_NAME)
 
         self.expectedToData = {c_serialization.KEY_VALIDATOR_NAME: c_testdata.VALIDATOR_NAME,
-                               c_serialization.KEY_VALIDATOR_SOURCENODES: [
-                                   {c_serialization.KEY_VAILIDITYNODES: [
+                               c_serialization.KEY_VALIDATOR_NODES: [
+                                   {
+                                    c_serialization.KEY_NODENAME: self.sourceNodeName,
+                                    c_serialization.KEY_NODTYPE: c_testdata.SRC_NODETYPE,
+                                    c_serialization.KEY_VAILIDITYNODES: [
                                        {
                                         c_serialization.KEY_NODENAME: self.ConnectionValidityNodeName,
+                                        c_serialization.KEY_NODTYPE: c_testdata.VALIDITY_NODETYPE,
                                         c_serialization.KEY_ATTRIBUTENAME: self.ConnectionValidityNodeAttrName,
                                         c_serialization.KEY_ATTRIBUTEVALUE: self.ConnectionValidityNodeAttrValue,
                                         c_serialization.KEY_SRC_ATTRIBUTENAME: self.srcNodeAttrName,
                                         c_serialization.KEY_SRC_ATTRIBUTEVALUE: self.srcNodeAttrValue
                                        }
-                                   ],
-                                    c_serialization.KEY_NODENAME: self.sourceNodeName}]}
+                                    ],
+                                   }
+                               ]
+                               }
 
     def test_validatorName(self):
         self.assertEqual(self.validator.name, c_testdata.VALIDATOR_NAME,
