@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 class Validator:
     def __init__(self, name, nodes=None):
         self._name = name                   # name of the validator.
-        self._nodes = nodes or list()       # list of SourceNodes with ValidityNodes
+        self._nodes = nodes or list()       # list of SourceNodes with ConnectionValidityNodes
 
     @property
     def name(self):
@@ -69,9 +69,10 @@ class Validator:
     def toData(self):
         data = dict()
         data[c_serialization.KEY_VALIDATOR_NAME] = self.name
-        data[c_serialization.KEY_VALIDATOR_SOURCENODES] = list()
-        for eachSourceNode in self.iterNodes():
-            data[c_serialization.KEY_VALIDATOR_SOURCENODES].append(eachSourceNode.toData())
+        data[c_serialization.KEY_VALIDATOR_NODES] = list()
+        for eachNode in self.iterNodes():
+            data[c_serialization.KEY_VALIDATOR_NODES].append(eachNode.toData())
+
         return data
 
     @classmethod

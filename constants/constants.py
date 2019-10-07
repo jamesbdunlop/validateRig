@@ -1,1 +1,1 @@
-JSON_EXT = '.json'
+JSON_EXT = ".json"

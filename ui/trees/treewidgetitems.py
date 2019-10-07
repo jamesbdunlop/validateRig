@@ -1,10 +1,10 @@
 from PyQt5 import QtWidgets, QtCore
-from core.nodes import ValidityNode, DefaultNode
+from core.nodes import ConnectionValidityNode, DefaultValueNode
 
 
 class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
-    def __init__(self, node):
-        super(TreeWidgetItem, self).__init__()
+    def __init__(self, node, *args, **kwargs):
+        super(TreeWidgetItem, self).__init__(*args, **kwargs)
         self._reportStatus = "--"
         self._node = node
 
@@ -27,7 +27,7 @@ class SourceTreeWidgetItem(TreeWidgetItem):
 
 class ValidityTreeWidgetItem(TreeWidgetItem):
     def __init__(self, node, *args, **kwargs):
-        assert isinstance(node, ValidityNode), "validityNode is not an instance of ValidityNode!"
+        assert isinstance(node, ConnectionValidityNode), "validityNode is not an instance of ConnectionValidityNode!"
         super(ValidityTreeWidgetItem, self).__init__(node=node, *args, **kwargs)
         self.setData(1, QtCore.Qt.DisplayRole, self._node.attributeName)
         self.setData(2, QtCore.Qt.DisplayRole, self._node.attributeValue)
@@ -39,7 +39,7 @@ class ValidityTreeWidgetItem(TreeWidgetItem):
 
 class DefaultTreeWidgetItem(TreeWidgetItem):
     def __init__(self, node, *args, **kwargs):
-        assert isinstance(node, DefaultNode), "defaultNode is not an instance of DefaultNode!"
+        assert isinstance(node, DefaultValueNode), "defaultNode is not an instance of DefaultValueNode!"
         super(DefaultTreeWidgetItem, self).__init__(node=node, *args, **kwargs)
         self.setData(1, QtCore.Qt.DisplayRole, self._node.name)
         self.setData(2, QtCore.Qt.DisplayRole, str(self._node.defaultValue))
