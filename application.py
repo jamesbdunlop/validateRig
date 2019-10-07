@@ -1,4 +1,5 @@
 import sys
+import os
 import pprint
 from PyQt5 import QtWidgets
 from core import validator as c_validator
@@ -11,75 +12,128 @@ from ui.dialogs import saveToJSONFile as uid_saveJSON
 
 
 class ValidationUI(QtWidgets.QWidget):
-    def __init__(self, title='ValidationUI', parent=None):
+    def __init__(self, title=constants.UINAME, parent=None):
         super(ValidationUI, self).__init__(parent=parent)
-        # collapse ALL
-        # expand ALL
-        # Search replace names? For namespaces? Or a nameSpace field?
-        # Validate buttons
-        # Shows errors. checkboxes? row colors?
-
+        """
+        TO DO
+        - collapse ALL
+        - expand ALL
+        - Search replace names? For namespaces? Or a nameSpace field?
+        - Validate buttons
+        - Shows errors. checkboxes? row colors?
+        """
         self.setWindowTitle(title)
         self.setObjectName("validator_mainWindow")
         self.setAcceptDrops(True)
+        self._validators = list()                   # list of tuples of validators and widgets (Validator, QTreeWidget)
 
-        # The base validator to be populated by drag and drop or a load
-        self.validator = None
-
-        # The main treeViewWidget for creating data
         self.mainLayout = QtWidgets.QVBoxLayout(self)
-        self.validatorTreeWidget = QtWidgets.QTreeWidget()
-        self.validatorTreeWidget.setAcceptDrops(True)
-        self.validatorTreeWidget.setColumnCount(7)
-        self.validatorTreeWidget.setHeaderLabels(("SourceNodeName", "SrcAttrName", "SrcAttrValue",
-                                                  "DestNodeName", "DestAttrName", "DestAttrValue",
-                                                  "REPORT STATUS"))
 
-        self.mainLayout.addWidget(self.validatorTreeWidget)
-
-        self.__setupTestUI()
-        self.validatorTreeWidget.resizeColumnToContents(True)
-        self.validatorTreeWidget.setAlternatingRowColors(True)
-
-        # Temp buttons
+        # Buttons
         self.buttonLayout = QtWidgets.QHBoxLayout()
-        self.load = QtWidgets.QPushButton("load")
-        self.save = QtWidgets.QPushButton("save")
-        self.save.clicked.connect(self._save)
-        self.run = QtWidgets.QPushButton("run")
-        self.buttonLayout.addWidget(self.load)
-        self.buttonLayout.addWidget(self.save)
-        self.buttonLayout.addWidget(self.run)
+
+        self.loadButton = QtWidgets.QPushButton("Load")
+        self.loadButton.clicked.connect(self._load)
+
+        self.saveButton = QtWidgets.QPushButton("Save")
+        self.saveButton.clicked.connect(self._save)
+
+        self.runButton = QtWidgets.QPushButton("Run")
+
+        self.buttonLayout.addWidget(self.loadButton)
+        self.buttonLayout.addWidget(self.saveButton)
+        self.buttonLayout.addWidget(self.runButton)
 
         self.mainLayout.addLayout(self.buttonLayout)
+
         self.resize(800, 600)
 
-    def __setupTestUI(self):
-        """ Test data for working out UI / workflow """
-        testDataPath = "T:/software/validateRig/core/tests/validatorTestData.json"
-        data = c_parser.read(testDataPath)
-        self.validator = c_validator.Validator(name=data.get(c_serialization.KEY_VALIDATOR_NAME, "INVALID"))
+    def _createValidatorTreeWidget(self):
+        # The main treeViewWidget for creating data
+        widget = QtWidgets.QTreeWidget()
+        widget.resizeColumnToContents(True)
+        widget.setAlternatingRowColors(True)
+        widget.setAcceptDrops(True)
+        widget.setColumnCount(7)
+        widget.setHeaderLabels(constants.HEADER_LABELS)
 
-        for sourceNodeData in data[c_serialization.KEY_VALIDATOR_NODES]:
+        self.mainLayout.addWidget((widget))
+
+        return widget
+
+    def _createValidationTuple(self, data):
+        """
+
+        :param data:`dict` Validation data
+        :return:
+        """
+        self._validators.append((c_validator.Validator(name=data.get(c_serialization.KEY_VALIDATOR_NAME, "")),
+                                 self._createValidatorTreeWidget()))
+
+        return self._validators[-1]
+
+    def _isValidFilepath(self, filepath):
+        if not os.path.isfile(filepath):
+            raise FileNotFoundError("%s" % filepath)
+
+    def _save(self):
+        """
+        Writes to disk all the validation data for each validation treeWidget added to the UI.
+
+        :return:
+        """
+        # Collect all the validation data's
+        data = dict()
+        for eachValidator, _ in self._validators:
+            vd = eachValidator.toData()
+            data[vd[c_serialization.KEY_VALIDATOR_NAME]] = vd
+
+        dialog = uid_saveJSON.SaveJSONToFileDialog(parent=None)
+        if dialog.exec():
+            for eachFile in dialog.selectedFiles():
+                c_parser.write(filepath=eachFile, data=data)
+
+    def _load(self):
+        dialog = QtWidgets.QFileDialog()
+        dialog.setNameFilter("*{}".format(constants.JSON_EXT))
+        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
+        if dialog.exec():
+            for filepath in dialog.selectedFiles():
+                data = c_parser.read(filepath)
+                for validatorName, validationData in data.items():
+                    self.addValidator(validationData, expanded=True)
+
+    def addValidator(self, data, expanded=False):
+        """
+        Sets up a new validator/treeWidget for the validation data passed in.
+
+        :param data:`dict`
+        :param expanded:`bool`  To auto expand the results or not
+        :return:
+        """
+        validationTuple = self._createValidationTuple(data=data)
+
+        # Popuplate now
+        for sourceNodeData in data.get(c_serialization.KEY_VALIDATOR_NODES, list()):
+            # Create and add the validation node to the validator
             node = SourceNode.fromData(sourceNodeData)
-            self.validator.addNodeToValidate(node)
+            validationTuple[0].addNodeToValidate(node)
 
+            # Create and add the treeWidgetItem to the treeWidget from the node
             w = cuit_treewidgetitems.SourceTreeWidgetItem(node=node)
-            self.validatorTreeWidget.addTopLevelItem(w)
+            validationTuple[1].addTopLevelItem(w)
 
-            # Populate the rows
+            # Populate the rows with the validations for the node
             for eachChild in node.iterNodes():
-                if isinstance(eachChild, ConnectionValidityNode):
-                    ctw = cuit_treewidgetitems.ValidityTreeWidgetItem(node=eachChild)
-                    w.addChild(ctw)
+                if eachChild.nodeType() == c_serialization.NT_CONNECTIONVALIDITY:
+                    w.addChild(cuit_treewidgetitems.ValidityTreeWidgetItem(node=eachChild))
 
-                if isinstance(eachChild, DefaultValueNode):
-                    dvtwi = cuit_treewidgetitems.DefaultTreeWidgetItem(node=eachChild)
-                    dvtwi.reportStatus = "Failed"
-                    w.addChild(dvtwi)
+                if eachChild.nodeType() == c_serialization.NT_DEFAULTVALUE:
+                    w.addChild(cuit_treewidgetitems.DefaultTreeWidgetItem(node=eachChild))
 
-            w.setExpanded(True)
+            w.setExpanded(expanded)
 
+    ##### QT STUFF
     def dragEnterEvent(self, QDragEnterEvent):
         super(ValidationUI, self).dragEnterEvent(QDragEnterEvent)
         dataAsText = QDragEnterEvent.mimeData().text()
@@ -93,15 +147,25 @@ class ValidationUI(QtWidgets.QWidget):
             data = c_parser.read(dataAsText.replace("file:///", ""))
             pprint.pprint(data)
 
-    def _save(self):
-        dialog = uid_saveJSON.SaveJSONToFileDialog(parent=None)
-        if dialog.exec():
-            for eachFile in dialog.selectedFiles():
-                c_parser.write(filepath=eachFile, data=self.validator.toData())
+    @classmethod
+    def from_fileJSON(cls, filepath):
+        """
+
+        :param filepath: `str` path to the a previous validation.json file
+        :return: `ValidationUI`
+        """
+        inst = cls()
+        inst._isValidFilepath(filepath)
+
+        data = c_parser.read(filepath)
+        for validatorName, validationData in data.items():
+            inst.addValidator(validationData)
+
+        return inst
 
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    myWin = ValidationUI(ValidationUI.__name__)
+    myWin = ValidationUI.from_fileJSON("T:/software/validateRig/core/tests/validatorTestData.json")
     myWin.show()
     app.exec_()

@@ -1,11 +1,12 @@
 from PyQt5 import QtWidgets, QtCore
 from core.nodes import ConnectionValidityNode, DefaultValueNode
+from constants import constants as constants
 
 
 class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
     def __init__(self, node, *args, **kwargs):
         super(TreeWidgetItem, self).__init__(*args, **kwargs)
-        self._reportStatus = "--"
+        self._reportStatus = constants.DEFAULT_REPORTSTATUS
         self._node = node
 
     @property
@@ -43,7 +44,7 @@ class DefaultTreeWidgetItem(TreeWidgetItem):
         super(DefaultTreeWidgetItem, self).__init__(node=node, *args, **kwargs)
         self.setData(1, QtCore.Qt.DisplayRole, self._node.name)
         self.setData(2, QtCore.Qt.DisplayRole, str(self._node.defaultValue))
-        self.setData(3, QtCore.Qt.DisplayRole, "----")
-        self.setData(4, QtCore.Qt.DisplayRole, "----")
-        self.setData(5, QtCore.Qt.DisplayRole, "----")
+        self.setData(3, QtCore.Qt.DisplayRole, "")
+        self.setData(4, QtCore.Qt.DisplayRole, "")
+        self.setData(5, QtCore.Qt.DisplayRole, "")
         self.setData(6, QtCore.Qt.DisplayRole, self.reportStatus)

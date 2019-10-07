@@ -26,6 +26,9 @@ class ValidationNode:
 
         self._name = name
 
+    def nodeType(self):
+        return self.NODETYPE
+
     def __repr__(self):
         return "%s" % self.name
 
@@ -226,7 +229,7 @@ class ConnectionValidityNode(ValidationNode):
 
 
 class DefaultValueNode(ValidationNode):
-    NODETYPE = c_serialization.NT_CONNECTIONVALIDITY
+    NODETYPE = c_serialization.NT_DEFAULTVALUE
 
     def __init__(self, name, defaultValue):
         super(DefaultValueNode, self).__init__(name=name)
