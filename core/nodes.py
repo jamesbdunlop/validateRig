@@ -2,7 +2,7 @@ from constants import serialization as c_serialization
 from core import parser as c_parser
 
 
-class ValidationNode:
+class ValidationNode(object):
     NODETYPE = c_serialization.NT_VALIDATIONNODE
 
     def __init__(self, name):

@@ -1,15 +1,15 @@
 import sys
 import os
 import pprint
-from PyQt5 import QtWidgets
-from ui.themes import factory as uit_factory
+from PySide2 import QtWidgets, QtCore
+from uiStuff.themes import factory as uit_factory
 from core import validator as c_validator
 from core import parser as c_parser
 from constants import constants
 from constants import serialization as c_serialization
 from core.nodes import SourceNode
-from ui.trees import treewidgetitems as cuit_treewidgetitems
-from ui.dialogs import saveToJSONFile as uid_saveJSON
+from uiStuff.trees import treewidgetitems as cuit_treewidgetitems
+from uiStuff.dialogs import saveToJSONFile as uid_saveJSON
 
 
 class ValidationUI(QtWidgets.QWidget):
@@ -25,6 +25,7 @@ class ValidationUI(QtWidgets.QWidget):
         """
         self.setWindowTitle(title)
         self.setObjectName("validator_mainWindow")
+        self.setWindowFlags(QtCore.Qt.Window)
         self.theme = theme
         self.themeColor = themecolor
         self.sheet = uit_factory.getThemeData(self.theme, self.themeColor)
@@ -58,6 +59,13 @@ class ValidationUI(QtWidgets.QWidget):
         self.mainLayout.addLayout(self.buttonLayout)
 
         self.resize(1200, 800)
+
+        self.customContextMenuRequested.connect(self._rcMenu)
+
+    def _rcMenu(self):
+        menu = QtWidgets.QMenu()
+        test = menu.addAction("Fart")
+        menu.show()
 
     def _createValidatorTreeWidget(self):
         # The main treeViewWidget for creating data
@@ -100,7 +108,7 @@ class ValidationUI(QtWidgets.QWidget):
 
         dialog = uid_saveJSON.SaveJSONToFileDialog(parent=None)
         dialog.setStyleSheet(self.sheet)
-        if dialog.exec():
+        if dialog.exec_():
             for eachFile in dialog.selectedFiles():
                 c_parser.write(filepath=eachFile, data=data)
 
@@ -110,11 +118,11 @@ class ValidationUI(QtWidgets.QWidget):
         dialog.setStyleSheet(self.sheet)
         dialog.setNameFilter("*{}".format(constants.JSON_EXT))
         dialog.setViewMode(QtWidgets.QFileDialog.Detail)
-        if dialog.exec():
+        if dialog.exec_():
             for filepath in dialog.selectedFiles():
                 data = c_parser.read(filepath)
                 for validatorName, validationData in data.items():
-                    self.addValidator(validationData, expanded=True)
+                    self.addValidatorFromData(validationData, expanded=True)
 
     def addValidatorFromData(self, data, expanded=False):
         """
@@ -161,13 +169,13 @@ class ValidationUI(QtWidgets.QWidget):
             pprint.pprint(data)
 
     @classmethod
-    def from_fileJSON(cls, filepath):
+    def from_fileJSON(cls, filepath, parent=None):
         """
 
         :param filepath: `str` path to the a previous validation.json file
         :return: `ValidationUI`
         """
-        inst = cls()
+        inst = cls(parent=parent)
         inst._isValidFilepath(filepath)
 
         data = c_parser.read(filepath)

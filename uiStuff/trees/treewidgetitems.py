@@ -1,7 +1,7 @@
-from PyQt5 import QtWidgets, QtCore, QtGui
+from PySide2 import QtWidgets, QtCore, QtGui
 from core.nodes import ConnectionValidityNode, DefaultValueNode
 from constants import constants as constants
-from ui.themes import factory as cui_theme
+from uiStuff.themes import factory as cui_theme
 
 
 class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
