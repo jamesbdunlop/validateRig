@@ -1,7 +1,7 @@
 import sys
 import os
 import pprint
-from PySide2 import QtWidgets, QtCore
+from PySide2 import QtWidgets, QtCore, QtGui
 from uiStuff.themes import factory as uit_factory
 from core import validator as c_validator
 from core import parser as c_parser
@@ -10,6 +10,31 @@ from constants import serialization as c_serialization
 from core.nodes import SourceNode
 from uiStuff.trees import treewidgetitems as cuit_treewidgetitems
 from uiStuff.dialogs import saveToJSONFile as uid_saveJSON
+from uiStuff.dialogs import attributeList as uid_attributeList
+import uiStuff.dialogs.attributeList as uid_attributeList
+from core import inside
+"""
+import sys
+paths = ["T:\\software\\validateRig", "C:\\Python27\\Lib\\site-packages"]
+for path in paths:
+    if path not in sys.path:
+        sys.path.append(path)
+
+from shiboken2 import wrapInstance
+from PySide2 import QtWidgets
+def getMainWindowPtr(): 
+    mayaMainWindowPtr = maya.OpenMayaUI.MQtUtil.mainWindow() 
+    mayaMainWindow = wrapInstance(long(mayaMainWindowPtr), QtWidgets.QMainWindow) 
+    return mayaMainWindow
+    
+import app
+reload(app)
+from app import ValidationUI as vUI
+myWin = vUI.from_fileJSON(filepath="T:/software/validateRig/core/tests/validatorTestData.json", 
+                          parent=getMainWindowPtr())
+myWin.show()
+
+"""
 
 
 class ValidationUI(QtWidgets.QWidget):
@@ -59,17 +84,24 @@ class ValidationUI(QtWidgets.QWidget):
         self.mainLayout.addLayout(self.buttonLayout)
 
         self.resize(1200, 800)
+        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self._appRCMenu)
 
-        self.customContextMenuRequested.connect(self._rcMenu)
-
-    def _rcMenu(self):
+    def _appRCMenu(self, point):
         menu = QtWidgets.QMenu()
-        test = menu.addAction("Fart")
-        menu.show()
+        menu.addAction("AddSource")
+        menu.exec_(self.mapToGlobal(point))
+
+    def _TreeViewRCMenu(self, point):
+        menu = QtWidgets.QMenu()
+        menu.addAction("Fix")
+        menu.exec_(self.mapToGlobal(point))
 
     def _createValidatorTreeWidget(self):
         # The main treeViewWidget for creating data
         widget = QtWidgets.QTreeWidget()
+        widget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        widget.customContextMenuRequested.connect(self._TreeViewRCMenu)
         widget.resizeColumnToContents(True)
         widget.setAcceptDrops(True)
         widget.setColumnCount(8)
@@ -157,6 +189,9 @@ class ValidationUI(QtWidgets.QWidget):
     ##### QT STUFF
     def dragEnterEvent(self, QDragEnterEvent):
         super(ValidationUI, self).dragEnterEvent(QDragEnterEvent)
+        if inside.insideMaya():
+            return QDragEnterEvent.accept()
+
         dataAsText = QDragEnterEvent.mimeData().text()
         if dataAsText.endswith(constants.JSON_EXT):
             return QDragEnterEvent.accept()
@@ -167,6 +202,27 @@ class ValidationUI(QtWidgets.QWidget):
         if dataAsText.endswith(constants.JSON_EXT):
             data = c_parser.read(dataAsText.replace("file:///", ""))
             pprint.pprint(data)
+
+        if inside.insideMaya():
+            self.processMayaDrop(QDropEvent)
+
+    def processMayaDrop(self, QDropEvent):
+        """
+
+        :param QDropEvent: `QDropEvent`
+        :return:
+        """
+        # pop up the validity UI
+        import maya.cmds as cmds
+        data = QDropEvent.mimeData().text().split("\n")
+        self.popup_addSourceNodes = uid_attributeList.createSourceNodeAttributeListWidget(nodes=data,
+                                                                                          qParent=self)
+        if self.popup_addSourceNodes is None:
+            return
+
+        self.popup_addSourceNodes.move(QtGui.QCursor.pos())
+        self.popup_addSourceNodes.resize(300, 900)
+        self.popup_addSourceNodes.show()
 
     @classmethod
     def from_fileJSON(cls, filepath, parent=None):
@@ -192,3 +248,4 @@ if __name__ == "__main__":
     myWin.show()
 
     app.exec_()
+
