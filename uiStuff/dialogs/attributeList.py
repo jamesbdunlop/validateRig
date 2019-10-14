@@ -2,34 +2,50 @@ from PySide2 import QtWidgets, QtCore
 from maya import cmds
 
 
-def createSourceNodeAttributeListWidget(nodes=None, qParent=None):
-    if nodes is None:
-        return
+class SourceNodeAttributeListWidget(QtWidgets.QWidget):
+    def __init__(self, nodes=None, qParent=None):
+        super(SourceNodeAttributeListWidget, self).__init__(parent=qParent)
 
-    w = QtWidgets.QWidget(qParent)
-    w.setWindowFlags(QtCore.Qt.Popup)
-    mainLayout = QtWidgets.QVBoxLayout(w)
+        if nodes is None:
+            return
 
-    dv = QtWidgets.QGroupBox("Default Values")
-    dvl = QtWidgets.QVBoxLayout(dv)
+        self.setWindowFlags(QtCore.Qt.Popup)
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
 
-    # Add a list widget for each selected sourceNode
-    for eachNode in nodes:
-        gb = QtWidgets.QGroupBox(eachNode.split("|")[-1])
-        gbl = QtWidgets.QVBoxLayout(gb)
+        # Add a list widget for each selected sourceNode
+        for eachNode in nodes:
+            subLayout = QtWidgets.QHBoxLayout()
 
-        lw = QtWidgets.QListWidget()
-        lw.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+            ngb = QtWidgets.QGroupBox(eachNode.split("|")[-1])
+            ngbhl = QtWidgets.QHBoxLayout(ngb)
 
-        for eachAttribute in cmds.listAttr(eachNode):
-            lw.addItem(eachAttribute)
+            # DV
+            dv = QtWidgets.QGroupBox("Default Values")
+            dvl = QtWidgets.QVBoxLayout(dv)
 
-        gbl.addWidget(lw)
-        dvl.addWidget(gb)
+            lw = QtWidgets.QListWidget()
+            lw.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
 
-    mainLayout.addWidget(dv)
+            for eachAttribute in cmds.listAttr(eachNode):
+                lw.addItem(eachAttribute)
+            dvl.addWidget(lw)
 
-    acceptButton = QtWidgets.QPushButton('Accept')
-    mainLayout.addWidget(acceptButton)
+            # Connections
+            dvc = QtWidgets.QGroupBox("Connections")
+            dvcl = QtWidgets.QVBoxLayout(dvc)
+            lwc = QtWidgets.QListWidget()
+            lwc.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+            for eachConnection in cmds.listConnections(eachNode, plugs=True):
+                lwc.addItem(eachConnection)
 
-    return w
+            dvcl.addWidget(lwc)
+
+            ngbhl.addWidget(dv)
+            ngbhl.addWidget(dvc)
+
+            subLayout.addWidget(ngb)
+            self.mainLayout.addLayout(subLayout)
+
+        self.acceptButton = QtWidgets.QPushButton('Accept')
+        self.mainLayout.addWidget(self.acceptButton)
+

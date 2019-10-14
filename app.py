@@ -11,7 +11,8 @@ from core.nodes import SourceNode
 from uiStuff.trees import treewidgetitems as cuit_treewidgetitems
 from uiStuff.dialogs import saveToJSONFile as uid_saveJSON
 from uiStuff.dialogs import attributeList as uid_attributeList
-import uiStuff.dialogs.attributeList as uid_attributeList
+# import uiStuff.dialogs.attributeList as uid_attributeList
+# reload(uid_attributeList)
 from core import inside
 """
 import sys
@@ -215,14 +216,18 @@ class ValidationUI(QtWidgets.QWidget):
         # pop up the validity UI
         import maya.cmds as cmds
         data = QDropEvent.mimeData().text().split("\n")
-        self.popup_addSourceNodes = uid_attributeList.createSourceNodeAttributeListWidget(nodes=data,
-                                                                                          qParent=self)
-        if self.popup_addSourceNodes is None:
+        self.srcNodesWidget = uid_attributeList.SourceNodeAttributeListWidget(nodes=data,
+                                                                              qParent=self)
+        if self.srcNodesWidget is None:
             return
 
-        self.popup_addSourceNodes.move(QtGui.QCursor.pos())
-        self.popup_addSourceNodes.resize(300, 900)
-        self.popup_addSourceNodes.show()
+        self.srcNodesWidget.acceptButton.clicked.connect(self._accept)
+        self.srcNodesWidget.move(QtGui.QCursor.pos())
+        self.srcNodesWidget.resize(600, 900)
+        self.srcNodesWidget.show()
+
+    def _accept(self):
+        self.srcNodesWidget.close()
 
     @classmethod
     def from_fileJSON(cls, filepath, parent=None):
