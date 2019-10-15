@@ -139,7 +139,7 @@ class ConnectionValidityNode(ValidationNode):
           state!
         - When the srcNode.attribute is correct, is the ConnectionValidityNode.attribute at the right value?
 
-        :param name: `str` name of the node in the scene the ConnectionValidityNode.attribute exists on.
+        :param name: `str` dest nodename of the node in the scene the ConnectionValidityNode.attribute exists on.
         :param attributeName: `str` name of the attribute on the node eg: showCloth
         :param attributeValue: `int`, `float`, `bool`, etc the expected value for this attribute when the
                                 sourceAttribute's value match

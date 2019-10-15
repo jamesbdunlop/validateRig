@@ -11,8 +11,8 @@ from core.nodes import SourceNode
 from uiStuff.trees import treewidgetitems as cuit_treewidgetitems
 from uiStuff.dialogs import saveToJSONFile as uid_saveJSON
 from uiStuff.dialogs import attributeList as uid_attributeList
-# import uiStuff.dialogs.attributeList as uid_attributeList
-# reload(uid_attributeList)
+import uiStuff.dialogs.attributeList as uid_attributeList
+reload(uid_attributeList)
 from core import inside
 """
 import sys
@@ -125,7 +125,7 @@ class ValidationUI(QtWidgets.QWidget):
 
     def _isValidFilepath(self, filepath):
         if not os.path.isfile(filepath):
-            raise FileNotFoundError("%s" % filepath)
+            raise RuntimeError("%s is not valid!" % filepath)
 
     def _save(self):
         """
@@ -167,6 +167,7 @@ class ValidationUI(QtWidgets.QWidget):
         """
         validationTuple = self._createValidationTuple(data=data)
 
+        # ToDO make this a method to populate the treetWidget etc from sourceNode
         # Popuplate now
         for sourceNodeData in data.get(c_serialization.KEY_VALIDATOR_NODES, list()):
             # Create and add the validation node to the validator
@@ -221,13 +222,27 @@ class ValidationUI(QtWidgets.QWidget):
         if self.srcNodesWidget is None:
             return
 
-        self.srcNodesWidget.acceptButton.clicked.connect(self._accept)
+        self.srcNodesWidget.addSrcNodes.connect(self._accept)
         self.srcNodesWidget.move(QtGui.QCursor.pos())
         self.srcNodesWidget.resize(600, 900)
         self.srcNodesWidget.show()
 
-    def _accept(self):
-        self.srcNodesWidget.close()
+    def _accept(self, srcDataList):
+        # Find the validator dropped over ??
+        for srcNode in srcDataList:
+            self._validators[-1][0].addNodeToValidate(srcNode)
+
+            # Create and add the treeWidgetItem to the treeWidget from the node
+            w = cuit_treewidgetitems.SourceTreeWidgetItem(node=srcNode)
+            self._validators[-1][1].addTopLevelItem(w)
+
+            # Populate the rows with the validations for the node
+            for eachChild in srcNode.iterNodes():
+                if eachChild.nodeType() == c_serialization.NT_CONNECTIONVALIDITY:
+                    w.addChild(cuit_treewidgetitems.ValidityTreeWidgetItem(node=eachChild))
+
+                if eachChild.nodeType() == c_serialization.NT_DEFAULTVALUE:
+                    w.addChild(cuit_treewidgetitems.DefaultTreeWidgetItem(node=eachChild))
 
     @classmethod
     def from_fileJSON(cls, filepath, parent=None):
