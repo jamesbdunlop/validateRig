@@ -1,15 +1,17 @@
 from PySide2 import QtWidgets, QtCore
 from core.nodes import SourceNode, DefaultValueNode, ConnectionValidityNode
-from maya import cmds
+from core import inside
+if inside.insideMaya():
+    from maya import cmds
 
 
 class SourceNodeAttributeListWidget(QtWidgets.QWidget):
-    addSrcNodes = QtCore.Signal(list)
-    SEP = "  --->>  "
 
-    def __init__(self, nodes=None, qParent=None):
+    def __init__(self, node=None, qParent=None):
         super(SourceNodeAttributeListWidget, self).__init__(parent=qParent)
-        if nodes is None:
+        self.addSrcNodes = QtCore.Signal(list)
+        self.SEP = "  --->>  "
+        if node is None:
             return
 
         self._nodeData = list()
@@ -18,44 +20,43 @@ class SourceNodeAttributeListWidget(QtWidgets.QWidget):
         self.mainLayout = QtWidgets.QVBoxLayout(self)
 
         # Add a list widget for each selected sourceNode
-        for eachNode in nodes:
-            subLayout = QtWidgets.QHBoxLayout()
+        subLayout = QtWidgets.QHBoxLayout()
 
-            ngb = QtWidgets.QGroupBox(eachNode.split("|")[-1])
-            ngbhl = QtWidgets.QHBoxLayout(ngb)
+        ngb = QtWidgets.QGroupBox(node.split("|")[-1])
+        ngbhl = QtWidgets.QHBoxLayout(ngb)
 
-            # DV
-            dv = QtWidgets.QGroupBox("Default Values")
-            dvl = QtWidgets.QVBoxLayout(dv)
+        # DV
+        dv = QtWidgets.QGroupBox("Default Values")
+        dvl = QtWidgets.QVBoxLayout(dv)
 
-            self.lw = QtWidgets.QListWidget()
-            self.lw.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.lw = QtWidgets.QListWidget()
+        self.lw.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
 
-            for eachAttribute in cmds.listAttr(eachNode):
-                self.lw.addItem(eachAttribute)
-            dvl.addWidget(self.lw)
+        for eachAttribute in cmds.listAttr(node):
+            self.lw.addItem(eachAttribute)
+        dvl.addWidget(self.lw)
 
-            # Connections
-            dvc = QtWidgets.QGroupBox("Connections")
-            dvcl = QtWidgets.QVBoxLayout(dvc)
-            self.lwc = QtWidgets.QListWidget()
-            self.lwc.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        # Connections
+        dvc = QtWidgets.QGroupBox("Connections")
+        dvcl = QtWidgets.QVBoxLayout(dvc)
+        self.lwc = QtWidgets.QListWidget()
+        self.lwc.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
 
-            conns = cmds.listConnections(eachNode, c=True, source=True, destination=True, plugs=True)
-            if conns is not None:
-                for x in xrange(0, len(conns), 2):
-                    self.lwc.addItem("{}{}{}".format(conns[x], self.SEP, conns[x+1]))
+        conns = cmds.listConnections(node, c=True, source=True, destination=True, plugs=True)
+        if conns is not None:
+            for x in range(0, len(conns), 2):
+                self.lwc.addItem("{}{}{}".format(conns[x], self.SEP, conns[x+1]))
 
-            dvcl.addWidget(self.lwc)
+        dvcl.addWidget(self.lwc)
 
-            ngbhl.addWidget(dv)
-            ngbhl.addWidget(dvc)
+        ngbhl.addWidget(dv)
+        ngbhl.addWidget(dvc)
 
-            subLayout.addWidget(ngb)
-            self.mainLayout.addLayout(subLayout)
+        subLayout.addWidget(ngb)
+        self.mainLayout.addLayout(subLayout)
 
-            # Store internally
-            self._nodeData.append([eachNode, self.lw, self.lwc])
+        # Store internally
+        self._nodeData.append([node, self.lw, self.lwc])
 
         self.acceptButton = QtWidgets.QPushButton('Accept')
         self.acceptButton.clicked.connect(self._accept)
@@ -64,18 +65,18 @@ class SourceNodeAttributeListWidget(QtWidgets.QWidget):
 
     def _accept(self):
         srcNodes = list()
-        for eachNodeList in self._nodeData:
-            nodeName = eachNodeList[0]
+        for nodeList in self._nodeData:
+            nodeName = nodeList[0]
 
             # Create default value nodes node
             validityNodes = list()
-            for eachAttr in eachNodeList[1].selectedItems():
+            for eachAttr in nodeList[1].selectedItems():
                 value = cmds.getAttr("{}.{}".format(nodeName, eachAttr.text()))
                 dvNode = DefaultValueNode(name=eachAttr.text(), defaultValue=value)
                 validityNodes.append(dvNode)
 
             # Create connection nodes node # [u'null2.visibility', u'null2.translate']
-            for eachConnPair in eachNodeList[2].selectedItems():
+            for eachConnPair in nodeList[2].selectedItems():
                 src, dest = eachConnPair.text().split(self.SEP)
                 destAttrName = dest.split(".")[-1]
                 destAttrValue = cmds.getAttr(dest)
@@ -93,7 +94,6 @@ class SourceNodeAttributeListWidget(QtWidgets.QWidget):
 
         self.addSrcNodes.emit(srcNodes)
         self.close()
-
 
     def fromSourceNodes(self, srcNodes):
         # TODO be able to instance this widget from an existing sourceNode list and select existing in the validator

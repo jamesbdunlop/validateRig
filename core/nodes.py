@@ -1,4 +1,4 @@
-from constants import serialization as c_serialization
+from const import serialization as c_serialization
 from core import parser as c_parser
 
 
@@ -63,17 +63,17 @@ class SourceNode(ValidationNode):
         :param validityNodes: `list` of ConnectionValidityNodes
         """
         super(SourceNode, self).__init__(name=name)
-        self._children = validityNodes or list()
+        self._validity = validityNodes or list()
 
     def addNodeToCheck(self, ConnectionValidityNode):
         """
 
         :param ConnectionValidityNode: `ConnectionValidityNode`
         """
-        self._children.append(ConnectionValidityNode)
+        self._validity.append(ConnectionValidityNode)
 
-    def iterNodes(self):
-        for eachNode in self._children:
+    def iterValidityNodes(self):
+        for eachNode in self._validity:
             yield eachNode
 
     def toData(self):
@@ -81,7 +81,7 @@ class SourceNode(ValidationNode):
         data[c_serialization.KEY_NODENAME] = self._name
         data[c_serialization.KEY_NODTYPE] = self.NODETYPE
         data[c_serialization.KEY_VAILIDITYNODES] = list()
-        for eachNode in self.iterNodes():
+        for eachNode in self.iterValidityNodes():
             data[c_serialization.KEY_VAILIDITYNODES].append(eachNode.toData())
 
         return data

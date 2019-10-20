@@ -1,14 +1,13 @@
-
-from PySide2 import QtWidgets
-
+import sys
 
 def insideMaya():
-    activeWindow = QtWidgets.QApplication.activeWindow()
+    inside = True
+    if not "maya.api.maya" in sys.modules:
+        inside = False
 
-    if activeWindow is None:
-        return False
+    try:
+        from maya import cmds
+    except:
+        inside = False
 
-    if activeWindow.objectName() == "MayaWindow":
-        return True
-
-    return False
+    return inside

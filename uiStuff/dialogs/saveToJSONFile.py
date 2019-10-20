@@ -1,5 +1,5 @@
 from PySide2 import QtWidgets
-from constants import constants as constants
+from const import constants as constants
 
 
 class SaveJSONToFileDialog(QtWidgets.QFileDialog):

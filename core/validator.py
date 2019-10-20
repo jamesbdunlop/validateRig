@@ -1,5 +1,5 @@
 import logging
-from constants import serialization as c_serialization
+from const import serialization as c_serialization
 from core import parser as c_parser
 
 logger = logging.getLogger(__name__)
@@ -54,7 +54,7 @@ class Validator:
         if self.sourceNodeExists(sourceNode) and not force:
             raise IndexError("%s already exists in validator. Use force=True if you want to overwrite existing!" % sourceNode)
 
-    def iterNodes(self):
+    def iterSourceNodes(self):
         for eachNode in self._nodes:
             yield eachNode
 
@@ -70,7 +70,7 @@ class Validator:
         data = dict()
         data[c_serialization.KEY_VALIDATOR_NAME] = self.name
         data[c_serialization.KEY_VALIDATOR_NODES] = list()
-        for eachNode in self.iterNodes():
+        for eachNode in self.iterSourceNodes():
             data[c_serialization.KEY_VALIDATOR_NODES].append(eachNode.toData())
 
         return data

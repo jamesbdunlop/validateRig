@@ -1,7 +1,7 @@
 import unittest
 import logging
-from constants import serialization as c_serialization
-from constants import testData as c_testdata
+from const import serialization as c_serialization
+from const import testData as c_testdata
 import core.nodes as c_nodes
 import core.validator as c_validator
 logger = logging.getLogger(__name__)
@@ -59,7 +59,7 @@ class Test_Validator(unittest.TestCase):
 
     def test_validatorIterNodes(self):
         self.validator.addNodeToValidate(self.sourceNode)
-        nodes = [n for n in self.validator.iterNodes()]
+        nodes = [n for n in self.validator.iterSourceNodes()]
 
         self.assertEqual(1, len(nodes),
                          "Nodes must be len 1! You have an empty list!")

@@ -1,6 +1,6 @@
 from PySide2 import QtWidgets, QtCore, QtGui
 from core.nodes import ConnectionValidityNode, DefaultValueNode
-from constants import constants as constants
+from const import constants as constants
 from uiStuff.themes import factory as cui_theme
 
 

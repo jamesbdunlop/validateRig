@@ -1,19 +1,17 @@
 import sys
 import os
 import pprint
+from core import inside
 from PySide2 import QtWidgets, QtCore, QtGui
-from uiStuff.themes import factory as uit_factory
+from const import constants
+from const import serialization as c_serialization
 from core import validator as c_validator
 from core import parser as c_parser
-from constants import constants
-from constants import serialization as c_serialization
 from core.nodes import SourceNode
+from uiStuff.themes import factory as uit_factory
 from uiStuff.trees import treewidgetitems as cuit_treewidgetitems
 from uiStuff.dialogs import saveToJSONFile as uid_saveJSON
 from uiStuff.dialogs import attributeList as uid_attributeList
-import uiStuff.dialogs.attributeList as uid_attributeList
-reload(uid_attributeList)
-from core import inside
 """
 import sys
 paths = ["T:\\software\\validateRig", "C:\\Python27\\Lib\\site-packages"]
@@ -179,7 +177,7 @@ class ValidationUI(QtWidgets.QWidget):
             validationTuple[1].addTopLevelItem(w)
 
             # Populate the rows with the validations for the node
-            for eachChild in node.iterNodes():
+            for eachChild in node.iterValidityNodes():
                 if eachChild.nodeType() == c_serialization.NT_CONNECTIONVALIDITY:
                     w.addChild(cuit_treewidgetitems.ValidityTreeWidgetItem(node=eachChild))
 
@@ -191,6 +189,9 @@ class ValidationUI(QtWidgets.QWidget):
     ##### QT STUFF
     def dragEnterEvent(self, QDragEnterEvent):
         super(ValidationUI, self).dragEnterEvent(QDragEnterEvent)
+        pos = QtGui.QCursor.pos()
+        widget = QtGui.QGuiApplication.widgetAt(pos)
+        print(widget)
         if inside.insideMaya():
             return QDragEnterEvent.accept()
 
@@ -208,6 +209,16 @@ class ValidationUI(QtWidgets.QWidget):
         if inside.insideMaya():
             self.processMayaDrop(QDropEvent)
 
+    def iterValidators(self):
+        for eachValidator, _ in self._validators:
+            yield eachValidator
+
+    def sourceNodeExists(self, nodeName):
+        for validator in self.iterValidators():
+            for srcNode in validator.iterSourceNodes():
+                if srcNode.name == nodeName:
+                    return srcNode
+
     def processMayaDrop(self, QDropEvent):
         """
 
@@ -216,16 +227,23 @@ class ValidationUI(QtWidgets.QWidget):
         """
         # pop up the validity UI
         import maya.cmds as cmds
-        data = QDropEvent.mimeData().text().split("\n")
-        self.srcNodesWidget = uid_attributeList.SourceNodeAttributeListWidget(nodes=data,
-                                                                              qParent=self)
-        if self.srcNodesWidget is None:
-            return
+        nodeNames = QDropEvent.mimeData().text().split("\n")
+        # check to see if this exists in the validator we dropped over.
+        for nodeName in nodeNames:
+            shortName = nodeName.split("|")[-1]
+            print(shortName, nodeName)
+            if self.sourceNodeExists(shortName):
+                continue
 
-        self.srcNodesWidget.addSrcNodes.connect(self._accept)
-        self.srcNodesWidget.move(QtGui.QCursor.pos())
-        self.srcNodesWidget.resize(600, 900)
-        self.srcNodesWidget.show()
+            self.srcNodesWidget = uid_attributeList.SourceNodeAttributeListWidget(node=nodeName,
+                                                                                  qParent=self)
+            if self.srcNodesWidget is None:
+                continue
+
+            self.srcNodesWidget.addSrcNodes.connect(self._accept)
+            self.srcNodesWidget.move(QtGui.QCursor.pos())
+            self.srcNodesWidget.resize(600, 900)
+            self.srcNodesWidget.show()
 
     def _accept(self, srcDataList):
         # Find the validator dropped over ??
@@ -237,12 +255,12 @@ class ValidationUI(QtWidgets.QWidget):
             self._validators[-1][1].addTopLevelItem(w)
 
             # Populate the rows with the validations for the node
-            for eachChild in srcNode.iterNodes():
-                if eachChild.nodeType() == c_serialization.NT_CONNECTIONVALIDITY:
-                    w.addChild(cuit_treewidgetitems.ValidityTreeWidgetItem(node=eachChild))
+            for eachVN in srcNode.iterValidityNodes():
+                if eachVN.nodeType() == c_serialization.NT_CONNECTIONVALIDITY:
+                    w.addChild(cuit_treewidgetitems.ValidityTreeWidgetItem(node=eachVN))
 
-                if eachChild.nodeType() == c_serialization.NT_DEFAULTVALUE:
-                    w.addChild(cuit_treewidgetitems.DefaultTreeWidgetItem(node=eachChild))
+                if eachVN.nodeType() == c_serialization.NT_DEFAULTVALUE:
+                    w.addChild(cuit_treewidgetitems.DefaultTreeWidgetItem(node=eachVN))
 
     @classmethod
     def from_fileJSON(cls, filepath, parent=None):
@@ -262,10 +280,7 @@ class ValidationUI(QtWidgets.QWidget):
 
 
 if __name__ == "__main__":
-    app = QtWidgets.QApplication(sys.argv)
-
+    app = QtWidgets.QApplication(sys.argv).instance()
     myWin = ValidationUI.from_fileJSON(filepath="T:/software/validateRig/core/tests/validatorTestData.json")
     myWin.show()
-
-    app.exec_()
-
+    sys.exit(app.exec_())
