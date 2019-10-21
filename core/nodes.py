@@ -1,5 +1,7 @@
 from const import serialization as c_serialization
 from core import parser as c_parser
+import logging
+logger = logging.getLogger(__name__)
 
 
 class ValidationNode(object):
@@ -54,7 +56,7 @@ class SourceNode(ValidationNode):
                                             attributeName="visibility", attributeValue=True,
                                             srcAttributeName="showCloth", srcAttributeValue="True"
                                             )
-            sourceNode.addNodeToCheck(showCloth_geoHrc)
+            sourceNode.addValidityNode(showCloth_geoHrc)
 
         It should also be noted we only serialize SourceNodes as ConnectionValidityNodes will be written as dependencies of these
         to disk as part of the SourceNode data.
@@ -65,12 +67,22 @@ class SourceNode(ValidationNode):
         super(SourceNode, self).__init__(name=name)
         self._validity = validityNodes or list()
 
-    def addNodeToCheck(self, ConnectionValidityNode):
+    def validityNodeExists(self, connectionValidityNodeName):
+        for eachValidityNode in self.iterValidityNodes():
+            if eachValidityNode.name == connectionValidityNodeName:
+                return True
+
+        return False
+
+    def addValidityNode(self, validityNode):
         """
 
-        :param ConnectionValidityNode: `ConnectionValidityNode`
+        :param validityNode: `ValidityNode` Default or Connection
         """
-        self._validity.append(ConnectionValidityNode)
+        if not self.validityNodeExists(validityNode.name):
+            self._validity.append(validityNode)
+        else:
+            logger.warning("ValidityNode already exists, skipping")
 
     def iterValidityNodes(self):
         for eachNode in self._validity:

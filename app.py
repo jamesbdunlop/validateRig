@@ -12,6 +12,9 @@ from uiStuff.themes import factory as uit_factory
 from uiStuff.trees import treewidgetitems as cuit_treewidgetitems
 from uiStuff.dialogs import saveToJSONFile as uid_saveJSON
 from uiStuff.dialogs import attributeList as uid_attributeList
+from uiStuff.dialogs import attributeList
+reload(attributeList)
+
 """
 import sys
 paths = ["T:\\software\\validateRig", "C:\\Python27\\Lib\\site-packages"]
@@ -165,7 +168,6 @@ class ValidationUI(QtWidgets.QWidget):
         """
         validationTuple = self._createValidationTuple(data=data)
 
-        # ToDO make this a method to populate the treetWidget etc from sourceNode
         # Popuplate now
         for sourceNodeData in data.get(c_serialization.KEY_VALIDATOR_NODES, list()):
             # Create and add the validation node to the validator
@@ -189,9 +191,6 @@ class ValidationUI(QtWidgets.QWidget):
     ##### QT STUFF
     def dragEnterEvent(self, QDragEnterEvent):
         super(ValidationUI, self).dragEnterEvent(QDragEnterEvent)
-        pos = QtGui.QCursor.pos()
-        widget = QtGui.QGuiApplication.widgetAt(pos)
-        print(widget)
         if inside.insideMaya():
             return QDragEnterEvent.accept()
 
@@ -219,24 +218,34 @@ class ValidationUI(QtWidgets.QWidget):
                 if srcNode.name == nodeName:
                     return srcNode
 
+    def sourceNodeAttributeListWidget(self, sourceNodeName):
+        """
+
+        :param sourceNodeName: `str`
+        :return: `SourceNodeAttributeListWidget` | `None`
+        """
+        existingSrcNode = self.sourceNodeExists(sourceNodeName.split("|")[-1])
+        if existingSrcNode:
+            return uid_attributeList.SourceNodeAttributeListWidget().fromSourceNode(sourceNode=existingSrcNode,
+                                                                                    parent=self)
+
+        return uid_attributeList.SourceNodeAttributeListWidget(nodeName=sourceNodeName, parent=self)
+
     def processMayaDrop(self, QDropEvent):
         """
 
         :param QDropEvent: `QDropEvent`
         :return:
         """
-        # pop up the validity UI
+        if not inside.insideMaya():
+            return
+
         import maya.cmds as cmds
         nodeNames = QDropEvent.mimeData().text().split("\n")
-        # check to see if this exists in the validator we dropped over.
-        for nodeName in nodeNames:
-            shortName = nodeName.split("|")[-1]
-            print(shortName, nodeName)
-            if self.sourceNodeExists(shortName):
-                continue
 
-            self.srcNodesWidget = uid_attributeList.SourceNodeAttributeListWidget(node=nodeName,
-                                                                                  qParent=self)
+        # Check to see if this exists in the validator we dropped over.
+        for nodeName in nodeNames:
+            self.srcNodesWidget = self.sourceNodeAttributeListWidget(nodeName)
             if self.srcNodesWidget is None:
                 continue
 
@@ -246,21 +255,38 @@ class ValidationUI(QtWidgets.QWidget):
             self.srcNodesWidget.show()
 
     def _accept(self, srcDataList):
-        # Find the validator dropped over ??
+        """
+
+        :param srcDataList: `list`
+        :return: `None`
+        """
         for srcNode in srcDataList:
-            self._validators[-1][0].addNodeToValidate(srcNode)
+            existing_srcNode = self.sourceNodeExists(srcNode.name)
+            self._validators[-1][0].addNodeToValidate(srcNode, True)
+            if not existing_srcNode:
+                # Create and add the treeWidgetItem to the treeWidget from the node
+                twi = cuit_treewidgetitems.SourceTreeWidgetItem(node=srcNode)
+                self._validators[-1][1].addTopLevelItem(twi)
 
-            # Create and add the treeWidgetItem to the treeWidget from the node
-            w = cuit_treewidgetitems.SourceTreeWidgetItem(node=srcNode)
-            self._validators[-1][1].addTopLevelItem(w)
+            else:
+                # Find existing and remove them from the tree
+                treeWidget = self._validators[-1][1]
+                # Assuming only 1 ever exists!
+                widgetList = treeWidget.findItems(existing_srcNode.name, QtCore.Qt.MatchExactly)
+                if not widgetList:
+                    continue
 
-            # Populate the rows with the validations for the node
+                twi = widgetList[0]
+                for x in range(twi.childCount()):
+                    twi.takeChild(x)
+
+            # Populate the validation rows with validity nodes
             for eachVN in srcNode.iterValidityNodes():
                 if eachVN.nodeType() == c_serialization.NT_CONNECTIONVALIDITY:
-                    w.addChild(cuit_treewidgetitems.ValidityTreeWidgetItem(node=eachVN))
+                    twi.addChild(cuit_treewidgetitems.ValidityTreeWidgetItem(node=eachVN))
 
                 if eachVN.nodeType() == c_serialization.NT_DEFAULTVALUE:
-                    w.addChild(cuit_treewidgetitems.DefaultTreeWidgetItem(node=eachVN))
+                    twi.addChild(cuit_treewidgetitems.DefaultTreeWidgetItem(node=eachVN))
 
     @classmethod
     def from_fileJSON(cls, filepath, parent=None):

@@ -15,30 +15,30 @@ class Test_Nodes(unittest.TestCase):
         self.srcNodeAttrValue = c_testData.SRC_ATTRVALUE
         self.sourceNodeType = c_testData.SRC_NODETYPE
 
-        self.ConnectionValidityNodeName = c_testData.VALIDITY_NODENAME
-        self.ConnectionValidityNodeAttrName = c_testData.VALIDITY_ATTRNAME
-        self.ConnectionValidityNodeAttrValue = c_testData.VALIDITY_ATTRVALUE
-        self.ConnectionValidityNodeType = c_testData.VALIDITY_NODETYPE
+        self.connectionValidityNodeName = c_testData.VALIDITY_NODENAME
+        self.connectionValidityNodeAttrName = c_testData.VALIDITY_ATTRNAME
+        self.connectionValidityNodeAttrValue = c_testData.VALIDITY_ATTRVALUE
+        self.connectionValidityNodeType = c_testData.VALIDITY_NODETYPE
 
         # Nodes now
         self.sourceNode = c_nodes.SourceNode(name=self.sourceNodeName)
 
-        self.ConnectionValidityNode = c_nodes.ConnectionValidityNode(name=self.ConnectionValidityNodeName)
-        self.ConnectionValidityNode.attributeName = self.ConnectionValidityNodeAttrName
-        self.ConnectionValidityNode.attributeValue = self.ConnectionValidityNodeAttrValue
-        self.ConnectionValidityNode.srcAttributeName = self.srcNodeAttrName
-        self.ConnectionValidityNode.srcAttributeValue = self.srcNodeAttrValue
+        self.connectionValidityNode = c_nodes.connectionValidityNode(name=self.connectionValidityNodeName)
+        self.connectionValidityNode.attributeName = self.connectionValidityNodeAttrName
+        self.connectionValidityNode.attributeValue = self.connectionValidityNodeAttrValue
+        self.connectionValidityNode.srcAttributeName = self.srcNodeAttrName
+        self.connectionValidityNode.srcAttributeValue = self.srcNodeAttrValue
 
-        self.sourceNode.addNodeToCheck(self.ConnectionValidityNode)
+        self.sourceNode.addValidityNode(self.connectionValidityNode)
 
         self.expectedToData = {
             c_serialization.KEY_NODENAME: self.sourceNodeName,
             c_serialization.KEY_NODTYPE: self.sourceNodeType,
             c_serialization.KEY_VAILIDITYNODES: [{
-                         c_serialization.KEY_NODENAME: self.ConnectionValidityNodeName,
-                         c_serialization.KEY_NODTYPE: self.ConnectionValidityNodeType,
-                         c_serialization.KEY_ATTRIBUTENAME: self.ConnectionValidityNodeAttrName,
-                         c_serialization.KEY_ATTRIBUTEVALUE: self.ConnectionValidityNodeAttrValue,
+                         c_serialization.KEY_NODENAME: self.connectionValidityNodeName,
+                         c_serialization.KEY_NODTYPE: self.connectionValidityNodeType,
+                         c_serialization.KEY_ATTRIBUTENAME: self.connectionValidityNodeAttrName,
+                         c_serialization.KEY_ATTRIBUTEVALUE: self.connectionValidityNodeAttrValue,
                          c_serialization.KEY_SRC_ATTRIBUTENAME: self.srcNodeAttrName,
                          c_serialization.KEY_SRC_ATTRIBUTEVALUE: self.srcNodeAttrValue,
                          }]
@@ -51,24 +51,24 @@ class Test_Nodes(unittest.TestCase):
         self.assertEqual(self.sourceNodeName, self.sourceNode.name,
                          "srcNodeName is not %s" % self.sourceNodeName)
 
-    def test_ConnectionValidityNodeName(self):
-        self.assertEqual(self.ConnectionValidityNodeName, self.ConnectionValidityNode.name,
-                         "ConnectionValidityNodeName is not %s" % self.ConnectionValidityNodeName)
+    def test_connectionValidityNodeName(self):
+        self.assertEqual(self.connectionValidityNodeName, self.connectionValidityNode.name,
+                         "connectionValidityNodeName is not %s" % self.connectionValidityNodeName)
 
-    def test_ConnectionValidityNode_attributeName(self):
-        self.assertEqual(self.ConnectionValidityNodeAttrName, self.ConnectionValidityNode.attributeName,
-                         "attributeName is not %s" % self.ConnectionValidityNodeAttrName)
+    def test_connectionValidityNode_attributeName(self):
+        self.assertEqual(self.connectionValidityNodeAttrName, self.connectionValidityNode.attributeName,
+                         "attributeName is not %s" % self.connectionValidityNodeAttrName)
 
-    def test_ConnectionValidityNode_attributeValue(self):
-        self.assertEqual(self.ConnectionValidityNodeAttrValue, self.ConnectionValidityNode.attributeValue,
-                         "attributeValue is not %s" % self.ConnectionValidityNodeAttrValue)
+    def test_connectionValidityNode_attributeValue(self):
+        self.assertEqual(self.connectionValidityNodeAttrValue, self.connectionValidityNode.attributeValue,
+                         "attributeValue is not %s" % self.connectionValidityNodeAttrValue)
 
-    def test_ConnectionValidityNode_srcAttributeName(self):
-        self.assertEqual(self.srcNodeAttrName, self.ConnectionValidityNode._srcAttributeName,
+    def test_connectionValidityNode_srcAttributeName(self):
+        self.assertEqual(self.srcNodeAttrName, self.connectionValidityNode._srcAttributeName,
                          "srcAttributeName is not %s" % self.srcNodeAttrName)
 
-    def test_ConnectionValidityNode_srcAttributeValue(self):
-        self.assertEqual(self.srcNodeAttrValue, self.ConnectionValidityNode.srcAttributeValue,
+    def test_connectionValidityNode_srcAttributeValue(self):
+        self.assertEqual(self.srcNodeAttrValue, self.connectionValidityNode.srcAttributeValue,
                          "srcAttributeValue is not %s" % self.srcNodeAttrValue)
 
     def test_srcNode_iterValidityNodes(self):
@@ -76,8 +76,8 @@ class Test_Nodes(unittest.TestCase):
 
         self.assertEqual(len(nodes), 1,
                          "Length of itrNodes is not 1!")
-        self.assertEqual(nodes[0], self.ConnectionValidityNode,
-                         "[0] Node is not %s" % self.ConnectionValidityNode)
+        self.assertEqual(nodes[0], self.connectionValidityNode,
+                         "[0] Node is not %s" % self.connectionValidityNode)
 
     def test_sourceNode_toData(self):
         self.assertEqual(self.sourceNode.toData(), self.expectedToData,

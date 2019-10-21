@@ -6,62 +6,91 @@ if inside.insideMaya():
 
 
 class SourceNodeAttributeListWidget(QtWidgets.QWidget):
+    addSrcNodes = QtCore.Signal(list)
+    SEP = "  --->>  "
 
-    def __init__(self, node=None, qParent=None):
-        super(SourceNodeAttributeListWidget, self).__init__(parent=qParent)
-        self.addSrcNodes = QtCore.Signal(list)
-        self.SEP = "  --->>  "
-        if node is None:
+    def __init__(self, nodeName=None, sourceNode=None, parent=None):
+        super(SourceNodeAttributeListWidget, self).__init__(parent=parent)
+        self.setWindowFlags(QtCore.Qt.Popup)
+        if nodeName is None:
             return
 
-        self._nodeData = list()
+        self._sourceNode = sourceNode
 
-        self.setWindowFlags(QtCore.Qt.Popup)
+        ############################
+        ## Setup the UI elements now
+        self._nodeName = nodeName
+        self._nodeData = list()
         self.mainLayout = QtWidgets.QVBoxLayout(self)
 
         # Add a list widget for each selected sourceNode
-        subLayout = QtWidgets.QHBoxLayout()
+        horizontalLayout = QtWidgets.QHBoxLayout()
 
-        ngb = QtWidgets.QGroupBox(node.split("|")[-1])
-        ngbhl = QtWidgets.QHBoxLayout(ngb)
+        mainGroupBox = QtWidgets.QGroupBox(self._nodeName.split("|")[-1])
+        mainGroupBoxLayout = QtWidgets.QHBoxLayout(mainGroupBox)
+        horizontalLayout.addWidget(mainGroupBox)
 
-        # DV
+        # Default Values
         dv = QtWidgets.QGroupBox("Default Values")
         dvl = QtWidgets.QVBoxLayout(dv)
-
-        self.lw = QtWidgets.QListWidget()
-        self.lw.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-
-        for eachAttribute in cmds.listAttr(node):
-            self.lw.addItem(eachAttribute)
-        dvl.addWidget(self.lw)
+        self.dvListWidget = QtWidgets.QListWidget()
+        self.dvListWidget.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        dvl.addWidget(self.dvListWidget)
 
         # Connections
         dvc = QtWidgets.QGroupBox("Connections")
         dvcl = QtWidgets.QVBoxLayout(dvc)
-        self.lwc = QtWidgets.QListWidget()
-        self.lwc.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.connsListWidget = QtWidgets.QListWidget()
+        self.connsListWidget.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        dvcl.addWidget(self.connsListWidget)
 
-        conns = cmds.listConnections(node, c=True, source=True, destination=True, plugs=True)
-        if conns is not None:
-            for x in range(0, len(conns), 2):
-                self.lwc.addItem("{}{}{}".format(conns[x], self.SEP, conns[x+1]))
+        mainGroupBoxLayout.addWidget(dv)
+        mainGroupBoxLayout.addWidget(dvc)
 
-        dvcl.addWidget(self.lwc)
-
-        ngbhl.addWidget(dv)
-        ngbhl.addWidget(dvc)
-
-        subLayout.addWidget(ngb)
-        self.mainLayout.addLayout(subLayout)
-
-        # Store internally
-        self._nodeData.append([node, self.lw, self.lwc])
-
+        # Buttons
         self.acceptButton = QtWidgets.QPushButton('Accept')
         self.acceptButton.clicked.connect(self._accept)
 
+        # MainLayout
+        self.mainLayout.addLayout(horizontalLayout)
         self.mainLayout.addWidget(self.acceptButton)
+
+        # Store internally
+        self._nodeData.append([self._nodeName, self.dvListWidget, self.connsListWidget])
+
+        # Populate listWidgets
+        self._populateDefaultValuesWidget()
+        self._populateConnectionsWidget()
+
+    def _populateDefaultValuesWidget(self):
+        """
+        Populates the listWidget from the nodeName. This should be a unique name in maya or it will fail.
+        """
+        for eachAttribute in cmds.listAttr(self._nodeName):
+            self.dvListWidget.addItem(eachAttribute)
+
+        # if self.sourceNode() is not None:
+        #     print([n.name for n in self.sourceNode().iterValidityNodes() if isinstance(n, DefaultValueNode)])
+        #     for nodeName in [n.name for n in self.sourceNode().iterValidityNodes() if isinstance(n, DefaultValueNode)]:
+        #         print(self.dvListWidget.findItems(nodeName, QtCore.Qt.MatchContains))
+
+        return True
+
+    def _populateConnectionsWidget(self):
+        """
+        Populates the listWidget from the nodeName. This should be a unique name in maya or it will fail.
+        """
+        conns = cmds.listConnections(self._nodeName, c=True, source=True, destination=True, plugs=True)
+        if conns is not None:
+            for x in range(0, len(conns), 2):
+                self.connsListWidget.addItem("{}{}{}".format(conns[x], self.SEP, conns[x+1]))
+
+        # if self.sourceNode() is not None:
+            # print([n.name for n in self.sourceNode().iterValidityNodes()if isinstance(n, ConnectionValidityNode)])
+            # for nodeName in [n.name for n in self.sourceNode().iterValidityNodes()if isinstance(n, ConnectionValidityNode)]:
+            #     print(self.connsListWidget.findItems(nodeName, QtCore.Qt.MatchContains))
+
+        return True
 
     def _accept(self):
         srcNodes = list()
@@ -89,13 +118,22 @@ class SourceNodeAttributeListWidget(QtWidgets.QWidget):
                                                   srcAttributeValue=srcAttributeValue)
                 validityNodes.append(connNode)
 
-            srcNode = SourceNode(name=nodeName, validityNodes=validityNodes)
+            if self.sourceNode() is None:
+                srcNode = SourceNode(name=nodeName, validityNodes=validityNodes)
+            else:
+                srcNode = self.sourceNode()
+                for eachValidityNode in validityNodes:
+                    srcNode.addValidityNode(validityNode=eachValidityNode)
+
             srcNodes.append(srcNode)
 
-        self.addSrcNodes.emit(srcNodes)
+            self.addSrcNodes.emit(srcNodes)
+
         self.close()
 
-    def fromSourceNodes(self, srcNodes):
-        # TODO be able to instance this widget from an existing sourceNode list and select existing in the validator
-        # so we can force it back into the validator with new selections etc.
-        pass
+    def sourceNode(self):
+        return self._sourceNode
+
+    @classmethod
+    def fromSourceNode(cls, sourceNode, parent=None):
+        return cls(nodeName=sourceNode.name, sourceNode=sourceNode, parent=parent)

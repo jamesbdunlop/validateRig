@@ -14,19 +14,19 @@ class Test_Validator(unittest.TestCase):
         self.srcNodeAttrName = c_testdata.SRC_ATTRNAME
         self.srcNodeAttrValue = c_testdata.SRC_ATTRVALUE
 
-        self.ConnectionValidityNodeName = c_testdata.VALIDITY_NODENAME
-        self.ConnectionValidityNodeAttrName = c_testdata.VALIDITY_ATTRNAME
-        self.ConnectionValidityNodeAttrValue = c_testdata.VALIDITY_ATTRVALUE
+        self.connectionValidityNodeName = c_testdata.VALIDITY_NODENAME
+        self.connectionValidityNodeAttrName = c_testdata.VALIDITY_ATTRNAME
+        self.connectionValidityNodeAttrValue = c_testdata.VALIDITY_ATTRVALUE
 
         self.sourceNode = c_nodes.SourceNode(name=self.sourceNodeName)
 
-        self.ConnectionValidityNode = c_nodes.ConnectionValidityNode(name=self.ConnectionValidityNodeName)
-        self.ConnectionValidityNode.attributeName = self.ConnectionValidityNodeAttrName
-        self.ConnectionValidityNode.attributeValue = self.ConnectionValidityNodeAttrValue
-        self.ConnectionValidityNode.srcAttributeName = self.srcNodeAttrName
-        self.ConnectionValidityNode.srcAttributeValue = self.srcNodeAttrValue
+        self.connectionValidityNode = c_nodes.connectionValidityNode(name=self.connectionValidityNodeName)
+        self.connectionValidityNode.attributeName = self.connectionValidityNodeAttrName
+        self.connectionValidityNode.attributeValue = self.connectionValidityNodeAttrValue
+        self.connectionValidityNode.srcAttributeName = self.srcNodeAttrName
+        self.connectionValidityNode.srcAttributeValue = self.srcNodeAttrValue
 
-        self.sourceNode.addNodeToCheck(self.ConnectionValidityNode)
+        self.sourceNode.addValidityNode(self.connectionValidityNode)
 
         self.validator = c_validator.Validator(name=c_testdata.VALIDATOR_NAME)
 
@@ -37,10 +37,10 @@ class Test_Validator(unittest.TestCase):
                                     c_serialization.KEY_NODTYPE: c_testdata.SRC_NODETYPE,
                                     c_serialization.KEY_VAILIDITYNODES: [
                                        {
-                                        c_serialization.KEY_NODENAME: self.ConnectionValidityNodeName,
+                                        c_serialization.KEY_NODENAME: self.connectionValidityNodeName,
                                         c_serialization.KEY_NODTYPE: c_testdata.VALIDITY_NODETYPE,
-                                        c_serialization.KEY_ATTRIBUTENAME: self.ConnectionValidityNodeAttrName,
-                                        c_serialization.KEY_ATTRIBUTEVALUE: self.ConnectionValidityNodeAttrValue,
+                                        c_serialization.KEY_ATTRIBUTENAME: self.connectionValidityNodeAttrName,
+                                        c_serialization.KEY_ATTRIBUTEVALUE: self.connectionValidityNodeAttrValue,
                                         c_serialization.KEY_SRC_ATTRIBUTENAME: self.srcNodeAttrName,
                                         c_serialization.KEY_SRC_ATTRIBUTEVALUE: self.srcNodeAttrValue
                                        }

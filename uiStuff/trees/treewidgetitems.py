@@ -10,6 +10,13 @@ class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
         self._reportStatus = constants.DEFAULT_REPORTSTATUS
         self._node = node
 
+    def setNode(self, node):
+        self._node = node
+        self.updateData()
+
+    def updateData(self):
+        pass
+
     @property
     def reportStatus(self):
         return self._reportStatus
@@ -23,11 +30,15 @@ class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
 class SourceTreeWidgetItem(TreeWidgetItem):
     def __init__(self, node, *args, **kwargs):
         super(SourceTreeWidgetItem, self).__init__(node=node, *args, **kwargs)
+        for x in range(7):
+            self.setBackground(x, QtGui.QBrush(QtGui.QColor(150, 150, 200)))
+
+        self.updateData()
+
+    def updateData(self):
         self.setData(0, QtCore.Qt.DisplayRole, self._node.name)
         self.setFont(0, QtGui.QFont(constants.FONT_NAME, constants.FONT_SIZE, QtGui.QFont.Bold))
         self.setData(7, QtCore.Qt.DisplayRole, self.reportStatus)
-        for x in range(7):
-            self.setBackground(x, QtGui.QBrush(QtGui.QColor(150, 150, 200)))
 
 
 class ValidityTreeWidgetItem(TreeWidgetItem):
@@ -39,6 +50,9 @@ class ValidityTreeWidgetItem(TreeWidgetItem):
         for x in range(1, 7):
             self.setBackground(x, QtGui.QBrush(QtGui.QColor(255 ,255, 153)))
 
+        self.updateData()
+
+    def updateData(self):
         self.setData(1, QtCore.Qt.DisplayRole, self._node.attributeName)
         self.setFont(1, QtGui.QFont(constants.FONT_NAME, constants.FONT_SIZE, QtGui.QFont.Bold))
 
@@ -64,6 +78,9 @@ class DefaultTreeWidgetItem(TreeWidgetItem):
         for x in range(1, 4):
             self.setBackground(x, QtGui.QBrush(QtGui.QColor(100, 200, 100)))
 
+        self.updateData()
+
+    def updateData(self):
         self.setData(1, QtCore.Qt.DisplayRole, self._node.name)
         self.setFont(1, QtGui.QFont(constants.FONT_NAME, constants.FONT_SIZE, QtGui.QFont.Bold))
 
