@@ -91,7 +91,7 @@ class ValidationUI(QtWidgets.QWidget):
     def _removeAllItemsFromSourceNode(self, treeWidget, QPoint):
         treeWidget.itemAt(QPoint).removeAllChildren()
 
-    def _removeALlSourceNodes(self, treeWidget):
+    def _removeAllSourceNodes(self, treeWidget):
         while treeWidget.topLevelItemCount():
             for x in range(treeWidget.topLevelItemCount()):
                 treeWidget.takeTopLevelItem(x)
@@ -123,17 +123,19 @@ class ValidationUI(QtWidgets.QWidget):
         if not nodeType:
             return
 
-        # Test menu
+        # Test menus
         if nodeType == c_serialization.NT_SOURCENODE:
             removeAll = menu.addAction("remove All")
             removeAll.triggered.connect(partial(self._removeAllItemsFromSourceNode, treeWidget, QPoint))
+
         elif nodeType == c_serialization.NT_CONNECTIONVALIDITY or nodeType == c_serialization.NT_DEFAULTVALUE:
             remove = menu.addAction("remove validityNode")
             remove.triggered.connect(partial(self._removeItem, treeWidget, QPoint))
+
         else:
             menu.addAction("AddSource")
             clearAll = menu.addAction("clear All")
-            clearAll.triggered.connect(partial(self._removeALlSourceNodes, treeWidget))
+            clearAll.triggered.connect(partial(self._removeAllSourceNodes, treeWidget))
 
         menu.exec_(menu.mapToGlobal(QtGui.QCursor.pos()))
 
