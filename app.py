@@ -1,10 +1,11 @@
 import sys
 import os
 import pprint
-from core import inside
+from functools import partial
 from PySide2 import QtWidgets, QtCore, QtGui
 from const import constants
 from const import serialization as c_serialization
+from core import inside
 from core import validator as c_validator
 from core import parser as c_parser
 from core.nodes import SourceNode
@@ -12,9 +13,6 @@ from uiStuff.themes import factory as uit_factory
 from uiStuff.trees import treewidgetitems as cuit_treewidgetitems
 from uiStuff.dialogs import saveToJSONFile as uid_saveJSON
 from uiStuff.dialogs import attributeList as uid_attributeList
-from uiStuff.dialogs import attributeList
-reload(attributeList)
-
 """
 import sys
 paths = ["T:\\software\\validateRig", "C:\\Python27\\Lib\\site-packages"]
@@ -86,24 +84,23 @@ class ValidationUI(QtWidgets.QWidget):
         self.mainLayout.addLayout(self.buttonLayout)
 
         self.resize(1200, 800)
-        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.customContextMenuRequested.connect(self._appRCMenu)
 
-    def _appRCMenu(self, point):
-        menu = QtWidgets.QMenu()
-        menu.addAction("AddSource")
-        menu.exec_(self.mapToGlobal(point))
+    def _removeItem(self, treeWidget, QPoint):
+        treeWidget.itemAt(QPoint).parent().removeChild(treeWidget.itemAt(QPoint))
 
-    def _TreeViewRCMenu(self, point):
-        menu = QtWidgets.QMenu()
-        menu.addAction("Fix")
-        menu.exec_(self.mapToGlobal(point))
+    def _removeAllItemsFromSourceNode(self, treeWidget, QPoint):
+        treeWidget.itemAt(QPoint).removeAllChildren()
+
+    def _removeALlSourceNodes(self, treeWidget):
+        while treeWidget.topLevelItemCount():
+            for x in range(treeWidget.topLevelItemCount()):
+                treeWidget.takeTopLevelItem(x)
 
     def _createValidatorTreeWidget(self):
         # The main treeViewWidget for creating data
         widget = QtWidgets.QTreeWidget()
         widget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        widget.customContextMenuRequested.connect(self._TreeViewRCMenu)
+        widget.customContextMenuRequested.connect(partial(self._TreeViewRCMenu, widget))
         widget.resizeColumnToContents(True)
         widget.setAcceptDrops(True)
         widget.setColumnCount(8)
@@ -112,6 +109,33 @@ class ValidationUI(QtWidgets.QWidget):
         self.treeWidgetLayout.addWidget(widget)
 
         return widget
+
+    def _nodeTypeUnderCursor(self, treeWidget, QPoint):
+        twi = treeWidget.itemAt(QPoint)
+        if twi is None:
+            return -1
+
+        return twi.node().nodeType()
+
+    def _TreeViewRCMenu(self, treeWidget, QPoint):
+        menu = QtWidgets.QMenu()
+        nodeType = self._nodeTypeUnderCursor(treeWidget, QPoint)
+        if not nodeType:
+            return
+
+        # Test menu
+        if nodeType == c_serialization.NT_SOURCENODE:
+            removeAll = menu.addAction("remove All")
+            removeAll.triggered.connect(partial(self._removeAllItemsFromSourceNode, treeWidget, QPoint))
+        elif nodeType == c_serialization.NT_CONNECTIONVALIDITY or nodeType == c_serialization.NT_DEFAULTVALUE:
+            remove = menu.addAction("remove validityNode")
+            remove.triggered.connect(partial(self._removeItem, treeWidget, QPoint))
+        else:
+            menu.addAction("AddSource")
+            clearAll = menu.addAction("clear All")
+            clearAll.triggered.connect(partial(self._removeALlSourceNodes, treeWidget))
+
+        menu.exec_(menu.mapToGlobal(QtGui.QCursor.pos()))
 
     def _createValidationTuple(self, data):
         """

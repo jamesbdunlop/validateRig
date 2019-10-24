@@ -10,12 +10,20 @@ class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
         self._reportStatus = constants.DEFAULT_REPORTSTATUS
         self._node = node
 
+    def node(self):
+        return self._node
+
     def setNode(self, node):
         self._node = node
         self.updateData()
 
     def updateData(self):
         pass
+
+    def removeAllChildren(self):
+        while self.childCount():
+            for x in range(self.childCount()):
+                self.removeChild(self.child(x))
 
     @property
     def reportStatus(self):
