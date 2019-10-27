@@ -61,10 +61,10 @@ class ValidityTreeWidgetItem(TreeWidgetItem):
         self.updateData()
 
     def updateData(self):
-        self.setData(1, QtCore.Qt.DisplayRole, self._node.attributeName)
+        self.setData(1, QtCore.Qt.DisplayRole, self._node.destAttrName)
         self.setFont(1, QtGui.QFont(constants.FONT_NAME, constants.FONT_SIZE, QtGui.QFont.Bold))
 
-        self.setData(2, QtCore.Qt.DisplayRole, self._node.attributeValue)
+        self.setData(2, QtCore.Qt.DisplayRole, self._node.destAttrValue)
 
         self.setData(4, QtCore.Qt.DisplayRole, self._node.name)
         self.setFont(4, QtGui.QFont(constants.FONT_NAME, constants.FONT_SIZE, QtGui.QFont.Bold))

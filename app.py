@@ -85,6 +85,32 @@ class ValidationUI(QtWidgets.QWidget):
 
         self.resize(1200, 800)
 
+    def _addValidator(self, data):
+        """
+
+        :param data:`dict` Validation data
+        :return:
+        """
+
+        def _createValidationTreeWidget():
+            """Creates a treeView widget for the treeWidget/validator pair for adding source nodes to"""
+            widget = QtWidgets.QTreeWidget()
+            widget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+            widget.customContextMenuRequested.connect(partial(self._TreeViewRCMenu, widget))
+            widget.resizeColumnToContents(True)
+            widget.setAcceptDrops(True)
+            widget.setColumnCount(8)
+            widget.setHeaderLabels(constants.HEADER_LABELS)
+
+            self.treeWidgetLayout.addWidget(widget)
+
+            return widget
+
+        self._validators.append((c_validator.Validator(name=data.get(c_serialization.KEY_VALIDATOR_NAME, "")),
+                                 _createValidationTreeWidget()))
+
+        return self._validators[-1]
+
     def _removeItem(self, treeWidget, QPoint):
         treeWidget.itemAt(QPoint).parent().removeChild(treeWidget.itemAt(QPoint))
 
@@ -96,26 +122,12 @@ class ValidationUI(QtWidgets.QWidget):
             for x in range(treeWidget.topLevelItemCount()):
                 treeWidget.takeTopLevelItem(x)
 
-    def _createValidatorTreeWidget(self):
-        # The main treeViewWidget for creating data
-        widget = QtWidgets.QTreeWidget()
-        widget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        widget.customContextMenuRequested.connect(partial(self._TreeViewRCMenu, widget))
-        widget.resizeColumnToContents(True)
-        widget.setAcceptDrops(True)
-        widget.setColumnCount(8)
-        widget.setHeaderLabels(constants.HEADER_LABELS)
-
-        self.treeWidgetLayout.addWidget(widget)
-
-        return widget
-
     def _nodeTypeUnderCursor(self, treeWidget, QPoint):
         twi = treeWidget.itemAt(QPoint)
         if twi is None:
             return -1
 
-        return twi.node().nodeType()
+        return twi.node().nodeType
 
     def _TreeViewRCMenu(self, treeWidget, QPoint):
         menu = QtWidgets.QMenu()
@@ -138,17 +150,6 @@ class ValidationUI(QtWidgets.QWidget):
             clearAll.triggered.connect(partial(self._removeAllSourceNodes, treeWidget))
 
         menu.exec_(menu.mapToGlobal(QtGui.QCursor.pos()))
-
-    def _createValidationTuple(self, data):
-        """
-
-        :param data:`dict` Validation data
-        :return:
-        """
-        self._validators.append((c_validator.Validator(name=data.get(c_serialization.KEY_VALIDATOR_NAME, "")),
-                                 self._createValidatorTreeWidget()))
-
-        return self._validators[-1]
 
     def _isValidFilepath(self, filepath):
         if not os.path.isfile(filepath):
@@ -182,37 +183,7 @@ class ValidationUI(QtWidgets.QWidget):
             for filepath in dialog.selectedFiles():
                 data = c_parser.read(filepath)
                 for validatorName, validationData in data.items():
-                    self.addValidatorFromData(validationData, expanded=True)
-
-    def addValidatorFromData(self, data, expanded=False):
-        """
-        Sets up a new validator/treeWidget for the validation data passed in.
-
-        :param data:`dict`
-        :param expanded:`bool`  To auto expand the results or not
-        :return:
-        """
-        validationTuple = self._createValidationTuple(data=data)
-
-        # Popuplate now
-        for sourceNodeData in data.get(c_serialization.KEY_VALIDATOR_NODES, list()):
-            # Create and add the validation node to the validator
-            node = SourceNode.fromData(sourceNodeData)
-            validationTuple[0].addNodeToValidate(node)
-
-            # Create and add the treeWidgetItem to the treeWidget from the node
-            w = cuit_treewidgetitems.SourceTreeWidgetItem(node=node)
-            validationTuple[1].addTopLevelItem(w)
-
-            # Populate the rows with the validations for the node
-            for eachChild in node.iterValidityNodes():
-                if eachChild.nodeType() == c_serialization.NT_CONNECTIONVALIDITY:
-                    w.addChild(cuit_treewidgetitems.ValidityTreeWidgetItem(node=eachChild))
-
-                if eachChild.nodeType() == c_serialization.NT_DEFAULTVALUE:
-                    w.addChild(cuit_treewidgetitems.DefaultTreeWidgetItem(node=eachChild))
-
-            w.setExpanded(expanded)
+                    self.addValidator_fromData(validationData, expanded=True)
 
     ##### QT STUFF
     def dragEnterEvent(self, QDragEnterEvent):
@@ -238,7 +209,7 @@ class ValidationUI(QtWidgets.QWidget):
         for eachValidator, _ in self._validators:
             yield eachValidator
 
-    def sourceNodeExists(self, nodeName):
+    def sourceNodeNameExists(self, nodeName):
         for validator in self.iterValidators():
             for srcNode in validator.iterSourceNodes():
                 if srcNode.name == nodeName:
@@ -250,44 +221,21 @@ class ValidationUI(QtWidgets.QWidget):
         :param sourceNodeName: `str`
         :return: `SourceNodeAttributeListWidget` | `None`
         """
-        existingSrcNode = self.sourceNodeExists(sourceNodeName.split("|")[-1])
+        existingSrcNode = self.sourceNodeNameExists(sourceNodeName.split("|")[-1])
         if existingSrcNode:
             return uid_attributeList.SourceNodeAttributeListWidget().fromSourceNode(sourceNode=existingSrcNode,
                                                                                     parent=self)
 
         return uid_attributeList.SourceNodeAttributeListWidget(nodeName=sourceNodeName, parent=self)
 
-    def processMayaDrop(self, QDropEvent):
-        """
-
-        :param QDropEvent: `QDropEvent`
-        :return:
-        """
-        if not inside.insideMaya():
-            return
-
-        import maya.cmds as cmds
-        nodeNames = QDropEvent.mimeData().text().split("\n")
-
-        # Check to see if this exists in the validator we dropped over.
-        for nodeName in nodeNames:
-            self.srcNodesWidget = self.sourceNodeAttributeListWidget(nodeName)
-            if self.srcNodesWidget is None:
-                continue
-
-            self.srcNodesWidget.addSrcNodes.connect(self._accept)
-            self.srcNodesWidget.move(QtGui.QCursor.pos())
-            self.srcNodesWidget.resize(600, 900)
-            self.srcNodesWidget.show()
-
-    def _accept(self, srcDataList):
+    def addSourceNodeData_fromSourceNodeAttributeWidget(self, srcDataList):
         """
 
         :param srcDataList: `list`
         :return: `None`
         """
         for srcNode in srcDataList:
-            existing_srcNode = self.sourceNodeExists(srcNode.name)
+            existing_srcNode = self.sourceNodeNameExists(srcNode.name)
             self._validators[-1][0].addNodeToValidate(srcNode, True)
             if not existing_srcNode:
                 # Create and add the treeWidgetItem to the treeWidget from the node
@@ -308,11 +256,64 @@ class ValidationUI(QtWidgets.QWidget):
 
             # Populate the validation rows with validity nodes
             for eachVN in srcNode.iterValidityNodes():
-                if eachVN.nodeType() == c_serialization.NT_CONNECTIONVALIDITY:
+                if eachVN.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
                     twi.addChild(cuit_treewidgetitems.ValidityTreeWidgetItem(node=eachVN))
 
-                if eachVN.nodeType() == c_serialization.NT_DEFAULTVALUE:
+                if eachVN.nodeType == c_serialization.NT_DEFAULTVALUE:
                     twi.addChild(cuit_treewidgetitems.DefaultTreeWidgetItem(node=eachVN))
+
+    def processMayaDrop(self, QDropEvent):
+        """
+
+        :param QDropEvent: `QDropEvent`
+        :return:
+        """
+        if not inside.insideMaya():
+            return
+
+        import maya.cmds as cmds
+        nodeNames = QDropEvent.mimeData().text().split("\n")
+
+        # Check to see if this exists in the validator we dropped over.
+        for nodeName in nodeNames:
+            self.srcNodesWidget = self.sourceNodeAttributeListWidget(nodeName)
+            if self.srcNodesWidget is None:
+                continue
+
+            self.srcNodesWidget.addSrcNodes.connect(self.addSourceNodeData_fromSourceNodeAttributeWidget)
+            self.srcNodesWidget.move(QtGui.QCursor.pos())
+            self.srcNodesWidget.resize(600, 900)
+            self.srcNodesWidget.show()
+
+    def addValidator_fromData(self, data, expanded=False):
+        """
+        Sets up a new validator/treeWidget for the validation data passed in.
+
+        :param data:`dict`
+        :param expanded:`bool`  To auto expand the results or not
+        :return:
+        """
+        validationTuple = self._addValidator(data=data)
+
+        # Popuplate now
+        for sourceNodeData in data.get(c_serialization.KEY_VALIDATOR_NODES, list()):
+            # Create and add the validation node to the validator
+            node = SourceNode.fromData(sourceNodeData)
+            validationTuple[0].addNodeToValidate(node)
+
+            # Create and add the treeWidgetItem to the treeWidget from the node
+            w = cuit_treewidgetitems.SourceTreeWidgetItem(node=node)
+            validationTuple[1].addTopLevelItem(w)
+
+            # Populate the rows with the validations for the node
+            for eachChild in node.iterValidityNodes():
+                if eachChild.nodeType == c_serialization.NT_DEFAULTVALUE:
+                    treewidgetItem = cuit_treewidgetitems.DefaultTreeWidgetItem(node=eachChild)
+                else:
+                    treewidgetItem = cuit_treewidgetitems.ValidityTreeWidgetItem(node=eachChild)
+                w.addChild(treewidgetItem)
+
+            w.setExpanded(expanded)
 
     @classmethod
     def from_fileJSON(cls, filepath, parent=None):
@@ -326,7 +327,7 @@ class ValidationUI(QtWidgets.QWidget):
 
         data = c_parser.read(filepath)
         for validatorName, validationData in data.items():
-            inst.addValidatorFromData(validationData)
+            inst.addValidator_fromData(validationData)
 
         return inst
 

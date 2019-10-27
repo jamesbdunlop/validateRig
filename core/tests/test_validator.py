@@ -15,14 +15,14 @@ class Test_Validator(unittest.TestCase):
         self.srcNodeAttrValue = c_testdata.SRC_ATTRVALUE
 
         self.connectionValidityNodeName = c_testdata.VALIDITY_NODENAME
-        self.connectionValidityNodeAttrName = c_testdata.VALIDITY_ATTRNAME
-        self.connectionValidityNodeAttrValue = c_testdata.VALIDITY_ATTRVALUE
+        self.connectionValidityNodeAttrName = c_testdata.VALIDITY_DEST_ATTRNAME
+        self.connectionValidityNodeAttrValue = c_testdata.VALIDITY_DEST_ATTRVALUE
 
         self.sourceNode = c_nodes.SourceNode(name=self.sourceNodeName)
 
-        self.connectionValidityNode = c_nodes.connectionValidityNode(name=self.connectionValidityNodeName)
-        self.connectionValidityNode.attributeName = self.connectionValidityNodeAttrName
-        self.connectionValidityNode.attributeValue = self.connectionValidityNodeAttrValue
+        self.connectionValidityNode = c_nodes.ConnectionValidityNode(name=self.connectionValidityNodeName)
+        self.connectionValidityNode.destAttrName = self.connectionValidityNodeAttrName
+        self.connectionValidityNode.destAttrValue = self.connectionValidityNodeAttrValue
         self.connectionValidityNode.srcAttributeName = self.srcNodeAttrName
         self.connectionValidityNode.srcAttributeValue = self.srcNodeAttrValue
 
@@ -39,8 +39,8 @@ class Test_Validator(unittest.TestCase):
                                        {
                                         c_serialization.KEY_NODENAME: self.connectionValidityNodeName,
                                         c_serialization.KEY_NODTYPE: c_testdata.VALIDITY_NODETYPE,
-                                        c_serialization.KEY_ATTRIBUTENAME: self.connectionValidityNodeAttrName,
-                                        c_serialization.KEY_ATTRIBUTEVALUE: self.connectionValidityNodeAttrValue,
+                                        c_serialization.KEY_DEST_ATTRIBUTENAME: self.connectionValidityNodeAttrName,
+                                        c_serialization.KEY_DEST_ATTRIBUTEVALUE: self.connectionValidityNodeAttrValue,
                                         c_serialization.KEY_SRC_ATTRIBUTENAME: self.srcNodeAttrName,
                                         c_serialization.KEY_SRC_ATTRIBUTEVALUE: self.srcNodeAttrValue
                                        }
