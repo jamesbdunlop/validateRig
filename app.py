@@ -205,9 +205,9 @@ class ValidationUI(QtWidgets.QWidget):
             # Populate the rows with the validations for the node
             for eachChild in node.iterValidityNodes():
                 if eachChild.nodeType == c_serialization.NT_DEFAULTVALUE:
-                    treewidgetItem = cuit_treewidgetitems.DefaultTreeWidgetItem(node=eachChild)
+                    treewidgetItem = cuit_treewidgetitems.DefaultValueTreeWidgetItem(node=eachChild)
                 else:
-                    treewidgetItem = cuit_treewidgetitems.ValidityTreeWidgetItem(node=eachChild)
+                    treewidgetItem = cuit_treewidgetitems.ConnectionValidityTreeWidgetItem(node=eachChild)
                 w.addChild(treewidgetItem)
 
             w.setExpanded(expanded)

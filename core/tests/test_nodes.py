@@ -4,7 +4,7 @@ from const import serialization as c_serialization
 from const import testData as c_testData
 import core.nodes as c_nodes
 logger = logging.getLogger(__name__)
-
+# TODO set status tests and anything else missing from base node
 
 class Test_Nodes(unittest.TestCase):
 

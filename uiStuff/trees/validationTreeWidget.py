@@ -98,10 +98,10 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
             # Populate the validation rows with validity nodes
             for eachValidityNode in srcNode.iterValidityNodes():
                 if eachValidityNode.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
-                    twi.addChild(cuit_treewidgetitems.ValidityTreeWidgetItem(node=eachValidityNode))
+                    twi.addChild(cuit_treewidgetitems.ConnectionValidityTreeWidgetItem(node=eachValidityNode))
 
                 if eachValidityNode.nodeType == c_serialization.NT_DEFAULTVALUE:
-                    twi.addChild(cuit_treewidgetitems.DefaultTreeWidgetItem(node=eachValidityNode))
+                    twi.addChild(cuit_treewidgetitems.DefaultValueTreeWidgetItem(node=eachValidityNode))
 
     def validator(self):
         return self._validator

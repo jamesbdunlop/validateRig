@@ -1,3 +1,4 @@
+from const import constants as c_constants
 from const import serialization as c_serialization
 from core import parser as c_parser
 import logging
@@ -13,6 +14,7 @@ class Node(object):
         """
         self._name = name
         self._nodeType = nodeType
+        self._validationStatus = c_constants.NODE_VALIDATION_NA
 
     @property
     def name(self):
@@ -31,6 +33,14 @@ class Node(object):
     @property
     def nodeType(self):
         return self._nodeType
+
+    @property
+    def status(self):
+        return self._validationStatus
+
+    @status.setter
+    def status(self, status):
+        self._validationStatus = status
 
     def toData(self):
         self.data = dict()
