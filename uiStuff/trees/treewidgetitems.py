@@ -21,7 +21,7 @@ class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
         return self.node().nodeType
 
     def updateData(self):
-        pass
+        raise NotImplemented("Must be overloaded!")
 
     def removeAllChildren(self):
         while self.childCount():

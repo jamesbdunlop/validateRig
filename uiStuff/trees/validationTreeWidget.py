@@ -28,6 +28,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         self.setAcceptDrops(True)
         self.setColumnCount(8)
         self.setHeaderLabels(constants.HEADER_LABELS)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.widgetUnderMouse = None
         self._validator = validator
 
@@ -52,11 +53,11 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
 
         if nodeType == c_serialization.NT_SOURCENODE:
             removeAll = menu.addAction("Remove ALL SourceNode ValidationNodes")
-            removeAll.triggered.connect(partial(self.__removeAllChildren, QPoint))
+            removeAll.triggered.connect(self.__removeAllChildren)
 
         elif nodeType == c_serialization.NT_CONNECTIONVALIDITY or nodeType == c_serialization.NT_DEFAULTVALUE:
             remove = menu.addAction("Remove ValidationNode")
-            remove.triggered.connect(partial(self.__removeTreeWidgetItem, QPoint))
+            remove.triggered.connect(self.__removeTreeWidgetItems)
 
         else:
             clearAll = menu.addAction("Clear ALL SourceNodes")
@@ -105,24 +106,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
     def validator(self):
         return self._validator
 
-    def __removeValidityNode(self, QPoint):
-        """
-        Runs BEFORE __removeTreeWidgetItem. Nested the call in the __removeTreeWidgetItem method to avoid any potential
-        Signal race conditions
-
-        :param QPoint: `QPoint`
-        :return:
-        """
-
-        twi = self.itemAt(QPoint)
-        if twi is None:
-            return
-
-        validityNode = twi.node()
-        sourceNode = twi.parent().node()
-        sourceNode.removeValidityNode(validityNode)
-
-    def __removeTreeWidgetItem(self, QPoint):
+    def __removeTreeWidgetItems(self):
         """
         Normally I'd consider just altering the data and redrawing everything, but I'm expecting this stuff to bloat
         pretty quicky on large rigs so I'm looking to edit ONLY the rows I want for now and directly removing the data
@@ -131,17 +115,20 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         :param QPoint: `QPoint`
         :return:
         """
-        self.__removeValidityNode(QPoint)
-        self.itemAt(QPoint).parent().removeChild(self.itemAt(QPoint))
+        for eachTreeWidgetItem in self.selectedItems():
+            sourceNode = eachTreeWidgetItem.parent().node()
+            sourceNode.removeValidityNode(eachTreeWidgetItem.node())
+            # qt
+            eachTreeWidgetItem.parent().removeChild(eachTreeWidgetItem)
 
-    def __removeAllChildren(self, QPoint):
+    def __removeAllChildren(self):
         """
 
         :param QPoint: `QPoint`
         :return:
         """
-
-        self.itemAt(QPoint).removeAllChildren()
+        for eachTreeWidgetItem in self.selectedItems():
+            eachTreeWidgetItem.removeAllChildren()
 
     def __removeAllTopLevelItems(self):
         while self.topLevelItemCount():
