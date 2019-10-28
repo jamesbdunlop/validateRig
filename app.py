@@ -12,6 +12,7 @@ from uiStuff.themes import factory as uit_factory
 from uiStuff.trees import treewidgetitems as cuit_treewidgetitems
 from uiStuff.dialogs import saveToJSONFile as uid_saveJSON
 from uiStuff.trees import validationTreeWidget as uit_validationTreeWidget
+reload(uit_validationTreeWidget)
 logger = logging.getLogger(__name__)
 
 """

@@ -125,6 +125,9 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
 
     def __removeTopLevelItems(self):
         for eachTreeWidgetItem in self.selectedItems():
+            sourceNode = eachTreeWidgetItem.node()
+            self.validator().removeSourceNode(sourceNode)
+
             idx = self.indexOfTopLevelItem(eachTreeWidgetItem)
             self.takeTopLevelItem(idx)
 

@@ -85,12 +85,12 @@ class MayaSourceNodeAttributeListWidget(SourceNodeAttributeListWidget):
         """
         Populates the listWidget from the nodeName. This should be a unique name in maya or it will fail.
         """
-        for eachAttribute in cmds.listAttr(self._nodeName):
+        for eachAttribute in sorted(cmds.listAttr(self._nodeName)):
             self.dvListWidget.addItem(eachAttribute)
 
         # Select existing
         if self.sourceNode() is not None:
-            for nodeName in [n.name for n in self.sourceNode().iterValidityNodes() if isinstance(n, DefaultValueNode)]:
+            for nodeName in [node.name for node in self.sourceNode().iterValidityNodes() if isinstance(node, DefaultValueNode)]:
                 items = self.dvListWidget.findItems(nodeName, QtCore.Qt.MatchExactly)
                 for eachItem in items:
                     if not self.dvListWidget.isItemSelected(eachItem):
