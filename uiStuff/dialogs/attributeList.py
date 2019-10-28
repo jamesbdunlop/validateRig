@@ -61,6 +61,27 @@ class SourceNodeAttributeListWidget(QtWidgets.QWidget):
         self._populateConnectionsWidget()
 
     def _populateDefaultValuesWidget(self):
+        raise NotImplemented("Overload me!")
+
+    def _populateConnectionsWidget(self):
+        raise NotImplemented("Overload me!")
+
+    def _accept(self):
+        raise NotImplemented("Overload me!")
+
+    def sourceNode(self):
+        return self._sourceNode
+
+    @classmethod
+    def fromSourceNode(cls, sourceNode, parent=None):
+        return cls(nodeName=sourceNode.name, sourceNode=sourceNode, parent=parent)
+
+
+class MayaSourceNodeAttributeListWidget(SourceNodeAttributeListWidget):
+    def __init__(self, nodeName=None, sourceNode=None, parent=None):
+        super(MayaSourceNodeAttributeListWidget, self).__init__(nodeName=nodeName, sourceNode=sourceNode, parent=parent)
+
+    def _populateDefaultValuesWidget(self):
         """
         Populates the listWidget from the nodeName. This should be a unique name in maya or it will fail.
         """
@@ -81,7 +102,7 @@ class SourceNodeAttributeListWidget(QtWidgets.QWidget):
         """
         Populates the listWidget from the nodeName. This should be a unique name in maya or it will fail.
         """
-        conns = cmds.listConnections(self._nodeName, c=True, source=True, destination=True, plugs=True)
+        conns = cmds.listConnections(self._nodeName, c=True, source=False, destination=True, plugs=True)
         if conns is not None:
             for x in range(0, len(conns), 2):
                 self.connsListWidget.addItem("{}{}{}".format(conns[x], self.SEP, conns[x+1]))
@@ -115,8 +136,8 @@ class SourceNodeAttributeListWidget(QtWidgets.QWidget):
                 srcAttrName = src.split(".")[-1]
                 srcAttrValue = cmds.getAttr(src)
                 connNode = ConnectionValidityNode(name=dest.split(".")[0],
-                                                  attributeName=destAttrName,
-                                                  attributeValue=destAttrValue,
+                                                  destAttrName=destAttrName,
+                                                  destAttrValue=destAttrValue,
                                                   srcAttrName=srcAttrName,
                                                   srcAttrValue=srcAttrValue)
                 validityNodes.append(connNode)
@@ -134,9 +155,3 @@ class SourceNodeAttributeListWidget(QtWidgets.QWidget):
 
         self.close()
 
-    def sourceNode(self):
-        return self._sourceNode
-
-    @classmethod
-    def fromSourceNode(cls, sourceNode, parent=None):
-        return cls(nodeName=sourceNode.name, sourceNode=sourceNode, parent=parent)

@@ -5,7 +5,6 @@ from const import serialization as c_serialization
 from core import inside
 from uiStuff.trees import treewidgetitems as cuit_treewidgetitems
 from uiStuff.dialogs import attributeList as uid_attributeList
-reload(uid_attributeList)
 logger = logging.getLogger(__name__)
 
 if inside.insideMaya():
@@ -51,6 +50,8 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
             return
 
         if nodeType == c_serialization.NT_SOURCENODE:
+            removeSourceNodes = menu.addAction("Remove SourceNode(s)")
+            removeSourceNodes.triggered.connect(self.__removeTopLevelItems)
             removeAll = menu.addAction("Remove ALL SourceNode ValidationNodes")
             removeAll.triggered.connect(self.__removeAllChildren)
 
@@ -122,9 +123,20 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         for eachTreeWidgetItem in self.selectedItems():
             eachTreeWidgetItem.removeAllChildren()
 
+    def __removeTopLevelItems(self):
+        for eachTreeWidgetItem in self.selectedItems():
+            idx = self.indexOfTopLevelItem(eachTreeWidgetItem)
+            self.takeTopLevelItem(idx)
+
     def __removeAllTopLevelItems(self):
         while self.topLevelItemCount():
             for x in range(self.topLevelItemCount()):
+                item = self.topLevelItem(x)
+                if item is None:
+                    continue
+
+                sourceNode = item.node()
+                self.validator().removeSourceNode(sourceNode)
                 self.takeTopLevelItem(x)
 
     # Drag and Drop
@@ -155,9 +167,9 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
                 existingSourceNode = self.validator().findSourceNodeByName(sourceNodeName)
 
             if existingSourceNode is not None:
-                self.srcNodesWidget = uid_attributeList.SourceNodeAttributeListWidget.fromSourceNode(sourceNode=existingSourceNode, parent=self)
+                self.srcNodesWidget = uid_attributeList.MayaSourceNodeAttributeListWidget.fromSourceNode(sourceNode=existingSourceNode, parent=self)
             else:
-                self.srcNodesWidget = uid_attributeList.SourceNodeAttributeListWidget(nodeName=nodeName, parent=self)
+                self.srcNodesWidget = uid_attributeList.MayaSourceNodeAttributeListWidget(nodeName=nodeName, parent=self)
 
             if self.srcNodesWidget is None:
                 continue
