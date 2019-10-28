@@ -1,5 +1,4 @@
 import logging
-from functools import partial
 from PySide2 import QtWidgets, QtCore, QtGui
 from const import constants
 from const import serialization as c_serialization
@@ -111,22 +110,15 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         Normally I'd consider just altering the data and redrawing everything, but I'm expecting this stuff to bloat
         pretty quicky on large rigs so I'm looking to edit ONLY the rows I want for now and directly removing the data
         from the validator / sourceNodes as required.
-
-        :param QPoint: `QPoint`
-        :return:
         """
         for eachTreeWidgetItem in self.selectedItems():
+            # Remove the data
             sourceNode = eachTreeWidgetItem.parent().node()
             sourceNode.removeValidityNode(eachTreeWidgetItem.node())
-            # qt
+            # Now the treeWidgetItems
             eachTreeWidgetItem.parent().removeChild(eachTreeWidgetItem)
 
     def __removeAllChildren(self):
-        """
-
-        :param QPoint: `QPoint`
-        :return:
-        """
         for eachTreeWidgetItem in self.selectedItems():
             eachTreeWidgetItem.removeAllChildren()
 
@@ -154,6 +146,7 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
 
     def processMayaDrop(self, QDropEvent):
         nodeNames = QDropEvent.mimeData().text().split("\n")
+
         # Check to see if this exists in the validator we dropped over.
         for nodeName in nodeNames:
             existingSourceNode = None
