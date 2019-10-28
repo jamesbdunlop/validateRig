@@ -14,9 +14,6 @@ from uiStuff.dialogs import saveToJSONFile as uid_saveJSON
 from uiStuff.trees import validationTreeWidget as uit_validationTreeWidget
 logger = logging.getLogger(__name__)
 
-if inside.insideMaya():
-    import maya.cmds as cmds
-
 """
 TEST MAYA USAGE:
 
@@ -101,8 +98,9 @@ class ValidationUI(QtWidgets.QWidget):
         """
         validatorName = data.get(c_serialization.KEY_VALIDATOR_NAME)
         if self.validatorExistsByName(validatorName):
-            logger.warning("Validator %s already exists! Skipping!" % validatorName)
-            return
+            msg = "Validator named: `%s` already exists! Skipping!" % validatorName
+            logger.warning(msg)
+            raise Exception(msg)
 
         validator = self.createValidator(data)
         treeWidget = self.createValidationTreeWidget(validator=validator)
@@ -173,7 +171,7 @@ class ValidationUI(QtWidgets.QWidget):
             for filepath in dialog.selectedFiles():
                 data = c_parser.read(filepath)
                 for validatorName, validationData in data.items():
-                    self.addValidator_fromData(validationData, expanded=True)
+                    self.addValidatorFromData(validationData, expanded=True)
 
     # Drag and Drop
     def dragEnterEvent(self, QDragEnterEvent):
