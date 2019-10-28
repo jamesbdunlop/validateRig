@@ -67,7 +67,7 @@ class SourceNode(Node):
             eg:
             showCloth_geoHrc = ConnectionValidityNode(name="geo_hrc",
                                             attributeName="visibility", destAttrValue=True,
-                                            srcAttributeName="showCloth", srcAttributeValue="True"
+                                            srcAttrName="showCloth", srcAttrValue="True"
                                             )
             sourceNode.addValidityNode(showCloth_geoHrc)
 
@@ -156,34 +156,36 @@ class SourceNode(Node):
 class ConnectionValidityNode(Node):
     def __init__(self, name, nodeType=c_serialization.NT_CONNECTIONVALIDITY,
                  destAttrName=None, destAttrValue=None,
-                 srcAttributeName=None, srcAttributeValue=None):
+                 srcAttrName=None, srcAttrValue=None):
         """
-        ConnectionValidityNodes hold some sourceNode data as these as children of the sourceNode and it makes sense to
-        couple the data here rather than try to split across the SourceNode and the ConnectionValidityNode.
+        ConnectionValidityNodes holds sourceNode.srcAttrName data as it makes sense to couple the data here rather than
+        try to store data in the sourceData and pair it up with data in here.
 
-        Each ConnectionValidityNode is considered a validation check for a single ConnectionValidityNode.attribute (value) against a
-        sourceNode.attribute (value).
-        This way we can do the following checks:
-        - Do these attributes even exist on the node??
-        - Is the destination attribute connected to anything? If so is it the srcNode.attribute?
-        - Does the srcNode.attribute = the expected srcNode.destAttrValue? If not bail early! The rig is NOT in default
-          state!
-        - When the srcNode.attribute is correct, is the ConnectionValidityNode.attribute at the right value?
+        Each ConnectionValidityNode is considered a single validation check eg:
+            `SourceNode.attribute` ----->  `ConnectionValidityNode.attribute`
 
-        :param name: `str` dest nodename of the node in the scene the ConnectionValidityNode.attribute exists on.
+        This way we can do something like the following boolean checks:
+        SourceNode.attribute.exists()
+        DestNode.attribute.exists()
+        SourceNode.attribute.connectedTo(DestNode.attribute)
+        SourceNode.attribute.value() == srcAttributeValue
+        SourceNode.destAttribute.value() == destAttrValue
+
+
+        :param name: `str` nodeName of the node that the sourceNode.attribute is connected to.
         :param destAttrName: `str` name of the attribute on the node eg: showCloth
         :param destAttrValue: `int`, `float`, `bool`, etc the expected value for this attribute when the
-                                sourceAttribute's value match
-        :param srcAttributeName: `str` name of the attribute on the sourceNode to match (note this node is a child of
-                                the source node)
-        :param srcAttributeValue: `int`, `float`, `bool`, etc the expected SOURCE value to be set for this value to be TRUE
+                              sourceAttribute's value match
+        :param srcAttrName: `str` name of the attribute on the sourceNode to match (note this node is a child of
+                             the source node)
+        :param srcAttrValue: `int`, `float`, `bool`, etc This is the expected SourceNode.attribute value.
         """
         super(ConnectionValidityNode, self).__init__(name=name, nodeType=nodeType)
 
         self._destAttrName = destAttrName
         self._destAttrValue = destAttrValue
-        self._srcAttributeName = srcAttributeName
-        self._srcAttributeValue = srcAttributeValue
+        self._srcAttrName = srcAttrName
+        self._srcAttrValue = srcAttrValue
         self._status = False    # This is the report status if it passed or failed the validation test
 
     @property
@@ -215,34 +217,34 @@ class ConnectionValidityNode(Node):
         self._destAttrValue = value
 
     @property
-    def srcAttributeName(self):
-        return self._srcAttributeName
+    def srcAttrName(self):
+        return self._srcAttrName
 
-    @srcAttributeName.setter
-    def srcAttributeName(self, name):
+    @srcAttrName.setter
+    def srcAttrName(self, name):
         if type(name) != str:
             raise TypeError("name is not of type str!")
 
-        self._srcAttributeName = name
+        self._srcAttrName = name
 
     @property
-    def srcAttributeValue(self):
-        return self._srcAttributeValue
+    def srcAttrValue(self):
+        return self._srcAttrValue
 
-    @srcAttributeValue.setter
-    def srcAttributeValue(self, value):
+    @srcAttrValue.setter
+    def srcAttrValue(self, value):
         """
 
         :param value: `int`, `float, `bool`, etc
         """
-        self._srcAttributeValue = value
+        self._srcAttrValue = value
 
     def toData(self):
         super(ConnectionValidityNode, self).toData()
         self.data[c_serialization.KEY_DEST_ATTRIBUTENAME] = self._destAttrName
         self.data[c_serialization.KEY_DEST_ATTRIBUTEVALUE] = self._destAttrValue
-        self.data[c_serialization.KEY_SRC_ATTRIBUTENAME] = self._srcAttributeName
-        self.data[c_serialization.KEY_SRC_ATTRIBUTEVALUE] = self._srcAttributeValue
+        self.data[c_serialization.KEY_SRC_ATTRIBUTENAME] = self._srcAttrName
+        self.data[c_serialization.KEY_SRC_ATTRIBUTEVALUE] = self._srcAttrValue
 
         return self.data
 
@@ -253,12 +255,12 @@ class ConnectionValidityNode(Node):
 
         destAttrName = data.get(c_serialization.KEY_DEST_ATTRIBUTENAME, "")
         destAttrValue = data.get(c_serialization.KEY_DEST_ATTRIBUTEVALUE, "")
-        srcAttributeName = data.get(c_serialization.KEY_SRC_ATTRIBUTENAME, "")
-        srcAttributeValue = data.get(c_serialization.KEY_SRC_ATTRIBUTEVALUE, "")
+        srcAttrName = data.get(c_serialization.KEY_SRC_ATTRIBUTENAME, "")
+        srcAttrValue = data.get(c_serialization.KEY_SRC_ATTRIBUTEVALUE, "")
 
         return cls(name=name, nodeType=nodetype,
                    destAttrName=destAttrName, destAttrValue=destAttrValue,
-                   srcAttributeName=srcAttributeName, srcAttributeValue=srcAttributeValue)
+                   srcAttrName=srcAttrName, srcAttrValue=srcAttrValue)
 
 
 class DefaultValueNode(Node):

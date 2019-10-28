@@ -69,9 +69,9 @@ class ValidityTreeWidgetItem(TreeWidgetItem):
         self.setData(4, QtCore.Qt.DisplayRole, self._node.name)
         self.setFont(4, QtGui.QFont(constants.FONT_NAME, constants.FONT_SIZE, QtGui.QFont.Bold))
 
-        self.setData(5, QtCore.Qt.DisplayRole, self._node.srcAttributeName)
+        self.setData(5, QtCore.Qt.DisplayRole, self._node.srcAttrName)
 
-        self.setData(6, QtCore.Qt.DisplayRole, self._node.srcAttributeValue)
+        self.setData(6, QtCore.Qt.DisplayRole, self._node.srcAttrValue)
 
         self.setData(7, QtCore.Qt.DisplayRole, self.reportStatus)
         self.setFont(7, QtGui.QFont(constants.FONT_NAME, constants.FONT_SIZE, QtGui.QFont.Bold))

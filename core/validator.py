@@ -16,17 +16,27 @@ class Validator:
 
     @name.setter
     def name(self, name):
+        """
+
+        :param name:`str` name of the validator
+        :return:
+        """
         if type(name) != str:
             raise TypeError("name is not of type str!")
 
         self._name = name
 
     def sourceNodeExists(self, sourceNode):
+        """
+
+        :param sourceNode: `SourceNode`
+        :return:
+        """
         sourceNodeNames = [n.name for n in self._nodes]
 
         return sourceNode.name in sourceNodeNames
 
-    def _addExistingNode(self, sourceNode):
+    def replaceExistingSourceNode(self, sourceNode):
         """
         Replace an existing index in the list with the sourceNode
         :param sourceNode: `SourceNode`
@@ -36,9 +46,10 @@ class Validator:
             if node.name == sourceNode.name:
                 self._nodes[x] = sourceNode
                 return True
+
         return False
 
-    def addNodeToValidate(self, sourceNode, force=False):
+    def addSourceNode(self, sourceNode, force=False):
         """
         :param sourceNode: `SourceNode`
         :param force: `bool`
@@ -49,17 +60,30 @@ class Validator:
             return True
 
         if self.sourceNodeExists(sourceNode) and force:
-            return self._addExistingNode(sourceNode)
+            return self.replaceExistingSourceNode(sourceNode)
 
         if self.sourceNodeExists(sourceNode) and not force:
             raise IndexError("%s already exists in validator. Use force=True if you want to overwrite existing!" % sourceNode)
+
+    def removeSourceNode(self, sourceNode):
+        for eachSourceNode in self.iterSourceNodes():
+            if eachSourceNode == sourceNode:
+                self._nodes.remove(eachSourceNode)
+                return True
+
+        return False
 
     def iterSourceNodes(self):
         for eachNode in self._nodes:
             yield eachNode
 
-    def sourceNodeByName(self, name):
-        for eachNode in self.iterNodes():
+    def findSourceNodeByName(self, name):
+        """
+
+        :param name: `str`
+        :return: `SourceNode`
+        """
+        for eachNode in self.iterSourceNodes():
             if eachNode.name == name:
                 return eachNode
 
@@ -170,12 +194,12 @@ class MayaValidator(Validator):
             srcMFn = om2.MFnDependencyNode(mSel.getDependNode(0))
 
             for destNode in srcNode.iterNodes():
-                srcPlug = srcMFn.findPlug(destNode.srcAttributeName, False)
-                expectedSourceValue = destNode.srcAttributeValue
+                srcPlug = srcMFn.findPlug(destNode.srcAttrName, False)
+                expectedSourceValue = destNode.srcAttrValue
 
                 # We can bail out early if the source attribute in scene doesn't match the expected validation setting!
                 srcPlugValue = self.getPlugValue(srcPlug)
                 if srcPlugValue != expectedSourceValue:
                     validationData[srcNode.name] = "Failed %s.%s is not set at %s" % (srcNode.name,
-                                                                                      destNode.srcAttributeName,
+                                                                                      destNode.srcAttrName,
                                                                                       expectedSourceValue)

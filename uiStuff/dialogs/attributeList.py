@@ -9,18 +9,16 @@ class SourceNodeAttributeListWidget(QtWidgets.QWidget):
     addSrcNodes = QtCore.Signal(list)
     SEP = "  --->>  "
 
-    def __init__(self, nodeName=None, sourceNode=None, parent=None):
+    def __init__(self, nodeName, sourceNode, parent=None):
         super(SourceNodeAttributeListWidget, self).__init__(parent=parent)
         self.setWindowFlags(QtCore.Qt.Popup)
-        if nodeName is None:
-            return
-
+        self._nodeName = nodeName
         self._sourceNode = sourceNode
+
+        self._nodeData = list()
 
         ############################
         ## Setup the UI elements now
-        self._nodeName = nodeName
-        self._nodeData = list()
         self.mainLayout = QtWidgets.QVBoxLayout(self)
 
         # Add a list widget for each selected sourceNode
@@ -109,13 +107,13 @@ class SourceNodeAttributeListWidget(QtWidgets.QWidget):
                 src, dest = eachConnPair.text().split(self.SEP)
                 destAttrName = dest.split(".")[-1]
                 destAttrValue = cmds.getAttr(dest)
-                srcAttributeName = src.split(".")[-1]
-                srcAttributeValue = cmds.getAttr(src)
+                srcAttrName = src.split(".")[-1]
+                srcAttrValue = cmds.getAttr(src)
                 connNode = ConnectionValidityNode(name=dest.split(".")[0],
                                                   attributeName=destAttrName,
                                                   attributeValue=destAttrValue,
-                                                  srcAttributeName=srcAttributeName,
-                                                  srcAttributeValue=srcAttributeValue)
+                                                  srcAttrName=srcAttrName,
+                                                  srcAttrValue=srcAttrValue)
                 validityNodes.append(connNode)
 
             if self.sourceNode() is None:

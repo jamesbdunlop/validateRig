@@ -26,8 +26,8 @@ class Test_Nodes(unittest.TestCase):
         self.connectionValidityNode = c_nodes.ConnectionValidityNode(name=self.connectionValidityNodeName)
         self.connectionValidityNode.destAttrName = self.connectionValidityNodeAttrName
         self.connectionValidityNode.destAttrValue = self.connectionValidityNodeAttrValue
-        self.connectionValidityNode.srcAttributeName = self.srcNodeAttrName
-        self.connectionValidityNode.srcAttributeValue = self.srcNodeAttrValue
+        self.connectionValidityNode.srcAttrName = self.srcNodeAttrName
+        self.connectionValidityNode.srcAttrValue = self.srcNodeAttrValue
 
         self.sourceNode.addValidityNode(self.connectionValidityNode)
 
@@ -63,13 +63,13 @@ class Test_Nodes(unittest.TestCase):
         self.assertEqual(self.connectionValidityNodeAttrValue, self.connectionValidityNode.destAttrValue,
                          "connectionValidityNode.destAttrValue is not %s" % self.connectionValidityNodeAttrValue)
 
-    def test_connectionValidityNode_srcAttributeName(self):
-        self.assertEqual(self.srcNodeAttrName, self.connectionValidityNode._srcAttributeName,
-                         "srcAttributeName is not %s" % self.srcNodeAttrName)
+    def test_connectionValidityNode_srcAttrName(self):
+        self.assertEqual(self.srcNodeAttrName, self.connectionValidityNode._srcAttrName,
+                         "srcAttrName is not %s" % self.srcNodeAttrName)
 
-    def test_connectionValidityNode_srcAttributeValue(self):
-        self.assertEqual(self.srcNodeAttrValue, self.connectionValidityNode.srcAttributeValue,
-                         "srcAttributeValue is not %s" % self.srcNodeAttrValue)
+    def test_connectionValidityNode_srcAttrValue(self):
+        self.assertEqual(self.srcNodeAttrValue, self.connectionValidityNode.srcAttrValue,
+                         "srcAttrValue is not %s" % self.srcNodeAttrValue)
 
     def test_srcNode_iterValidityNodes(self):
         nodes = [n for n in self.sourceNode.iterValidityNodes()]
