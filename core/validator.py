@@ -26,6 +26,16 @@ class Validator:
 
         self._name = name
 
+    def findSourceNodeByName(self, name):
+        """
+
+        :param name: `str`
+        :return: `SourceNode`
+        """
+        for eachNode in self.iterSourceNodes():
+            if eachNode.name == name:
+                return eachNode
+
     def sourceNodeExists(self, sourceNode):
         """
 
@@ -35,6 +45,16 @@ class Validator:
         sourceNodeNames = [n.name for n in self._nodes]
 
         return sourceNode.name in sourceNodeNames
+
+    def sourceNodeNameExists(self, sourceNodeName):
+        """
+
+        :param sourceNodeName: `str`
+        :return:
+        """
+        sourceNodeNames = [n.name for n in self._nodes]
+
+        return sourceNodeName in sourceNodeNames
 
     def replaceExistingSourceNode(self, sourceNode):
         """
@@ -76,16 +96,6 @@ class Validator:
     def iterSourceNodes(self):
         for eachNode in self._nodes:
             yield eachNode
-
-    def findSourceNodeByName(self, name):
-        """
-
-        :param name: `str`
-        :return: `SourceNode`
-        """
-        for eachNode in self.iterSourceNodes():
-            if eachNode.name == name:
-                return eachNode
 
     def validate(self):
         raise NotImplementedError('Override this..')

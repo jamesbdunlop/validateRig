@@ -9,7 +9,7 @@ class SourceNodeAttributeListWidget(QtWidgets.QWidget):
     addSrcNodes = QtCore.Signal(list)
     SEP = "  --->>  "
 
-    def __init__(self, nodeName, sourceNode, parent=None):
+    def __init__(self, nodeName=None, sourceNode=None, parent=None):
         super(SourceNodeAttributeListWidget, self).__init__(parent=parent)
         self.setWindowFlags(QtCore.Qt.Popup)
         self._nodeName = nodeName
@@ -67,10 +67,13 @@ class SourceNodeAttributeListWidget(QtWidgets.QWidget):
         for eachAttribute in cmds.listAttr(self._nodeName):
             self.dvListWidget.addItem(eachAttribute)
 
-        # if self.sourceNode() is not None:
-        #     print([n.name for n in self.sourceNode().iterValidityNodes() if isinstance(n, DefaultValueNode)])
-        #     for nodeName in [n.name for n in self.sourceNode().iterValidityNodes() if isinstance(n, DefaultValueNode)]:
-        #         print(self.dvListWidget.findItems(nodeName, QtCore.Qt.MatchContains))
+        # Select existing
+        if self.sourceNode() is not None:
+            for nodeName in [n.name for n in self.sourceNode().iterValidityNodes() if isinstance(n, DefaultValueNode)]:
+                items = self.dvListWidget.findItems(nodeName, QtCore.Qt.MatchExactly)
+                for eachItem in items:
+                    if not self.dvListWidget.isItemSelected(eachItem):
+                        self.dvListWidget.setItemSelected(eachItem, True)
 
         return True
 
@@ -83,11 +86,13 @@ class SourceNodeAttributeListWidget(QtWidgets.QWidget):
             for x in range(0, len(conns), 2):
                 self.connsListWidget.addItem("{}{}{}".format(conns[x], self.SEP, conns[x+1]))
 
-        # if self.sourceNode() is not None:
-            # print([n.name for n in self.sourceNode().iterValidityNodes()if isinstance(n, ConnectionValidityNode)])
-            # for nodeName in [n.name for n in self.sourceNode().iterValidityNodes()if isinstance(n, ConnectionValidityNode)]:
-            #     print(self.connsListWidget.findItems(nodeName, QtCore.Qt.MatchContains))
-
+        # Select existing
+        if self.sourceNode() is not None:
+            for nodeName in [n.name for n in self.sourceNode().iterValidityNodes() if isinstance(n, ConnectionValidityNode)]:
+                items = self.connsListWidget.findItems(nodeName, QtCore.Qt.MatchExactly)
+                for eachItem in items:
+                    if not self.connsListWidget.isItemSelected(eachItem):
+                        self.connsListWidget.setItemSelected(eachItem, True)
         return True
 
     def _accept(self):

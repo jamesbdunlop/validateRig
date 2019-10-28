@@ -1,9 +1,7 @@
 import sys
 import os
-import pprint
 import logging
-from functools import partial
-from PySide2 import QtWidgets, QtCore, QtGui
+from PySide2 import QtWidgets, QtCore
 from const import constants
 from const import serialization as c_serialization
 from core import inside
@@ -14,7 +12,7 @@ from uiStuff.themes import factory as uit_factory
 from uiStuff.trees import treewidgetitems as cuit_treewidgetitems
 from uiStuff.dialogs import saveToJSONFile as uid_saveJSON
 from uiStuff.trees import validationTreeWidget as uit_validationTreeWidget
-from uiStuff.trees import validationTreeWidget
+reload(uit_validationTreeWidget)
 logger = logging.getLogger(__name__)
 
 if inside.insideMaya():
@@ -97,8 +95,9 @@ class ValidationUI(QtWidgets.QWidget):
     # Create
     def createValidationPair(self, data):
         """
+        The (validator, treeWidget) tuple pair creator.
 
-        :param data: `dict`
+        :param data: `dict` result of a previously saved ValidationUI.toData()
         :return:
         """
         validatorName = data.get(c_serialization.KEY_VALIDATOR_NAME)
@@ -120,6 +119,9 @@ class ValidationUI(QtWidgets.QWidget):
         """Creates a treeView widget for the treeWidget/validator pair for adding source nodes to.
         :param validator: `Validator`
         """
+        if inside.insideMaya():
+            return uit_validationTreeWidget.MayaValidationTreeWidget(validator, self)
+
         return uit_validationTreeWidget.ValidationTreeWidget(validator, self)
 
     # Search

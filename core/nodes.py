@@ -78,7 +78,7 @@ class SourceNode(Node):
         :param validityNodes: `list` of ConnectionValidityNodes
         """
         super(SourceNode, self).__init__(name=name, nodeType=nodeType)
-        self._validity = validityNodes or list()
+        self._validityNodes = validityNodes or list()
 
     def validityNodeExists(self, connectionValidityNodeName):
         for eachValidityNode in self.iterValidityNodes():
@@ -93,12 +93,17 @@ class SourceNode(Node):
         :param validityNode: `ValidityNode` Default or Connection
         """
         if not self.validityNodeExists(validityNode.name):
-            self._validity.append(validityNode)
+            self._validityNodes.append(validityNode)
         else:
             logger.warning("ValidityNode already exists, skipping")
-
+    
+    def removeValidityNode(self, node):
+        for eachNode in self.iterValidityNodes():
+            if eachNode == node:
+                self._validityNodes.remove(node)
+                
     def iterValidityNodes(self):
-        for eachNode in self._validity:
+        for eachNode in self._validityNodes:
             yield eachNode
 
     def toData(self):

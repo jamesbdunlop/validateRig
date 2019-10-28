@@ -17,6 +17,9 @@ class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
         self._node = node
         self.updateData()
 
+    def nodeType(self):
+        return self.node().nodeType
+
     def updateData(self):
         pass
 
