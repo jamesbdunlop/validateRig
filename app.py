@@ -12,7 +12,6 @@ from uiStuff.themes import factory as uit_factory
 from uiStuff.trees import treewidgetitems as cuit_treewidgetitems
 from uiStuff.dialogs import saveToJSONFile as uid_saveJSON
 from uiStuff.trees import validationTreeWidget as uit_validationTreeWidget
-reload(uit_validationTreeWidget)
 logger = logging.getLogger(__name__)
 
 """
@@ -42,7 +41,7 @@ myWin.show()
 
 
 class ValidationUI(QtWidgets.QWidget):
-    def __init__(self, title=constants.UINAME, theme="core", themecolor="", parent=None):
+    def __init__(self, title=constants.UINAME, theme="core", themecolor="blue", parent=None):
         super(ValidationUI, self).__init__(parent=parent)
         """
         TO DO
