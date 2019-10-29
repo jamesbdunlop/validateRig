@@ -3,8 +3,52 @@ from core.nodes import SourceNode, DefaultValueNode, ConnectionValidityNode
 from core import inside
 
 if inside.insideMaya():
-    import maya.api.OpenMaya as om2
     from maya import cmds
+
+
+class MultiSourceNodeListWidgets(QtWidgets.QWidget):
+    sourceNodesAccepted = QtCore.Signal(list)
+
+    def __init__(self, title, parent=None):
+        super(MultiSourceNodeListWidgets, self).__init__(parent=parent)
+        self.setWindowTitle(title)
+        self.setObjectName("MultiAttributeListWidget_{}".format(title))
+
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
+        self.widgetsLayout = QtWidgets.QHBoxLayout(self)
+
+        self._listWidgets = list()
+
+        # UI STUFF
+        self.buttonLayout = QtWidgets.QHBoxLayout()
+        self.acceptButton = QtWidgets.QPushButton('Accept')
+        self.acceptButton.clicked.connect(self._accept)
+
+        self.closeButton = QtWidgets.QPushButton('Close')
+        self.closeButton.clicked.connect(self.close)
+
+        self.buttonLayout.addWidget(self.acceptButton)
+        self.buttonLayout.addWidget(self.closeButton)
+
+        self.mainLayout.addLayout(self.widgetsLayout)
+        self.mainLayout.addLayout(self.buttonLayout)
+
+    def addListWidget(self, listWidget):
+        self.widgetsLayout.addWidget(listWidget)
+        if listWidget not in self._listWidgets:
+            self._listWidgets.append(listWidget)
+
+            return True
+
+        return False
+
+    def iterListWidgets(self):
+        for eachListWidgets in self._listWidgets:
+            yield eachListWidgets
+
+    def _accept(self):
+        self.sourceNodesAccepted.emit([listWidget.toSourceNode() for listWidget in self.iterListWidgets()])
+        self.close()
 
 
 class SourceNodeAttributeListWidget(QtWidgets.QWidget):
@@ -103,80 +147,49 @@ class MayaSourceNodeAttributeListWidget(SourceNodeAttributeListWidget):
                         self.connsListWidget.setItemSelected(eachItem, True)
         return True
 
-    def toSourceNode(self):
-        nodeName, defaultValuesListWidget, connsListWidget = self._nodeData
+    def __getValidityNodesFromDefaultValuesListWidget(self, nodeName, defaultValuesListWidget):
+        """
 
-        # Create DefaultValueNode's
-        validityNodes = list()
+        :param nodeName: `str` name of the node to query in maya (this is the destination node not the sourceNode name)
+        :param defaultValuesListWidget: `QListWidget`
+        :return: `list`
+        """
+        nodes = list()
         for eachAttr in defaultValuesListWidget.selectedItems():
             value = cmds.getAttr("{}.{}".format(nodeName, eachAttr.text()))
             dvNode = DefaultValueNode(name=eachAttr.text(), defaultValue=value)
-            validityNodes.append(dvNode)
+            nodes.append(dvNode)
 
-        # Create ConnectionValidityNode's
-        for eachConnPair in connsListWidget.selectedItems():
+        return nodes
+
+    def __getValidityNodesFromConnectionsListWidget(self, connectionsListWidget):
+        nodes = list()
+        for eachConnPair in connectionsListWidget.selectedItems():
             src, dest = eachConnPair.text().split(self.SEP)
-            destAttrName = dest.split(".")[-1]
-            destAttrValue = cmds.getAttr(dest)
-            srcAttrName = src.split(".")[-1]
-            srcAttrValue = cmds.getAttr(src)
-            connNode = ConnectionValidityNode(name=dest.split(".")[0],
-                                              destAttrName=destAttrName,
-                                              destAttrValue=destAttrValue,
-                                              srcAttrName=srcAttrName,
-                                              srcAttrValue=srcAttrValue)
-            validityNodes.append(connNode)
+
+            connectionNode = ConnectionValidityNode(name=dest.split(".")[0])
+            connectionNode.destAttrName = dest.split(".")[-1]
+            connectionNode.destAttrValue = cmds.getAttr(dest)
+            connectionNode.srcAttrName = src.split(".")[-1]
+            connectionNode.srcAttrValue = cmds.getAttr(src)
+
+            nodes.append(connectionNode)
+
+        return nodes
+
+    def toSourceNode(self):
+        nodeName, defaultValuesListWidget, connsListWidget = self._nodeData
+
+        # Collect validityNode children for the SourceNode into a list
+        validityNodes = list()
+        validityNodes += self.__getValidityNodesFromDefaultValuesListWidget(nodeName, defaultValuesListWidget)
+        validityNodes += self.__getValidityNodesFromConnectionsListWidget(connsListWidget)
 
         if self.sourceNode() is None:
-            srcNode = SourceNode(name=nodeName, validityNodes=validityNodes)
+            return SourceNode(name=nodeName, validityNodes=validityNodes)
+
         else:
-            srcNode = self.sourceNode()
-            for eachValidityNode in validityNodes:
-                srcNode.addValidityNode(validityNode=eachValidityNode)
-
-        return srcNode
+            srcNode = self.sourceNode().appendValidityNodes(validityNodes)
+            return srcNode
 
 
-class MultiAttributeListWidgets(QtWidgets.QWidget):
-    sourceNodesAccepted = QtCore.Signal(list)
-
-    def __init__(self, title, parent=None):
-        super(MultiAttributeListWidgets, self).__init__(parent=parent)
-        self.setWindowTitle(title)
-        self.setObjectName("MultiAttributeListWidget_{}".format(title))
-
-        self.mainLayout = QtWidgets.QVBoxLayout(self)
-        self.widgetsLayout = QtWidgets.QHBoxLayout(self)
-
-        self._listWidgets = list()
-
-        # UI STUFF
-        self.buttonLayout = QtWidgets.QHBoxLayout()
-        self.acceptButton = QtWidgets.QPushButton('Accept')
-        self.acceptButton.clicked.connect(self._accept)
-
-        self.closeButton = QtWidgets.QPushButton('Close')
-        self.closeButton.clicked.connect(self.close)
-
-        self.buttonLayout.addWidget(self.acceptButton)
-        self.buttonLayout.addWidget(self.closeButton)
-
-        self.mainLayout.addLayout(self.widgetsLayout)
-        self.mainLayout.addLayout(self.buttonLayout)
-
-    def addListWidget(self, listWidget):
-        self.widgetsLayout.addWidget(listWidget)
-        if listWidget not in self._listWidgets:
-            self._listWidgets.append(listWidget)
-
-            return True
-
-        return False
-
-    def iterListWidgets(self):
-        for eachListWidgets in self._listWidgets:
-            yield eachListWidgets
-
-    def _accept(self):
-        self.sourceNodesAccepted.emit([listWidget.toSourceNode() for listWidget in self.iterListWidgets()])
-        self.close()

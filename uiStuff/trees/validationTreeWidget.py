@@ -62,59 +62,71 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
 
         menu.exec_(menu.mapToGlobal(QtGui.QCursor.pos()))
 
+    def __addTopLevelTreeWidgetItemFromSourceNode(self, sourceNode):
+        item = cuit_treewidgetitems.SourceNodeTreeWidgetItem(node=sourceNode)
+        self.addTopLevelItem(item)
+
+        return item
+
+    def __findTreeWidgetItemByExactName(self, name):
+        """
+
+        :param name: `str` SourceNode.name
+        :return: `QList`
+        """
+        itemList = self.findItems(name, QtCore.Qt.MatchExactly)
+        if itemList.count():
+           return itemList[0]
+
+    def __removeAllTreeWidgetItemChildren(self, treeWidgetItem):
+        """
+
+        :param treeWidgetItem:`QTreeWidgetItem`
+        :return:
+        """
+        # Kinda annoying but QT sucks at just using childCount() for some reason! Most likely the data changes
+        # out from under and it just hangs onto the last one or something odd.
+        while treeWidgetItem.childCount():
+            for x in range(treeWidgetItem.childCount()):
+                treeWidgetItem.takeChild(x)
+
+    def __addValidityNodesToTreeWidgetItemFromSourceNode(self, sourceNode, treeWidgetItem):
+        for eachValidityNode in sourceNode.iterValidityNodes():
+            if eachValidityNode.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
+                treeWidgetItem.addChild(cuit_treewidgetitems.ConnectionTreeWidgetItem(node=eachValidityNode))
+
+            if eachValidityNode.nodeType == c_serialization.NT_DEFAULTVALUE:
+                treeWidgetItem.addChild(cuit_treewidgetitems.DefaultValueTreeWidgetItem(node=eachValidityNode))
+
     def _processSourceNodeAttributeWidgets(self, sourceNodesList):
         """
 
         :param sourceNodesList: `list` of SourceNodes
         :return:
         """
-        for srcNode in sourceNodesList:
-            existing_srcNode = self.validator().findSourceNodeByName(srcNode.name)
-
-            if existing_srcNode is None:
-                self.validator().addSourceNode(srcNode, True)
-
-                # Create and add the treeWidgetItem to the treeWidget from the node
-                item = cuit_treewidgetitems.SourceTreeWidgetItem(node=srcNode)
-                self.addTopLevelItem(item)
-
-            else:
-                # Find existing treeWidgetItem, remove them from the tree and add fresh Validity Nodes
-                # Assuming only 1 ever exists!
-                widgetList = self.findItems(existing_srcNode.name, QtCore.Qt.MatchExactly)
-                if not widgetList:
+        for sourceNode in sourceNodesList:
+            existingSourceNode = self.validator().findSourceNodeByName(sourceNode.name)
+            if existingSourceNode is not None:
+                treeWidgetItem = self._findTreeWidgetItemByExactName(sourceNode.name)
+                if treeWidgetItem is None:
                     continue
 
-                item = widgetList[0]
-                # Kinda annoying but QT sucks at just using childCount() for some reason! Most likely the data changes
-                # out from under and it just hangs onto the last one or something odd.
-                while item.childCount():
-                    for x in range(item.childCount()):
-                        item.takeChild(x)
+                self.__removeAllTreeWidgetItemChildren(treeWidgetItem)
+                self.__addValidityNodesToTreeWidgetItemFromSourceNode(sourceNode, treeWidgetItem)
+                continue
 
-            # Populate the validation rows with validity nodes
-            for eachValidityNode in srcNode.iterValidityNodes():
-                if eachValidityNode.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
-                    item.addChild(cuit_treewidgetitems.ConnectionValidityTreeWidgetItem(node=eachValidityNode))
-
-                if eachValidityNode.nodeType == c_serialization.NT_DEFAULTVALUE:
-                    item.addChild(cuit_treewidgetitems.DefaultValueTreeWidgetItem(node=eachValidityNode))
-
-    def validator(self):
-        return self._validator
+            # New
+            self.validator().addSourceNode(sourceNode, True)
+            treeWidgetItem = self.__addTopLevelTreeWidgetItemFromSourceNode(sourceNode)
+            self.__addValidityNodesToTreeWidgetItemFromSourceNode(sourceNode, treeWidgetItem)
 
     def __removeTreeWidgetItems(self):
-        """
-        Normally I'd consider just altering the data and redrawing everything, but I'm expecting this stuff to bloat
-        pretty quicky on large rigs so I'm looking to edit ONLY the rows I want for now and directly removing the data
-        from the validator / sourceNodes as required.
-        """
         for eachTreeWidgetItem in self.selectedItems():
-            # Remove the data
             sourceNode = eachTreeWidgetItem.parent().node()
             sourceNode.removeValidityNode(eachTreeWidgetItem.node())
-            # Now the treeWidgetItems
-            eachTreeWidgetItem.parent().removeChild(eachTreeWidgetItem)
+
+            sourceNodeTreeWidgetItem = eachTreeWidgetItem.parent()
+            sourceNodeTreeWidgetItem.removeChild(eachTreeWidgetItem)
 
     def __removeAllChildren(self):
         for eachTreeWidgetItem in self.selectedItems():
@@ -151,6 +163,9 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
     def dropEvent(self, QDropEvent):
         super(ValidationTreeWidget, self).dropEvent(QDropEvent)
 
+    def validator(self):
+        return self._validator
+
 
 class MayaValidationTreeWidget(ValidationTreeWidget):
     def __init__(self, validator, parent=None):
@@ -159,7 +174,7 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
     def processMayaDrop(self, QDropEvent):
         nodeNames = QDropEvent.mimeData().text().split("\n")
 
-        self.mainAttrWidget = uid_attributeList.MultiAttributeListWidgets("SourceNodes", None)
+        self.mainAttrWidget = uid_attributeList.MultiSourceNodeListWidgets("SourceNodes", None)
 
         # Check to see if this exists in the validator we dropped over.
         for nodeName in nodeNames:

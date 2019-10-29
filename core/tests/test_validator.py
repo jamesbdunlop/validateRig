@@ -28,7 +28,7 @@ class Test_Validator(unittest.TestCase):
         self.connectionValidityNode.srcAttrName = self.srcNodeAttrName
         self.connectionValidityNode.srcAttrValue = self.srcNodeAttrValue
 
-        self.sourceNode.addValidityNode(self.connectionValidityNode)
+        self.sourceNode.appendValidityNode(self.connectionValidityNode)
 
         # Add the sourceNode to the validator now
         self.validator.addSourceNode(self.sourceNode)
@@ -37,11 +37,11 @@ class Test_Validator(unittest.TestCase):
                                c_serialization.KEY_VALIDATOR_NODES: [
                                    {
                                     c_serialization.KEY_NODENAME: self.sourceNodeName,
-                                    c_serialization.KEY_NODTYPE: c_testdata.SRC_NODETYPE,
+                                    c_serialization.KEY_NODETYPE: c_testdata.SRC_NODETYPE,
                                     c_serialization.KEY_VAILIDITYNODES: [
                                        {
                                         c_serialization.KEY_NODENAME: self.connectionValidityNodeName,
-                                        c_serialization.KEY_NODTYPE: c_testdata.VALIDITY_NODETYPE,
+                                        c_serialization.KEY_NODETYPE: c_testdata.VALIDITY_NODETYPE,
                                         c_serialization.KEY_DEST_ATTRIBUTENAME: self.connectionValidityNodeAttrName,
                                         c_serialization.KEY_DEST_ATTRIBUTEVALUE: self.connectionValidityNodeAttrValue,
                                         c_serialization.KEY_SRC_ATTRIBUTENAME: self.srcNodeAttrName,

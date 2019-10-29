@@ -188,7 +188,6 @@ class ValidationUI(QtWidgets.QWidget):
         :param expanded:`bool` To auto expand the results or not
         :return:
         """
-
         validator, treeWidget = self.createValidationPair(data)
         # Popuplate now
         for sourceNodeData in data.get(c_serialization.KEY_VALIDATOR_NODES, list()):
@@ -197,14 +196,14 @@ class ValidationUI(QtWidgets.QWidget):
             validator.addSourceNode(node)
 
             # Create and add the treeWidgetItem to the treeWidget from the node
-            w = cuit_treewidgetitems.SourceTreeWidgetItem(node=node)
+            w = cuit_treewidgetitems.SourceNodeTreeWidgetItem(node=node)
 
             # Populate the rows with the validations for the node
             for eachChild in node.iterValidityNodes():
                 if eachChild.nodeType == c_serialization.NT_DEFAULTVALUE:
                     treewidgetItem = cuit_treewidgetitems.DefaultValueTreeWidgetItem(node=eachChild)
-                else:
-                    treewidgetItem = cuit_treewidgetitems.ConnectionValidityTreeWidgetItem(node=eachChild)
+                elif eachChild.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
+                    treewidgetItem = cuit_treewidgetitems.ConnectionTreeWidgetItem(node=eachChild)
                 w.addChild(treewidgetItem)
 
             w.setExpanded(expanded)

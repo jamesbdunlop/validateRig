@@ -147,6 +147,7 @@ class MayaValidator(Validator):
         :param plug: MPlug
         :return: The value of the passed in MPlug or None
         """
+        # look to clean this up as this is my old MASSIVE plugValue..
         import maya.api.OpenMaya as om2
 
         pAttribute = plug.attribute()

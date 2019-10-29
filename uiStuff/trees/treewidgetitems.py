@@ -4,9 +4,9 @@ from const import constants as constants
 from uiStuff.themes import factory as cui_theme
 
 
-class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
+class BaseTreeWidgetItem(QtWidgets.QTreeWidgetItem):
     def __init__(self, node, *args, **kwargs):
-        super(TreeWidgetItem, self).__init__(*args, **kwargs)
+        super(BaseTreeWidgetItem, self).__init__(*args, **kwargs)
         self._node = node
         self._reportStatus = node.status
 
@@ -38,9 +38,9 @@ class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
         self.setData(7, QtCore.Qt.DisplayRole, status)
 
 
-class SourceTreeWidgetItem(TreeWidgetItem):
+class SourceNodeTreeWidgetItem(BaseTreeWidgetItem):
     def __init__(self, node, *args, **kwargs):
-        super(SourceTreeWidgetItem, self).__init__(node=node, *args, **kwargs)
+        super(SourceNodeTreeWidgetItem, self).__init__(node=node, *args, **kwargs)
         for x in range(7):
             self.setBackground(x, QtGui.QBrush(QtGui.QColor(150, 150, 200)))
 
@@ -52,10 +52,10 @@ class SourceTreeWidgetItem(TreeWidgetItem):
         self.setData(7, QtCore.Qt.DisplayRole, self.reportStatus)
 
 
-class ConnectionValidityTreeWidgetItem(TreeWidgetItem):
+class ConnectionTreeWidgetItem(BaseTreeWidgetItem):
     def __init__(self, node, *args, **kwargs):
-        assert isinstance(node, ConnectionValidityNode), "validityNode is not an instance of ConnectionValidityNode!"
-        super(ConnectionValidityTreeWidgetItem, self).__init__(node=node, *args, **kwargs)
+        assert isinstance(node, ConnectionValidityNode), "%s is not an instance of ConnectionValidityNode!" % type(node)
+        super(ConnectionTreeWidgetItem, self).__init__(node=node, *args, **kwargs)
         self.setIcon(0, cui_theme.QIcon(themeName="core", iconName="connection"))
 
         for x in range(1, 7):
@@ -80,9 +80,9 @@ class ConnectionValidityTreeWidgetItem(TreeWidgetItem):
         self.setFont(7, QtGui.QFont(constants.FONT_NAME, constants.FONT_SIZE, QtGui.QFont.Bold))
 
 
-class DefaultValueTreeWidgetItem(TreeWidgetItem):
+class DefaultValueTreeWidgetItem(BaseTreeWidgetItem):
     def __init__(self, node, *args, **kwargs):
-        assert isinstance(node, DefaultValueNode), "defaultNode is not an instance of DefaultValueNode!"
+        assert isinstance(node, DefaultValueNode), "%s is not an instance of DefaultValueNode!" % type(node)
         super(DefaultValueTreeWidgetItem, self).__init__(node=node, *args, **kwargs)
         self.setIcon(0, cui_theme.QIcon(themeName="core", iconName="defaultvalue"))
 
