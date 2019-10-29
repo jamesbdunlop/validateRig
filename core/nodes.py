@@ -12,7 +12,8 @@ class Node(object):
 
         :param name: `str` name of the Node
         """
-        self._name = name
+        self._name = name.split("|")[-1]
+        self._longname = name
         self._nodeType = nodeType
         self._validationStatus = c_constants.NODE_VALIDATION_NA
 
@@ -29,6 +30,20 @@ class Node(object):
             raise TypeError("name is not of type str!")
 
         self._name = name
+
+    @property
+    def longName(self):
+        return self._longName
+
+    @name.setter
+    def longName(self, longName):
+        """
+        :param name: `str`
+        """
+        if type(longName) != str:
+            raise TypeError("name is not of type str!")
+
+        self._longName = longName
 
     @property
     def nodeType(self):

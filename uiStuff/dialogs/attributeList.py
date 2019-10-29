@@ -1,12 +1,13 @@
 from PySide2 import QtWidgets, QtCore
 from core.nodes import SourceNode, DefaultValueNode, ConnectionValidityNode
 from core import inside
+
 if inside.insideMaya():
+    import maya.api.OpenMaya as om2
     from maya import cmds
 
 
 class SourceNodeAttributeListWidget(QtWidgets.QWidget):
-    addSrcNodes = QtCore.Signal(list)
     SEP = "  --->>  "
 
     def __init__(self, nodeName=None, sourceNode=None, parent=None):
@@ -15,46 +16,35 @@ class SourceNodeAttributeListWidget(QtWidgets.QWidget):
         self._nodeName = nodeName
         self._sourceNode = sourceNode
 
-        self._nodeData = list()
-
         ############################
         ## Setup the UI elements now
         self.mainLayout = QtWidgets.QVBoxLayout(self)
 
         # Add a list widget for each selected sourceNode
-        horizontalLayout = QtWidgets.QHBoxLayout()
-
-        mainGroupBox = QtWidgets.QGroupBox(self._nodeName.split("|")[-1])
-        mainGroupBoxLayout = QtWidgets.QHBoxLayout(mainGroupBox)
-        horizontalLayout.addWidget(mainGroupBox)
+        mainGroupBox = QtWidgets.QGroupBox(self._nodeName)
+        mainGroupBoxLayout = QtWidgets.QVBoxLayout(mainGroupBox)
 
         # Default Values
-        dv = QtWidgets.QGroupBox("Default Values")
-        dvl = QtWidgets.QVBoxLayout(dv)
-        self.dvListWidget = QtWidgets.QListWidget()
-        self.dvListWidget.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-        dvl.addWidget(self.dvListWidget)
+        defaultValuesGroupBox = QtWidgets.QGroupBox("Default Values")
+        defaultValuesGroupBoxlayout = QtWidgets.QVBoxLayout(defaultValuesGroupBox)
+        self.defaultValuesListWidget = QtWidgets.QListWidget()
+        self.defaultValuesListWidget.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        defaultValuesGroupBoxlayout.addWidget(self.defaultValuesListWidget)
 
         # Connections
-        dvc = QtWidgets.QGroupBox("Connections")
-        dvcl = QtWidgets.QVBoxLayout(dvc)
+        connectionsGroupBox = QtWidgets.QGroupBox("Connections")
+        connectionsGroupBoxLayout = QtWidgets.QVBoxLayout(connectionsGroupBox)
         self.connsListWidget = QtWidgets.QListWidget()
         self.connsListWidget.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-        dvcl.addWidget(self.connsListWidget)
+        connectionsGroupBoxLayout.addWidget(self.connsListWidget)
 
-        mainGroupBoxLayout.addWidget(dv)
-        mainGroupBoxLayout.addWidget(dvc)
+        mainGroupBoxLayout.addWidget(defaultValuesGroupBox)
+        mainGroupBoxLayout.addWidget(connectionsGroupBox)
 
-        # Buttons
-        self.acceptButton = QtWidgets.QPushButton('Accept')
-        self.acceptButton.clicked.connect(self._accept)
-
-        # MainLayout
-        self.mainLayout.addLayout(horizontalLayout)
-        self.mainLayout.addWidget(self.acceptButton)
+        self.mainLayout.addWidget(mainGroupBox)
 
         # Store internally
-        self._nodeData.append([self._nodeName, self.dvListWidget, self.connsListWidget])
+        self._nodeData = [self._nodeName, self.defaultValuesListWidget, self.connsListWidget]
 
         # Populate listWidgets
         self._populateDefaultValuesWidget()
@@ -64,9 +54,6 @@ class SourceNodeAttributeListWidget(QtWidgets.QWidget):
         raise NotImplemented("Overload me!")
 
     def _populateConnectionsWidget(self):
-        raise NotImplemented("Overload me!")
-
-    def _accept(self):
         raise NotImplemented("Overload me!")
 
     def sourceNode(self):
@@ -86,15 +73,15 @@ class MayaSourceNodeAttributeListWidget(SourceNodeAttributeListWidget):
         Populates the listWidget from the nodeName. This should be a unique name in maya or it will fail.
         """
         for eachAttribute in sorted(cmds.listAttr(self._nodeName)):
-            self.dvListWidget.addItem(eachAttribute)
+            self.defaultValuesListWidget.addItem(eachAttribute)
 
         # Select existing
         if self.sourceNode() is not None:
             for nodeName in [node.name for node in self.sourceNode().iterValidityNodes() if isinstance(node, DefaultValueNode)]:
-                items = self.dvListWidget.findItems(nodeName, QtCore.Qt.MatchExactly)
+                items = self.defaultValuesListWidget.findItems(nodeName, QtCore.Qt.MatchExactly)
                 for eachItem in items:
-                    if not self.dvListWidget.isItemSelected(eachItem):
-                        self.dvListWidget.setItemSelected(eachItem, True)
+                    if not self.defaultValuesListWidget.isItemSelected(eachItem):
+                        self.defaultValuesListWidget.setItemSelected(eachItem, True)
 
         return True
 
@@ -116,42 +103,80 @@ class MayaSourceNodeAttributeListWidget(SourceNodeAttributeListWidget):
                         self.connsListWidget.setItemSelected(eachItem, True)
         return True
 
+    def toSourceNode(self):
+        nodeName, defaultValuesListWidget, connsListWidget = self._nodeData
+
+        # Create DefaultValueNode's
+        validityNodes = list()
+        for eachAttr in defaultValuesListWidget.selectedItems():
+            value = cmds.getAttr("{}.{}".format(nodeName, eachAttr.text()))
+            dvNode = DefaultValueNode(name=eachAttr.text(), defaultValue=value)
+            validityNodes.append(dvNode)
+
+        # Create ConnectionValidityNode's
+        for eachConnPair in connsListWidget.selectedItems():
+            src, dest = eachConnPair.text().split(self.SEP)
+            destAttrName = dest.split(".")[-1]
+            destAttrValue = cmds.getAttr(dest)
+            srcAttrName = src.split(".")[-1]
+            srcAttrValue = cmds.getAttr(src)
+            connNode = ConnectionValidityNode(name=dest.split(".")[0],
+                                              destAttrName=destAttrName,
+                                              destAttrValue=destAttrValue,
+                                              srcAttrName=srcAttrName,
+                                              srcAttrValue=srcAttrValue)
+            validityNodes.append(connNode)
+
+        if self.sourceNode() is None:
+            srcNode = SourceNode(name=nodeName, validityNodes=validityNodes)
+        else:
+            srcNode = self.sourceNode()
+            for eachValidityNode in validityNodes:
+                srcNode.addValidityNode(validityNode=eachValidityNode)
+
+        return srcNode
+
+
+class MultiAttributeListWidgets(QtWidgets.QWidget):
+    sourceNodesAccepted = QtCore.Signal(list)
+
+    def __init__(self, title, parent=None):
+        super(MultiAttributeListWidgets, self).__init__(parent=parent)
+        self.setWindowTitle(title)
+        self.setObjectName("MultiAttributeListWidget_{}".format(title))
+
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
+        self.widgetsLayout = QtWidgets.QHBoxLayout(self)
+
+        self._listWidgets = list()
+
+        # UI STUFF
+        self.buttonLayout = QtWidgets.QHBoxLayout()
+        self.acceptButton = QtWidgets.QPushButton('Accept')
+        self.acceptButton.clicked.connect(self._accept)
+
+        self.closeButton = QtWidgets.QPushButton('Close')
+        self.closeButton.clicked.connect(self.close)
+
+        self.buttonLayout.addWidget(self.acceptButton)
+        self.buttonLayout.addWidget(self.closeButton)
+
+        self.mainLayout.addLayout(self.widgetsLayout)
+        self.mainLayout.addLayout(self.buttonLayout)
+
+    def addListWidget(self, listWidget):
+        self.widgetsLayout.addWidget(listWidget)
+        if listWidget not in self._listWidgets:
+            self._listWidgets.append(listWidget)
+
+            return True
+
+        return False
+
+    def iterListWidgets(self):
+        for eachListWidgets in self._listWidgets:
+            yield eachListWidgets
+
     def _accept(self):
-        srcNodes = list()
-        for nodeList in self._nodeData:
-            nodeName = nodeList[0]
-
-            # Create default value nodes node
-            validityNodes = list()
-            for eachAttr in nodeList[1].selectedItems():
-                value = cmds.getAttr("{}.{}".format(nodeName, eachAttr.text()))
-                dvNode = DefaultValueNode(name=eachAttr.text(), defaultValue=value)
-                validityNodes.append(dvNode)
-
-            # Create connection nodes node # [u'null2.visibility', u'null2.translate']
-            for eachConnPair in nodeList[2].selectedItems():
-                src, dest = eachConnPair.text().split(self.SEP)
-                destAttrName = dest.split(".")[-1]
-                destAttrValue = cmds.getAttr(dest)
-                srcAttrName = src.split(".")[-1]
-                srcAttrValue = cmds.getAttr(src)
-                connNode = ConnectionValidityNode(name=dest.split(".")[0],
-                                                  destAttrName=destAttrName,
-                                                  destAttrValue=destAttrValue,
-                                                  srcAttrName=srcAttrName,
-                                                  srcAttrValue=srcAttrValue)
-                validityNodes.append(connNode)
-
-            if self.sourceNode() is None:
-                srcNode = SourceNode(name=nodeName, validityNodes=validityNodes)
-            else:
-                srcNode = self.sourceNode()
-                for eachValidityNode in validityNodes:
-                    srcNode.addValidityNode(validityNode=eachValidityNode)
-
-            srcNodes.append(srcNode)
-
-            self.addSrcNodes.emit(srcNodes)
-
+        self.sourceNodesAccepted.emit([listWidget.toSourceNode() for listWidget in self.iterListWidgets()])
         self.close()
-

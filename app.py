@@ -97,16 +97,18 @@ class ValidationUI(QtWidgets.QWidget):
         :return:
         """
         validatorName = data.get(c_serialization.KEY_VALIDATOR_NAME)
-        if self.validatorExistsByName(validatorName):
+        if self.get_validatorByName(validatorName) is not None:
             msg = "Validator named: `%s` already exists! Skipping!" % validatorName
             logger.warning(msg)
             raise Exception(msg)
 
         validator = self.createValidator(data)
         treeWidget = self.createValidationTreeWidget(validator=validator)
+        validatorpair = (validator, treeWidget)
+        if validatorpair in self._validators:
+            raise Exception("Something bad happened! \nThe validation pair exists! But we didn't fail get_validatorbyName!")
 
         self._validators.append((validator, treeWidget))
-
         return validator, treeWidget
 
     def createValidator(self, data):
@@ -122,25 +124,20 @@ class ValidationUI(QtWidgets.QWidget):
         return uit_validationTreeWidget.ValidationTreeWidget(validator, self)
 
     # Search
-    def findValidatorByName(self, name):
+    def get_validatorByName(self, name):
         for eachValidator in self.iterValidators():
             if eachValidator.name == name:
                 return eachValidator
 
-    def validatorExistsByName(self, name):
-        """
-
-        :param name:`str` name of the validator being added
-        :return:
-        """
-        if self.findValidatorByName(name=name) is not None:
-            return True
-
-        return False
-
     def iterValidators(self):
         for eachValidator, _ in self._validators:
             yield eachValidator
+
+    def iterSourceNodes(self):
+        """ Convenience generator to iter through ALL validators and their sourceNodes"""
+        for eachValidator in self.iterValidators():
+            for eachSourceNode in eachValidator.iterSourceNodes():
+                yield eachSourceNode
 
     # Dialogs
     def _save(self):

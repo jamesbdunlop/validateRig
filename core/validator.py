@@ -1,8 +1,13 @@
 import logging
 from const import serialization as c_serialization
 from core import parser as c_parser
+from core import inside
 
 logger = logging.getLogger(__name__)
+
+if inside.insideMaya():
+    import maya.api.OpenMaya as om2
+    from maya import cmds
 
 
 class Validator:
@@ -33,7 +38,7 @@ class Validator:
         :return: `SourceNode`
         """
         for eachNode in self.iterSourceNodes():
-            if eachNode.name == name:
+            if eachNode.longName == name:
                 return eachNode
 
     def sourceNodeExists(self, sourceNode):
@@ -52,7 +57,7 @@ class Validator:
         :param sourceNodeName: `str`
         :return:
         """
-        sourceNodeNames = [n.name for n in self._nodes]
+        sourceNodeNames = [n.longName for n in self._nodes]
 
         return sourceNodeName in sourceNodeNames
 
@@ -97,7 +102,10 @@ class Validator:
         for eachNode in self._nodes:
             yield eachNode
 
-    def validate(self):
+    def validateSourceNodes(self):
+        raise NotImplementedError('Override this..')
+
+    def remedyFailedValidations(self):
         raise NotImplementedError('Override this..')
 
     def toData(self):
@@ -191,25 +199,23 @@ class MayaValidator(Validator):
 
         return None
 
-    def validate(self):
+    def validateAllSourceNodes(self):
         """
         Maya validator checking for values against the expected values!
         """
-        import maya.api.OpenMaya as om2
-
         validationData = dict()
-        for srcNode in self.iterNodes():
+        for validityNode in self.iterSourceNodes():
+            nodeType = validityNode.nodeType()
+
             mSel = om2.MSelectionList()
-            mSel.add(srcNode.name)
+            mSel.add(validityNode.name)
             srcMFn = om2.MFnDependencyNode(mSel.getDependNode(0))
 
-            for destNode in srcNode.iterNodes():
-                srcPlug = srcMFn.findPlug(destNode.srcAttrName, False)
-                expectedSourceValue = destNode.srcAttrValue
+    def remedyFailedValidations(self):
+        def fixConnections():
+            pass
 
-                # We can bail out early if the source attribute in scene doesn't match the expected validation setting!
-                srcPlugValue = self.getPlugValue(srcPlug)
-                if srcPlugValue != expectedSourceValue:
-                    validationData[srcNode.name] = "Failed %s.%s is not set at %s" % (srcNode.name,
-                                                                                      destNode.srcAttrName,
-                                                                                      expectedSourceValue)
+        def fixDefaultValues():
+            pass
+
+        pass
