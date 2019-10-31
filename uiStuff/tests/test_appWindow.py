@@ -4,7 +4,6 @@ from app import ValidationUI
 
 
 class Test_QApplication(unittest.TestCase):
-
     def setUp(self):
         super(Test_QApplication, self).setUp()
         if isinstance(QtGui.QGuiApplication, type(None)):
@@ -25,6 +24,6 @@ class Test_QApplication(unittest.TestCase):
         self.assertIsInstance(self.mainWindow, ValidationUI)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     runner = unittest.TextTestRunner()
     runner.run(unittest.TestSuite())

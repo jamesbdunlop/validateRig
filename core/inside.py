@@ -1,5 +1,6 @@
 import sys
 
+
 def insideMaya():
     inside = True
     if not "maya.api.maya" in sys.modules:

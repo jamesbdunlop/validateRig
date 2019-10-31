@@ -12,6 +12,7 @@ from uiStuff.themes import factory as uit_factory
 from uiStuff.trees import treewidgetitems as cuit_treewidgetitems
 from uiStuff.dialogs import saveToJSONFile as uid_saveJSON
 from uiStuff.trees import validationTreeWidget as uit_validationTreeWidget
+
 logger = logging.getLogger(__name__)
 
 """
@@ -41,7 +42,9 @@ myWin.show()
 
 
 class ValidationUI(QtWidgets.QWidget):
-    def __init__(self, title=constants.UINAME, theme="core", themecolor="blue", parent=None):
+    def __init__(
+        self, title=constants.UINAME, theme="core", themecolor="", parent=None
+    ):
         super(ValidationUI, self).__init__(parent=parent)
         """
         TO DO
@@ -60,7 +63,9 @@ class ValidationUI(QtWidgets.QWidget):
         self.setStyleSheet(self.sheet)
         self.setAcceptDrops(True)
 
-        self._validators = list()                   # list of tuples of validators and widgets (Validator, QTreeWidget)
+        self._validators = (
+            list()
+        )  # list of tuples of validators and widgets (Validator, QTreeWidget)
 
         self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setObjectName("mainLayout")
@@ -106,13 +111,17 @@ class ValidationUI(QtWidgets.QWidget):
         treeWidget = self.createValidationTreeWidget(validator=validator)
         validatorpair = (validator, treeWidget)
         if validatorpair in self._validators:
-            raise Exception("Something bad happened! \nThe validation pair exists! But we didn't fail get_validatorbyName!")
+            raise Exception(
+                "Something bad happened! \nThe validation pair exists! But we didn't fail get_validatorbyName!"
+            )
 
         self._validators.append((validator, treeWidget))
         return validator, treeWidget
 
     def createValidator(self, data):
-        return c_validator.Validator(name=data.get(c_serialization.KEY_VALIDATOR_NAME, ""))
+        return c_validator.Validator(
+            name=data.get(c_serialization.KEY_VALIDATOR_NAME, "")
+        )
 
     def createValidationTreeWidget(self, validator):
         """Creates a treeView widget for the treeWidget/validator pair for adding source nodes to.
@@ -201,16 +210,22 @@ class ValidationUI(QtWidgets.QWidget):
             # Populate the rows with the validations for the node
             for eachChild in node.iterValidityNodes():
                 if eachChild.nodeType == c_serialization.NT_DEFAULTVALUE:
-                    treewidgetItem = cuit_treewidgetitems.DefaultValueTreeWidgetItem(node=eachChild)
+                    treewidgetItem = cuit_treewidgetitems.DefaultValueTreeWidgetItem(
+                        node=eachChild
+                    )
                 elif eachChild.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
-                    treewidgetItem = cuit_treewidgetitems.ConnectionTreeWidgetItem(node=eachChild)
+                    treewidgetItem = cuit_treewidgetitems.ConnectionTreeWidgetItem(
+                        node=eachChild
+                    )
                 w.addChild(treewidgetItem)
 
             w.setExpanded(expanded)
             treeWidget.addTopLevelItem(w)
 
         # Validator GBox and treeWidget as child
-        groupBox = QtWidgets.QGroupBox(data.get(c_serialization.KEY_VALIDATOR_NAME, "None"))
+        groupBox = QtWidgets.QGroupBox(
+            data.get(c_serialization.KEY_VALIDATOR_NAME, "None")
+        )
         groupBoxLayout = QtWidgets.QVBoxLayout(groupBox)
         groupBoxLayout.addWidget(treeWidget)
         self.treeWidgetLayout.addWidget(groupBox)
@@ -237,6 +252,8 @@ class ValidationUI(QtWidgets.QWidget):
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv).instance()
-    myWin = ValidationUI.from_fileJSON(filepath="T:/software/validateRig/core/tests/validatorTestData.json")
+    myWin = ValidationUI.from_fileJSON(
+        filepath="T:/software/validateRig/core/tests/validatorTestData.json"
+    )
     myWin.show()
     sys.exit(app.exec_())

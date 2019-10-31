@@ -12,8 +12,10 @@ if inside.insideMaya():
 
 class Validator:
     def __init__(self, name, nodes=None):
-        self._name = name                   # name of the validator.
-        self._nodes = nodes or list()       # list of SourceNodes with ConnectionValidityNodes
+        self._name = name  # name of the validator.
+        self._nodes = (
+            nodes or list()
+        )  # list of SourceNodes with ConnectionValidityNodes
 
     @property
     def name(self):
@@ -88,7 +90,10 @@ class Validator:
             return self.replaceExistingSourceNode(sourceNode)
 
         if self.sourceNodeExists(sourceNode) and not force:
-            raise IndexError("%s already exists in validator. Use force=True if you want to overwrite existing!" % sourceNode)
+            raise IndexError(
+                "%s already exists in validator. Use force=True if you want to overwrite existing!"
+                % sourceNode
+            )
 
     def removeSourceNode(self, sourceNode):
         for eachSourceNode in self.iterSourceNodes():
@@ -103,10 +108,10 @@ class Validator:
             yield eachNode
 
     def validateSourceNodes(self):
-        raise NotImplementedError('Override this..')
+        raise NotImplementedError("Override this..")
 
     def remedyFailedValidations(self):
-        raise NotImplementedError('Override this..')
+        raise NotImplementedError("Override this..")
 
     def toData(self):
         data = dict()
@@ -154,7 +159,11 @@ class MayaValidator(Validator):
         apiType = pAttribute.apiType()
 
         # Float Groups - rotate, translate, scale; Com2pounds
-        if apiType in [om2.MFn.kAttribute3Double, om2.MFn.kAttribute3Float, om2.MFn.kCompoundAttribute]:
+        if apiType in [
+            om2.MFn.kAttribute3Double,
+            om2.MFn.kAttribute3Float,
+            om2.MFn.kCompoundAttribute,
+        ]:
             result = []
             if plug.isCompound:
                 for c in range(plug.numChildren()):
@@ -188,10 +197,18 @@ class MayaValidator(Validator):
             pType = om2.MFnNumericAttribute(pAttribute).numericType()
             if pType == om2.MFnNumericData.kBoolean:
                 return plug.asBool()
-            elif pType in [om2.MFnNumericData.kShort, om2.MFnNumericData.kInt, om2.MFnNumericData.kLong,
-                           om2.MFnNumericData.kByte]:
+            elif pType in [
+                om2.MFnNumericData.kShort,
+                om2.MFnNumericData.kInt,
+                om2.MFnNumericData.kLong,
+                om2.MFnNumericData.kByte,
+            ]:
                 return plug.asInt()
-            elif pType in [om2.MFnNumericData.kFloat, om2.MFnNumericData.kDouble, om2.MFnNumericData.kAddr]:
+            elif pType in [
+                om2.MFnNumericData.kFloat,
+                om2.MFnNumericData.kDouble,
+                om2.MFnNumericData.kAddr,
+            ]:
                 return plug.asDouble()
 
         # Enum

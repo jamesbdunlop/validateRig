@@ -2,6 +2,7 @@ from const import constants as c_constants
 from const import serialization as c_serialization
 from core import parser as c_parser
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -66,7 +67,11 @@ class Node(object):
         return cls(name=name, nodeType=nodeType)
 
     def __repr__(self):
-        return "shortName: %s\nlongName: %s\nstatus: %s" % (self.name, self.longName, self.status)
+        return "shortName: %s\nlongName: %s\nstatus: %s" % (
+            self.name,
+            self.longName,
+            self.status,
+        )
 
 
 class SourceNode(Node):
@@ -96,7 +101,9 @@ class SourceNode(Node):
         :param name: `str` unique name of the node as it exists in the dcc
         :param validityNodes: `list` of ConnectionValidityNodes
         """
-        super(SourceNode, self).__init__(name=name, nodeType=c_serialization.NT_SOURCENODE)
+        super(SourceNode, self).__init__(
+            name=name, nodeType=c_serialization.NT_SOURCENODE
+        )
         self._validityNodes = validityNodes or list()
 
     def validityNodeExists(self, validityNode):
@@ -181,7 +188,10 @@ class SourceNode(Node):
             raise KeyError("sourceNodeName is not valid! %s" % data)
 
         serializedValidityNodes = data.get(c_serialization.KEY_VAILIDITYNODES, list())
-        validityNodes = [cls.createValidityNodeFromData(validityNodeData) for validityNodeData in serializedValidityNodes]
+        validityNodes = [
+            cls.createValidityNodeFromData(validityNodeData)
+            for validityNodeData in serializedValidityNodes
+        ]
 
         inst = cls(name=sourceNodeName, validityNodes=validityNodes)
 
@@ -225,14 +235,16 @@ class ConnectionValidityNode(Node):
         :param name: `str` nodeName of the node that the sourceNode.attribute is connected to.
         :param nodeType: `int`
         """
-        super(ConnectionValidityNode, self).__init__(name=name, nodeType=c_serialization.NT_CONNECTIONVALIDITY)
+        super(ConnectionValidityNode, self).__init__(
+            name=name, nodeType=c_serialization.NT_CONNECTIONVALIDITY
+        )
 
         # These should be set using the setters!
         self._destAttrName = ""
         self._destAttrValue = ""
         self._srcAttrName = ""
         self._srcAttrValue = ""
-        self._status = False    # This is the report status if it passed or failed the validation test
+        self._status = False  # This is the report status if it passed or failed the validation test
 
     @property
     def destAttrName(self):
@@ -268,7 +280,7 @@ class ConnectionValidityNode(Node):
 
     @srcAttrName.setter
     def srcAttrName(self, name):
-      self._srcAttrName = name
+        self._srcAttrName = name
 
     @property
     def srcAttrValue(self):
@@ -307,7 +319,9 @@ class ConnectionValidityNode(Node):
 
 class DefaultValueNode(Node):
     def __init__(self, name, defaultValue=None):
-        super(DefaultValueNode, self).__init__(name=name, nodeType=c_serialization.NT_DEFAULTVALUE)
+        super(DefaultValueNode, self).__init__(
+            name=name, nodeType=c_serialization.NT_DEFAULTVALUE
+        )
 
         self._defaultValue = defaultValue
 

@@ -5,6 +5,7 @@ from const import serialization as c_serialization
 from core import inside
 from uiStuff.trees import treewidgetitems as cuit_treewidgetitems
 from uiStuff.dialogs import attributeList as uid_attributeList
+
 logger = logging.getLogger(__name__)
 
 
@@ -52,7 +53,10 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
             removeAll = menu.addAction("Remove ALL SourceNode ValidationNodes")
             removeAll.triggered.connect(self.__removeAllChildren)
 
-        elif nodeType == c_serialization.NT_CONNECTIONVALIDITY or nodeType == c_serialization.NT_DEFAULTVALUE:
+        elif (
+            nodeType == c_serialization.NT_CONNECTIONVALIDITY
+            or nodeType == c_serialization.NT_DEFAULTVALUE
+        ):
             remove = menu.addAction("Remove ValidationNode")
             remove.triggered.connect(self.__removeTreeWidgetItems)
 
@@ -76,7 +80,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         """
         itemList = self.findItems(name, QtCore.Qt.MatchExactly)
         if itemList.count():
-           return itemList[0]
+            return itemList[0]
 
     def __removeAllTreeWidgetItemChildren(self, treeWidgetItem):
         """
@@ -90,13 +94,21 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
             for x in range(treeWidgetItem.childCount()):
                 treeWidgetItem.takeChild(x)
 
-    def __addValidityNodesToTreeWidgetItemFromSourceNode(self, sourceNode, treeWidgetItem):
+    def __addValidityNodesToTreeWidgetItemFromSourceNode(
+        self, sourceNode, treeWidgetItem
+    ):
         for eachValidityNode in sourceNode.iterValidityNodes():
             if eachValidityNode.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
-                treeWidgetItem.addChild(cuit_treewidgetitems.ConnectionTreeWidgetItem(node=eachValidityNode))
+                treeWidgetItem.addChild(
+                    cuit_treewidgetitems.ConnectionTreeWidgetItem(node=eachValidityNode)
+                )
 
             if eachValidityNode.nodeType == c_serialization.NT_DEFAULTVALUE:
-                treeWidgetItem.addChild(cuit_treewidgetitems.DefaultValueTreeWidgetItem(node=eachValidityNode))
+                treeWidgetItem.addChild(
+                    cuit_treewidgetitems.DefaultValueTreeWidgetItem(
+                        node=eachValidityNode
+                    )
+                )
 
     def _processSourceNodeAttributeWidgets(self, sourceNodesList):
         """
@@ -112,13 +124,17 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
                     continue
 
                 self.__removeAllTreeWidgetItemChildren(treeWidgetItem)
-                self.__addValidityNodesToTreeWidgetItemFromSourceNode(sourceNode, treeWidgetItem)
+                self.__addValidityNodesToTreeWidgetItemFromSourceNode(
+                    sourceNode, treeWidgetItem
+                )
                 continue
 
             # New
             self.validator().addSourceNode(sourceNode, True)
             treeWidgetItem = self.__addTopLevelTreeWidgetItemFromSourceNode(sourceNode)
-            self.__addValidityNodesToTreeWidgetItemFromSourceNode(sourceNode, treeWidgetItem)
+            self.__addValidityNodesToTreeWidgetItemFromSourceNode(
+                sourceNode, treeWidgetItem
+            )
 
     def __removeTreeWidgetItems(self):
         for eachTreeWidgetItem in self.selectedItems():
@@ -169,21 +185,28 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
 
 class MayaValidationTreeWidget(ValidationTreeWidget):
     def __init__(self, validator, parent=None):
-        super(MayaValidationTreeWidget, self).__init__(validator=validator, parent=parent)
+        super(MayaValidationTreeWidget, self).__init__(
+            validator=validator, parent=parent
+        )
 
     def processMayaDrop(self, QDropEvent):
         nodeNames = QDropEvent.mimeData().text().split("\n")
 
-        self.mainAttrWidget = uid_attributeList.MultiSourceNodeListWidgets("SourceNodes", None)
+        self.mainAttrWidget = uid_attributeList.MultiSourceNodeListWidgets(
+            "SourceNodes", None
+        )
 
         # Check to see if this exists in the validator we dropped over.
         for nodeName in nodeNames:
             if not self.validator().sourceNodeNameExists(nodeName):
-                self.srcNodesWidget = uid_attributeList.MayaSourceNodeAttributeListWidget(nodeName=nodeName, parent=self)
+                self.srcNodesWidget = uid_attributeList.MayaSourceNodeAttributeListWidget(
+                    nodeName=nodeName, parent=self
+                )
             else:
                 existingSourceNode = self.validator().findSourceNodeByName(nodeName)
-                self.srcNodesWidget = uid_attributeList.MayaSourceNodeAttributeListWidget.fromSourceNode(sourceNode=existingSourceNode,
-                                                                                                         parent=self)
+                self.srcNodesWidget = uid_attributeList.MayaSourceNodeAttributeListWidget.fromSourceNode(
+                    sourceNode=existingSourceNode, parent=self
+                )
 
             if self.srcNodesWidget is None:
                 continue
@@ -194,7 +217,9 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
             self.mainAttrWidget.addListWidget(self.srcNodesWidget)
 
         self.mainAttrWidget.resize(600, 900)
-        self.mainAttrWidget.sourceNodesAccepted.connect(self._processSourceNodeAttributeWidgets)
+        self.mainAttrWidget.sourceNodesAccepted.connect(
+            self._processSourceNodeAttributeWidgets
+        )
         self.mainAttrWidget.move(QtGui.QCursor.pos())
         self.mainAttrWidget.show()
 

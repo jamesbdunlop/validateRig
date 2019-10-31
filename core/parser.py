@@ -16,6 +16,7 @@ def read(filepath):
 
         return data
 
+
 def write(filepath, data):
     """
 
@@ -24,7 +25,7 @@ def write(filepath, data):
     :return: `bool`
     """
     logger.info("Writing data to %s" % filepath)
-    with open(filepath, 'w') as outfile:
+    with open(filepath, "w") as outfile:
         outfile.write(json.dumps(data, sort_keys=True))
 
     logger.info("Wrote date to %s" % filepath)
