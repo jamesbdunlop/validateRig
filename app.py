@@ -10,7 +10,8 @@ from core import parser as c_parser
 from core.nodes import SourceNode
 from uiStuff.themes import factory as uit_factory
 from uiStuff.trees import treewidgetitems as cuit_treewidgetitems
-from uiStuff.dialogs import saveToJSONFile as uid_saveJSON
+from uiStuff.dialogs import saveToJSONFile as uid_saveToJSON
+from uiStuff.dialogs import loadFromJSONFile as uid_loadFromJSON
 from uiStuff.trees import validationTreeWidget as uit_validationTreeWidget
 
 logger = logging.getLogger(__name__)
@@ -70,17 +71,17 @@ class ValidationUI(QtWidgets.QWidget):
         self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setObjectName("mainLayout")
 
-        self.treeWidgetLayout = QtWidgets.QVBoxLayout()
-        self.treeWidgetLayout.setObjectName("widgetLayout")
+        self.groupBoxesLayout = QtWidgets.QVBoxLayout()
+        self.groupBoxesLayout.setObjectName("groupBoxLayout")
 
         # Buttons
         self.buttonLayout = QtWidgets.QHBoxLayout()
 
         self.loadButton = QtWidgets.QPushButton("Load")
-        self.loadButton.clicked.connect(self._load)
+        self.loadButton.clicked.connect(self._loadDialog)
 
         self.saveButton = QtWidgets.QPushButton("Save")
-        self.saveButton.clicked.connect(self._save)
+        self.saveButton.clicked.connect(self._saveDialog)
 
         self.runButton = QtWidgets.QPushButton("Run")
 
@@ -88,7 +89,7 @@ class ValidationUI(QtWidgets.QWidget):
         self.buttonLayout.addWidget(self.saveButton)
         self.buttonLayout.addWidget(self.runButton)
 
-        self.mainLayout.addLayout(self.treeWidgetLayout)
+        self.mainLayout.addLayout(self.groupBoxesLayout)
         self.mainLayout.addLayout(self.buttonLayout)
 
         self.resize(1200, 800)
@@ -102,7 +103,7 @@ class ValidationUI(QtWidgets.QWidget):
         :return:
         """
         validatorName = data.get(c_serialization.KEY_VALIDATOR_NAME)
-        if self.get_validatorByName(validatorName) is not None:
+        if self.findValidatorByName(validatorName) is not None:
             msg = "Validator named: `%s` already exists! Skipping!" % validatorName
             logger.warning(msg)
             raise Exception(msg)
@@ -119,6 +120,11 @@ class ValidationUI(QtWidgets.QWidget):
         return validator, treeWidget
 
     def createValidator(self, data):
+        """
+
+        :param data: dict
+        :return: `Validator`
+        """
         return c_validator.Validator(
             name=data.get(c_serialization.KEY_VALIDATOR_NAME, "")
         )
@@ -128,51 +134,62 @@ class ValidationUI(QtWidgets.QWidget):
         :param validator: `Validator`
         """
         if inside.insideMaya():
-            return uit_validationTreeWidget.MayaValidationTreeWidget(validator, self)
+            treewidget = uit_validationTreeWidget.MayaValidationTreeWidget(validator, self)
+        else:
+            treewidget = uit_validationTreeWidget.ValidationTreeWidget(validator, self)
 
-        return uit_validationTreeWidget.ValidationTreeWidget(validator, self)
+        treewidget.remove.connect(self.removeValidator)
+        return treewidget
 
     # Search
-    def get_validatorByName(self, name):
+    def findValidatorByName(self, name):
+        """
+
+        :param name: `str` shortName
+        :return: `Validator`
+        """
         for eachValidator in self.iterValidators():
             if eachValidator.name == name:
                 return eachValidator
 
     def iterValidators(self):
+        """
+
+        :return: `Validator`
+        """
         for eachValidator, _ in self._validators:
             yield eachValidator
 
-    def iterSourceNodes(self):
-        """ Convenience generator to iter through ALL validators and their sourceNodes"""
-        for eachValidator in self.iterValidators():
-            for eachSourceNode in eachValidator.iterSourceNodes():
-                yield eachSourceNode
-
-    # Dialogs
-    def _save(self):
+    def toData(self):
         """
-        Writes to disk all the validation data for each validation treeWidget added to the UI.
+        Collect all the validation data's into a dict
 
-        :return:
+        :return: `dict`
         """
-        # Collect all the validation data's
         data = dict()
         for eachValidator, _ in self._validators:
             vd = eachValidator.toData()
             data[vd[c_serialization.KEY_VALIDATOR_NAME]] = vd
 
-        dialog = uid_saveJSON.SaveJSONToFileDialog(parent=None)
+        return data
+
+    # Dialogs
+    def _saveDialog(self):
+        """
+        Writes to disk all the validation data for each validation treeWidget added to the UI.
+
+        :return:
+        """
+        dialog = uid_saveToJSON.SaveJSONToFileDialog(parent=None)
         dialog.setStyleSheet(self.sheet)
         if dialog.exec_():
             for eachFile in dialog.selectedFiles():
-                c_parser.write(filepath=eachFile, data=data)
+                c_parser.write(filepath=eachFile, data=self.toData())
 
-    def _load(self):
+    def _loadDialog(self):
         # TODO make this a class like the save dialog
-        dialog = QtWidgets.QFileDialog()
+        dialog = uid_loadFromJSON.LoadFromJSONFileDialog(parent=None)
         dialog.setStyleSheet(self.sheet)
-        dialog.setNameFilter("*{}".format(constants.JSON_EXT))
-        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
         if dialog.exec_():
             for filepath in dialog.selectedFiles():
                 data = c_parser.read(filepath)
@@ -201,11 +218,10 @@ class ValidationUI(QtWidgets.QWidget):
         # Popuplate now
         for sourceNodeData in data.get(c_serialization.KEY_VALIDATOR_NODES, list()):
             # Create and add the validation node to the validator
-            node = SourceNode.fromData(sourceNodeData)
-            validator.addSourceNode(node)
+            node = validator.addSourceNodeFromData(sourceNodeData)
 
             # Create and add the treeWidgetItem to the treeWidget from the node
-            w = cuit_treewidgetitems.SourceNodeTreeWidgetItem(node=node)
+            sourceNodeTreeWItm = cuit_treewidgetitems.SourceNodeTreeWidgetItem(node=node)
 
             # Populate the rows with the validations for the node
             for eachChild in node.iterValidityNodes():
@@ -217,20 +233,34 @@ class ValidationUI(QtWidgets.QWidget):
                     treewidgetItem = cuit_treewidgetitems.ConnectionTreeWidgetItem(
                         node=eachChild
                     )
-                w.addChild(treewidgetItem)
+                sourceNodeTreeWItm.addChild(treewidgetItem)
 
-            w.setExpanded(expanded)
-            treeWidget.addTopLevelItem(w)
+            sourceNodeTreeWItm.setExpanded(expanded)
+            treeWidget.addTopLevelItem(sourceNodeTreeWItm)
 
+        groupBoxName = data.get(c_serialization.KEY_VALIDATOR_NAME, "None")
+        self.createValidationGroupBox(name=groupBoxName, treeWidget=treeWidget)
+
+    def createValidationGroupBox(self, name, treeWidget):
         # Validator GBox and treeWidget as child
-        groupBox = QtWidgets.QGroupBox(
-            data.get(c_serialization.KEY_VALIDATOR_NAME, "None")
-        )
+        groupBox = QtWidgets.QGroupBox(name)
         groupBoxLayout = QtWidgets.QVBoxLayout(groupBox)
         groupBoxLayout.addWidget(treeWidget)
-        self.treeWidgetLayout.addWidget(groupBox)
+        self.groupBoxesLayout.addWidget(groupBox)
 
-        return validator, treeWidget
+        return groupBox
+
+    def removeValidator(self, validatorList):
+        """
+
+        :param validatorList: `list` [Validator, GroupBox]
+        """
+        validator, groupBox = validatorList
+        for eachValidator, treeWidget in self._validators:
+            if validator.name == eachValidator.name:
+                self._validators.remove((eachValidator, treeWidget))
+                groupBox.setParent(None)
+                del groupBox
 
     @classmethod
     def from_fileJSON(cls, filepath, expanded=False, parent=None):

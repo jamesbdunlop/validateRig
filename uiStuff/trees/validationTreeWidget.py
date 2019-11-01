@@ -10,6 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 class ValidationTreeWidget(QtWidgets.QTreeWidget):
+    remove = QtCore.Signal(list, name="remove")
+
     def __init__(self, validator, parent=None):
         """
 
@@ -28,6 +30,9 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         self.widgetUnderMouse = None
         self._validator = validator
 
+    def validator(self):
+        return self._validator
+
     def __getNodeTypeUnderCursor(self, QPoint):
         item = self.itemAt(QPoint)
         if item is None:
@@ -43,6 +48,8 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         :return:
         """
         menu = QtWidgets.QMenu()
+        removeValidator = menu.addAction("removeValidator")
+        removeValidator.triggered.connect(self.__removeValidator)
         nodeType = self.__getNodeTypeUnderCursor(QPoint)
         if not nodeType:
             return
@@ -65,6 +72,9 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
             clearAll.triggered.connect(self.__removeAllTopLevelItems)
 
         menu.exec_(menu.mapToGlobal(QtGui.QCursor.pos()))
+
+    def __removeValidator(self):
+        self.remove.emit([self.validator(), self.parent()])
 
     def __addTopLevelTreeWidgetItemFromSourceNode(self, sourceNode):
         item = cuit_treewidgetitems.SourceNodeTreeWidgetItem(node=sourceNode)
@@ -94,9 +104,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
             for x in range(treeWidgetItem.childCount()):
                 treeWidgetItem.takeChild(x)
 
-    def __addValidityNodesToTreeWidgetItemFromSourceNode(
-        self, sourceNode, treeWidgetItem
-    ):
+    def __addValidityNodesToTreeWidgetItemFromSourceNode(self, sourceNode, treeWidgetItem):
         for eachValidityNode in sourceNode.iterValidityNodes():
             if eachValidityNode.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
                 treeWidgetItem.addChild(
@@ -178,9 +186,6 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
 
     def dropEvent(self, QDropEvent):
         super(ValidationTreeWidget, self).dropEvent(QDropEvent)
-
-    def validator(self):
-        return self._validator
 
 
 class MayaValidationTreeWidget(ValidationTreeWidget):

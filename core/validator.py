@@ -1,5 +1,6 @@
 import logging
 from const import serialization as c_serialization
+from core.nodes import SourceNode
 from core import parser as c_parser
 from core import inside
 
@@ -72,9 +73,7 @@ class Validator:
         for x, node in enumerate(self._nodes):
             if node.name == sourceNode.name:
                 self._nodes[x] = sourceNode
-                return True
-
-        return False
+                return sourceNode
 
     def addSourceNode(self, sourceNode, force=False):
         """
@@ -84,9 +83,9 @@ class Validator:
 
         if not self.sourceNodeExists(sourceNode):
             self._nodes.append(sourceNode)
-            return True
+            return sourceNode
 
-        if self.sourceNodeExists(sourceNode) and force:
+        if self.sourceNodeExists(sourceNode) is not None and force:
             return self.replaceExistingSourceNode(sourceNode)
 
         if self.sourceNodeExists(sourceNode) and not force:
@@ -94,6 +93,17 @@ class Validator:
                 "%s already exists in validator. Use force=True if you want to overwrite existing!"
                 % sourceNode
             )
+
+    def addSourceNodeFromData(self, data):
+        """
+
+        :param data: `dict`
+        :return: `SourceNode`
+        """
+        sourceNode = SourceNode.fromData(data)
+        self.addSourceNode(sourceNode)
+
+        return sourceNode
 
     def removeSourceNode(self, sourceNode):
         for eachSourceNode in self.iterSourceNodes():
@@ -141,6 +151,9 @@ class Validator:
         c_parser.write(filepath=filePath, data=self.toData())
         logger.info("Successfully wrote validator to: %s" % filePath)
         return True
+
+    def __repr__(self):
+        return "%s" % self.name
 
 
 class MayaValidator(Validator):

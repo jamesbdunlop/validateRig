@@ -1,0 +1,63 @@
+{
+  "Extended Validator": {
+    "vN": "Extended Validator",
+    "vNodes": [
+      {
+        "nN": "master_ctrl",
+        "nT": 10,
+        "vdn": [
+          {
+            "aN": "showCloth",
+            "aV": true,
+            "nN": "geo_hrc",
+            "nT": 20,
+            "srcAN": "visibility",
+            "srcAV": true
+          },
+          {
+            "dv": "xyz",
+            "nN": "rotateOrder",
+            "nT": 30
+          },
+          {
+            "dv": [
+              0,
+              0,
+              0
+            ],
+            "nN": "translate",
+            "nT": 30
+          },
+          {
+            "dv": [
+              90,
+              0,
+              0
+            ],
+            "nN": "rotate",
+            "nT": 30
+          }
+        ]
+      },
+      {
+        "nN": "body_ctrl",
+        "nT": 10,
+        "vdn": [
+          {
+            "aN": "showJacket",
+            "aV": true,
+            "nN": "jacket_geo",
+            "nT": 20,
+            "srcAN": "visibility",
+            "srcAV": true
+          },
+          {
+            "dv": "zxy",
+            "nN": "rotateOrder",
+            "nT": 30
+          }
+        ]
+      }
+    ]
+  }
+}
