@@ -14,7 +14,7 @@ class Test_Parser(unittest.TestCase):
         pass
 
     def test_readwriteFile(self):
-        c_parser.write(self.filepath, self.testOutData)
+        self.assertTrue(c_parser.write(self.filepath, self.testOutData))
         self.assertEqual(c_parser.read(self.filepath), self.testOutData, "out data is not the same!")
 
 

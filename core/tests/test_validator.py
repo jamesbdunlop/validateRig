@@ -4,11 +4,11 @@ from const import serialization as c_serialization
 from const import testData as c_testdata
 import core.nodes as c_nodes
 import core.validator as c_validator
+
 logger = logging.getLogger(__name__)
 
 
 class Test_Validator(unittest.TestCase):
-
     def setUp(self):
         self.validator = c_validator.Validator(name=c_testdata.VALIDATOR_NAME)
 
@@ -22,7 +22,9 @@ class Test_Validator(unittest.TestCase):
 
         self.sourceNode = c_nodes.SourceNode(name=self.sourceNodeName)
 
-        self.connectionValidityNode = c_nodes.ConnectionValidityNode(name=self.connectionValidityNodeName)
+        self.connectionValidityNode = c_nodes.ConnectionValidityNode(
+            name=self.connectionValidityNodeName
+        )
         self.connectionValidityNode.destAttrName = self.connectionValidityNodeAttrName
         self.connectionValidityNode.destAttrValue = self.connectionValidityNodeAttrValue
         self.connectionValidityNode.srcAttrName = self.srcNodeAttrName
@@ -33,68 +35,96 @@ class Test_Validator(unittest.TestCase):
         # Add the sourceNode to the validator now
         self.validator.addSourceNode(self.sourceNode)
 
-        self.expectedToData = {c_serialization.KEY_VALIDATOR_NAME: c_testdata.VALIDATOR_NAME,
-                               c_serialization.KEY_VALIDATOR_NODES: [
-                                   {
-                                    c_serialization.KEY_NODENAME: self.sourceNodeName,
-                                    c_serialization.KEY_NODETYPE: c_testdata.SRC_NODETYPE,
-                                    c_serialization.KEY_VAILIDITYNODES: [
-                                       {
-                                        c_serialization.KEY_NODENAME: self.connectionValidityNodeName,
-                                        c_serialization.KEY_NODETYPE: c_testdata.VALIDITY_NODETYPE,
-                                        c_serialization.KEY_DEST_ATTRIBUTENAME: self.connectionValidityNodeAttrName,
-                                        c_serialization.KEY_DEST_ATTRIBUTEVALUE: self.connectionValidityNodeAttrValue,
-                                        c_serialization.KEY_SRC_ATTRIBUTENAME: self.srcNodeAttrName,
-                                        c_serialization.KEY_SRC_ATTRIBUTEVALUE: self.srcNodeAttrValue
-                                       }
-                                    ],
-                                   }
-                               ]
-                               }
+        self.expectedToData = {
+            c_serialization.KEY_VALIDATOR_NAME: c_testdata.VALIDATOR_NAME,
+            c_serialization.KEY_VALIDATOR_NODES: [
+                {
+                    c_serialization.KEY_NODENAME: self.sourceNodeName,
+                    c_serialization.KEY_NODETYPE: c_testdata.SRC_NODETYPE,
+                    c_serialization.KEY_VAILIDITYNODES: [
+                        {
+                            c_serialization.KEY_NODENAME: self.connectionValidityNodeName,
+                            c_serialization.KEY_NODETYPE: c_testdata.VALIDITY_NODETYPE,
+                            c_serialization.KEY_DEST_ATTRIBUTENAME: self.connectionValidityNodeAttrName,
+                            c_serialization.KEY_DEST_ATTRIBUTEVALUE: self.connectionValidityNodeAttrValue,
+                            c_serialization.KEY_SRC_ATTRIBUTENAME: self.srcNodeAttrName,
+                            c_serialization.KEY_SRC_ATTRIBUTEVALUE: self.srcNodeAttrValue,
+                        }
+                    ],
+                }
+            ],
+        }
 
     def test_Name(self):
-        self.assertEqual(self.validator.name, c_testdata.VALIDATOR_NAME,
-                         "ValidatorName is not %s" % c_testdata.VALIDATOR_NAME)
+        self.assertEqual(
+            self.validator.name,
+            c_testdata.VALIDATOR_NAME,
+            "ValidatorName is not %s" % c_testdata.VALIDATOR_NAME,
+        )
 
     def test_addSourceNode(self):
-        self.assertEqual(True,
-                         self.validator.addSourceNode(c_nodes.SourceNode(name="2ndSourceNode")),
-                         "Could not .addSourceNode?! Name already exists?")
+        nodeName = "2ndSourceNode"
+        srcNode = c_nodes.SourceNode(name=nodeName)
+        self.validator.addSourceNode(srcNode)
+        self.assertTrue(
+            self.validator.sourceNodeExists(srcNode),
+            "validator.addSourceNode failed!",
+        )
 
     def test_removeSourceNode(self):
         tmpSourceNode = c_nodes.SourceNode(name="toRemove")
         self.validator.addSourceNode(tmpSourceNode)
-        self.assertTrue(self.validator.removeSourceNode(tmpSourceNode), "Failed to remove tmpSourceNode!")
+        self.assertTrue(
+            self.validator.removeSourceNode(tmpSourceNode),
+            "Failed to remove tmpSourceNode!",
+        )
 
     def test_replaceExistingSourceNode(self):
-        self.assertTrue(self.validator.replaceExistingSourceNode(self.sourceNode),
-                        "Failed to replaceExistingSourceNode!")
+        self.assertTrue(
+            self.validator.replaceExistingSourceNode(self.sourceNode),
+            "Failed to replaceExistingSourceNode!",
+        )
 
     def test_findSourceNodeByName(self):
-        sourceNode =self.validator.findSourceNodeByName(name=self.sourceNodeName)
-        self.assertEqual(sourceNode, self.sourceNode, "self.validator.findSourceNodeByName() is not self.sourceNode!")
+        sourceNode = self.validator.findSourceNodeByName(name=self.sourceNodeName)
+        self.assertEqual(
+            sourceNode,
+            self.sourceNode,
+            "self.validator.findSourceNodeByName() is not self.sourceNode!",
+        )
 
     def test_sourceNodeExists(self):
-        self.assertEqual(True, self.validator.sourceNodeExists(self.sourceNode),
-                         "SourceNode doesn't exist!")
+        self.assertEqual(
+            True,
+            self.validator.sourceNodeExists(self.sourceNode),
+            "SourceNode doesn't exist!",
+        )
 
     def test_iterNodes(self):
         nodes = [n for n in self.validator.iterSourceNodes()]
 
-        self.assertEqual(1, len(nodes),
-                         "Nodes must be len 1!")
-        self.assertEqual(nodes[0], self.sourceNode,
-                         "Validators [0] node is not %s" % self.sourceNode)
+        self.assertEqual(1, len(nodes), "Nodes must be len 1!")
+        self.assertEqual(
+            nodes[0], self.sourceNode, "Validators [0] node is not %s" % self.sourceNode
+        )
 
     def test_toFileJSON(self):
-        self.assertTrue(self.validator.to_fileJSON(filePath="C:/Temp/%s.json" % self.validator.name),
-                        "Failed to write validator data to disk!")
+        self.assertTrue(
+            self.validator.to_fileJSON(
+                filePath="C:/Temp/%s.json" % self.validator.name
+            ),
+            "Failed to write validator data to disk!",
+        )
 
     def test_toData(self):
-        self.assertEqual(self.expectedToData, self.validator.toData(),
-                         "Validation toData does not match! %s %s" % (self.expectedToData, self.validator.toData()))
+        self.assertEqual(
+            self.expectedToData,
+            self.validator.toData(),
+            "Validation toData does not match! %s %s"
+            % (self.expectedToData, self.validator.toData()),
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     runner = unittest.TextTestRunner()
     runner.run(unittest.TestSuite())

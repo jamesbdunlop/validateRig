@@ -1,6 +1,8 @@
+import sys
 from core import validator
 from core.nodes import SourceNode, DefaultValueNode, ConnectionValidityNode
-
+import app as validateRigApplication
+from PySide2 import QtWidgets
 
 def createValidator(name):
     """
@@ -59,3 +61,22 @@ def createConnectionValidityNode(
     node.srcAttrValue = sourceNodeAttributeValue
 
     return node
+
+def uiFromValidtators(name, theme="core", themecolor="", parent=None, validators=None):
+    """
+
+    :param name: `str`
+    :param validator: `list` of Validator instances
+    """
+    app = QtWidgets.QApplication(sys.argv).instance()
+    win = validateRigApplication.ValidationUI(name, theme=theme, themecolor=themecolor, parent=parent)
+    for eachValidator in validators:
+        win.addValidatorFromData(eachValidator.toData())
+
+    win.show()
+    sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+    uiFromValidtators(name="testUI", validators=[createValidator("test")])
+

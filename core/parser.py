@@ -29,3 +29,4 @@ def write(filepath, data):
         outfile.write(json.dumps(data, sort_keys=True))
 
     logger.info("Wrote date to %s" % filepath)
+    return True
