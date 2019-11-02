@@ -16,31 +16,6 @@ from uiStuff.trees import validationTreeWidget as uit_validationTreeWidget
 
 logger = logging.getLogger(__name__)
 
-"""
-TEST MAYA USAGE:
-
-import sys
-paths = ["T:\\software\\validateRig", "C:\\Python27\\Lib\\site-packages"]
-for path in paths:
-    if path not in sys.path:
-        sys.path.append(path)
-
-from shiboken2 import wrapInstance
-from PySide2 import QtWidgets
-def getMainWindowPtr(): 
-    mayaMainWindowPtr = maya.OpenMayaUI.MQtUtil.mainWindow() 
-    mayaMainWindow = wrapInstance(long(mayaMainWindowPtr), QtWidgets.QMainWindow) 
-    return mayaMainWindow
-    
-import app
-reload(app)
-from app import ValidationUI as vUI
-myWin = vUI.from_fileJSON(filepath="T:/software/validateRig/core/tests/validatorTestData.json", 
-                          parent=getMainWindowPtr())
-myWin.show()
-
-"""
-
 
 class ValidationUI(QtWidgets.QWidget):
     def __init__(
