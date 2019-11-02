@@ -31,9 +31,7 @@ class ValidationUI(QtWidgets.QWidget):
         self.setStyleSheet(self.sheet)
         self.setAcceptDrops(True)
 
-        self._validators = (
-            list()
-        )  # list of tuples of validators and widgets (Validator, QTreeWidget)
+        self._validators = []           # list of tuples of validators and widgets (Validator, QTreeWidget)
 
         self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setObjectName("mainLayout")

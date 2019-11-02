@@ -4,6 +4,7 @@ from core.nodes import SourceNode, DefaultValueNode, ConnectionValidityNode
 import app as validateRigApplication
 from PySide2 import QtWidgets
 
+
 def createValidator(name):
     """
 
