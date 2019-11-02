@@ -20,8 +20,6 @@ class Test_QApplication(unittest.TestCase):
     def test_QApplicationInstance(self):
         self.assertIsInstance(self.app, QtWidgets.QApplication)
 
-    def test_ValidationUIInstance(self):
-        self.assertIsInstance(self.mainWindow, ValidationUI)
 
 
 if __name__ == "__main__":

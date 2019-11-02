@@ -34,8 +34,8 @@ def createSourceNode(name, validityNodes=None):
     return SourceNode(name=name, validityNodes=validityNodes)
 
 
-def createDefaultValueNode(name, value):
-    return DefaultValueNode(name=name, value=value)
+def createDefaultValueNode(name, defaultValue):
+    return DefaultValueNode(name=name, defaultValue=defaultValue)
 
 
 def createConnectionValidityNode(

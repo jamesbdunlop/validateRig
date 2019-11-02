@@ -143,7 +143,9 @@ class ValidationUI(QtWidgets.QWidget):
         :param validator: `Validator`
         """
         if inside.insideMaya():
-            treewidget = uit_validationTreeWidget.MayaValidationTreeWidget(validator, self)
+            treewidget = uit_validationTreeWidget.MayaValidationTreeWidget(
+                validator, self
+            )
         else:
             treewidget = uit_validationTreeWidget.ValidationTreeWidget(validator, self)
 
@@ -193,7 +195,7 @@ class ValidationUI(QtWidgets.QWidget):
         dialog.setStyleSheet(self.sheet)
         if dialog.exec_():
             for eachFile in dialog.selectedFiles():
-                c_parser.write(filepath=eachFile, data=self.toData())
+                self.to_fileJSON(filepath=eachFile)
 
     def _loadDialog(self):
         # TODO make this a class like the save dialog
@@ -230,7 +232,9 @@ class ValidationUI(QtWidgets.QWidget):
             node = validator.addSourceNodeFromData(sourceNodeData)
 
             # Create and add the treeWidgetItem to the treeWidget from the node
-            sourceNodeTreeWItm = cuit_treewidgetitems.SourceNodeTreeWidgetItem(node=node)
+            sourceNodeTreeWItm = cuit_treewidgetitems.SourceNodeTreeWidgetItem(
+                node=node
+            )
 
             # Populate the rows with the validations for the node
             for eachChild in node.iterValidityNodes():
@@ -288,11 +292,22 @@ class ValidationUI(QtWidgets.QWidget):
 
         return inst
 
+    def to_fileJSON(self, filepath):
+        """
+
+        :param filepath: `str`
+        :return:
+        """
+        data = self.toData()
+        c_parser.write(filepath=filepath, data=data)
+
+        return True
+
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv).instance()
     myWin = ValidationUI.from_fileJSON(
-        filepath="T:/software/validateRig/core/tests/validatorTestData.json"
+        filepath="T:/software/validateRig/tests/validatorTestData.json"
     )
     # myWin = ValidationUI()
     myWin.show()
