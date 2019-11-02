@@ -47,14 +47,6 @@ class ValidationUI(QtWidgets.QWidget):
         self, title=constants.UINAME, theme="core", themecolor="", parent=None
     ):
         super(ValidationUI, self).__init__(parent=parent)
-        """
-        TO DO
-        - collapse ALL
-        - expand ALL
-        - Search replace names? For namespaces? Or a nameSpace field?
-        - Validate buttons
-        - Shows errors. checkboxes? row colors?
-        """
         self.setWindowTitle(title)
         self.setObjectName("validator_mainWindow")
         self.setWindowFlags(QtCore.Qt.Window)
@@ -75,6 +67,14 @@ class ValidationUI(QtWidgets.QWidget):
         self.groupBoxesLayout.setObjectName("groupBoxLayout")
 
         # Buttons
+        self.treeButtons = QtWidgets.QHBoxLayout()
+        self.expandAll = QtWidgets.QPushButton("expand All")
+        self.expandAll.clicked.connect(self.__expandAll)
+        self.collapseAll = QtWidgets.QPushButton("collapse All")
+        self.collapseAll.clicked.connect(self.__collapseAll)
+        self.treeButtons.addWidget(self.expandAll)
+        self.treeButtons.addWidget(self.collapseAll)
+
         self.buttonLayout = QtWidgets.QHBoxLayout()
 
         self.loadButton = QtWidgets.QPushButton("Load")
@@ -89,10 +89,19 @@ class ValidationUI(QtWidgets.QWidget):
         self.buttonLayout.addWidget(self.saveButton)
         self.buttonLayout.addWidget(self.runButton)
 
+        self.mainLayout.addLayout(self.treeButtons)
         self.mainLayout.addLayout(self.groupBoxesLayout)
         self.mainLayout.addLayout(self.buttonLayout)
 
         self.resize(1200, 800)
+
+    def __expandAll(self):
+        for _, treeWidget in self._validators:
+            treeWidget.expandAll()
+
+    def __collapseAll(self):
+        for _, treeWidget in self._validators:
+            treeWidget.collapseAll()
 
     # Create
     def createValidationPair(self, data):
@@ -285,5 +294,6 @@ if __name__ == "__main__":
     myWin = ValidationUI.from_fileJSON(
         filepath="T:/software/validateRig/core/tests/validatorTestData.json"
     )
+    # myWin = ValidationUI()
     myWin.show()
     sys.exit(app.exec_())
