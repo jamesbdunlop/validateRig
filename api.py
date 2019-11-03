@@ -1,9 +1,28 @@
-import sys
-from core import validator
+from core import validator as c_validator
 from core.nodes import SourceNode, DefaultValueNode, ConnectionValidityNode
-import app as validateRigApplication
-from PySide2 import QtWidgets
 
+"""
+# Very quick usage example in maya
+import api as vrAPI
+
+validator = vrAPI.createValidator("test")
+sourceNodes = list()
+for e in cmds.ls(sl=True):
+    attrs = ("translate", "rotate", "scale")
+    sourceNodes = list()
+    srtNodes = [vrAPI.createDefaultValueNode(name=attr, defaultValue=cmds.getAttr("{}.{}".format(e, attr))) for attr in attrs]
+    sourceNodes += srtNodes
+    
+    if cmds.listAttr(e, ud=True):
+        udefinedAttributes = [vrAPI.createDefaultValueNode(name=attr, defaultValue=cmds.getAttr("{}.{}".format(e, attr))) for attr in cmds.listAttr(e, ud=True)]
+        sourceNodes += udefinedAttributes
+    
+    sourceNode = vrAPI.createSourceNode(name=e, validityNodes=sourceNodes)
+    validator.addSourceNode(sourceNode)
+    
+validator.to_fileJSON(filePath="C:/temp/testValidator.json")
+# This file can then be loaded into the UI
+"""
 
 def createValidator(name):
     """
@@ -12,7 +31,7 @@ def createValidator(name):
     :return: `Validator`
     """
 
-    return validator.Validator(name=name)
+    return c_validator.Validator(name=name)
 
 
 def createMayaValidator(name):
@@ -22,7 +41,7 @@ def createMayaValidator(name):
     :return: `Validator`
     """
 
-    return validator.MayaValidator(name=name)
+    return c_validator.MayaValidator(name=name)
 
 
 def createSourceNode(name, validityNodes=None):
@@ -62,22 +81,4 @@ def createConnectionValidityNode(
     node.srcAttrValue = sourceNodeAttributeValue
 
     return node
-
-def uiFromValidtators(name, theme="core", themecolor="", parent=None, validators=None):
-    """
-
-    :param name: `str`
-    :param validator: `list` of Validator instances
-    """
-    app = QtWidgets.QApplication(sys.argv).instance()
-    win = validateRigApplication.ValidationUI(name, theme=theme, themecolor=themecolor, parent=parent)
-    for eachValidator in validators:
-        win.addValidatorFromData(eachValidator.toData())
-
-    win.show()
-    sys.exit(app.exec_())
-
-
-if __name__ == "__main__":
-    uiFromValidtators(name="testUI", validators=[createValidator("test")])
 

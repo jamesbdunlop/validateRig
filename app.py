@@ -42,9 +42,9 @@ class ValidationUI(QtWidgets.QWidget):
         # Buttons
         self.treeButtons = QtWidgets.QHBoxLayout()
         self.expandAll = QtWidgets.QPushButton("expand All")
-        self.expandAll.clicked.connect(self.__expandAll)
+        self.expandAll.clicked.connect(self.__expandAllTreeWidgets)
         self.collapseAll = QtWidgets.QPushButton("collapse All")
-        self.collapseAll.clicked.connect(self.__collapseAll)
+        self.collapseAll.clicked.connect(self.__collapseAllTreeWidgets)
         self.treeButtons.addWidget(self.expandAll)
         self.treeButtons.addWidget(self.collapseAll)
 
@@ -68,11 +68,11 @@ class ValidationUI(QtWidgets.QWidget):
 
         self.resize(1200, 800)
 
-    def __expandAll(self):
+    def __expandAllTreeWidgets(self):
         for _, treeWidget in self._validators:
             treeWidget.expandAll()
 
-    def __collapseAll(self):
+    def __collapseAllTreeWidgets(self):
         for _, treeWidget in self._validators:
             treeWidget.collapseAll()
 
@@ -146,16 +146,15 @@ class ValidationUI(QtWidgets.QWidget):
 
     def toData(self):
         """
-        Collect all the validation data's into a dict
+        Collect all the validation data's into a list
 
-        :return: `dict`
+        :return: `list` of validator dicts
         """
-        data = dict()
+        validatorDataList = list()
         for eachValidator, _ in self._validators:
-            vd = eachValidator.toData()
-            data[vd[c_serialization.KEY_VALIDATOR_NAME]] = vd
+            validatorDataList.append(eachValidator.toData())
 
-        return data
+        return validatorDataList
 
     # Dialogs
     def _saveDialog(self):
@@ -171,14 +170,16 @@ class ValidationUI(QtWidgets.QWidget):
                 self.to_fileJSON(filepath=eachFile)
 
     def _loadDialog(self):
-        # TODO make this a class like the save dialog
         dialog = uid_loadFromJSON.LoadFromJSONFileDialog(parent=None)
         dialog.setStyleSheet(self.sheet)
         if dialog.exec_():
             for filepath in dialog.selectedFiles():
                 data = c_parser.read(filepath)
-                for validatorName, validationData in data.items():
-                    self.addValidatorFromData(validationData, expanded=True)
+                if type(data) == list: # We have a sessionSave from the UI of multiple validators
+                    for validationData in data:
+                        self.addValidatorFromData(validationData, expanded=True)
+                else:
+                    self.addValidatorFromData(data, expanded=True)
 
     # Drag and Drop
     def dragEnterEvent(self, QDragEnterEvent):
@@ -260,7 +261,7 @@ class ValidationUI(QtWidgets.QWidget):
             raise RuntimeError("%s is not valid!" % filepath)
 
         data = c_parser.read(filepath)
-        for validatorName, validationData in data.items():
+        for validationData in data:
             inst.addValidatorFromData(data=validationData, expanded=expanded)
 
         return inst

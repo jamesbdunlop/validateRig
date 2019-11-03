@@ -131,6 +131,9 @@ class MayaSourceNodeAttributeListWidget(SourceNodeAttributeListWidget):
             self.defaultValuesListWidget.addItem(eachAttribute)
 
         # Select existing
+        if self.sourceNode() is None:
+            return
+
         nodeNames = [
             node.name
             for node in self.sourceNode().iterValidityNodes()

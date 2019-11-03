@@ -1,5 +1,5 @@
-{
-  "Extended Validator": {
+[
+  {
     "vN": "Extended Validator",
     "vNodes": [
       {
@@ -60,4 +60,4 @@
       }
     ]
   }
-}
+]

@@ -1,5 +1,5 @@
-{
-  "Base Validator": {
+[
+  {
     "vN": "Base Validator",
     "vNodes": [
       {
@@ -60,4 +60,4 @@
       }
     ]
   }
-}
+]
