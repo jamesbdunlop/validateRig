@@ -7,7 +7,6 @@ from const import serialization as c_serialization
 from core import inside
 from core import validator as c_validator
 from core import parser as c_parser
-from core.nodes import SourceNode
 from uiStuff.themes import factory as uit_factory
 from uiStuff.trees import treewidgetitems as cuit_treewidgetitems
 from uiStuff.dialogs import saveToJSONFile as uid_saveToJSON
@@ -283,6 +282,5 @@ if __name__ == "__main__":
     myWin = ValidationUI.from_fileJSON(
         filepath="T:/software/validateRig/tests/validatorTestData.json"
     )
-    # myWin = ValidationUI()
     myWin.show()
     sys.exit(app.exec_())

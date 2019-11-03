@@ -89,7 +89,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         :return: `QList`
         """
         itemList = self.findItems(name, QtCore.Qt.MatchExactly)
-        if itemList.count():
+        if itemList:
             return itemList[0]
 
     def __removeAllTreeWidgetItemChildren(self, treeWidgetItem):
@@ -127,7 +127,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         for sourceNode in sourceNodesList:
             existingSourceNode = self.validator().findSourceNodeByName(sourceNode.name)
             if existingSourceNode is not None:
-                treeWidgetItem = self._findTreeWidgetItemByExactName(sourceNode.name)
+                treeWidgetItem = self.__findTreeWidgetItemByExactName(sourceNode.name)
                 if treeWidgetItem is None:
                     continue
 
@@ -203,6 +203,7 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
 
         # Check to see if this exists in the validator we dropped over.
         for nodeName in nodeNames:
+            print("nodeName: {}".format(nodeName))
             if not self.validator().sourceNodeNameExists(nodeName):
                 self.srcNodesWidget = uid_attributeList.MayaSourceNodeAttributeListWidget(
                     nodeName=nodeName, parent=self
@@ -216,9 +217,6 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
             if self.srcNodesWidget is None:
                 continue
 
-            # self.srcNodesWidget.addSrcNodes.connect(self._processSourceNodeAttributeWidget)
-            # self.srcNodesWidget.move(QtGui.QCursor.pos())
-            # self.srcNodesWidget.show()
             self.mainAttrWidget.addListWidget(self.srcNodesWidget)
 
         self.mainAttrWidget.resize(600, 900)

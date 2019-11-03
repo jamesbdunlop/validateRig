@@ -50,19 +50,19 @@ class Validator:
         :param sourceNode: `SourceNode`
         :return:
         """
-        sourceNodeNames = [n.name for n in self._nodes]
+        sourceNodeNames = [sn.longName for sn in self._nodes]
 
-        return sourceNode.name in sourceNodeNames
+        return sourceNode.longName in sourceNodeNames
 
-    def sourceNodeNameExists(self, sourceNodeName):
+    def sourceNodeNameExists(self, sourceNodeLongName):
         """
 
-        :param sourceNodeName: `str`
+        :param sourceNodeLongName: `str`
         :return:
         """
         sourceNodeNames = [n.longName for n in self._nodes]
-
-        return sourceNodeName in sourceNodeNames
+        print("{} sourceNodeNameExists: {}".format(sourceNodeLongName, sourceNodeNames))
+        return sourceNodeLongName in sourceNodeNames
 
     def replaceExistingSourceNode(self, sourceNode):
         """
@@ -71,7 +71,7 @@ class Validator:
         :return: `bool`
         """
         for x, node in enumerate(self._nodes):
-            if node.name == sourceNode.name:
+            if node.longName == sourceNode.longName:
                 self._nodes[x] = sourceNode
                 return sourceNode
 

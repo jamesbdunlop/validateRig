@@ -56,9 +56,6 @@ class SourceNodeTreeWidgetItem(BaseTreeWidgetItem):
 
 class ConnectionTreeWidgetItem(BaseTreeWidgetItem):
     def __init__(self, node, *args, **kwargs):
-        assert isinstance(
-            node, ConnectionValidityNode
-        ), "%s is not an instance of ConnectionValidityNode!" % type(node)
         super(ConnectionTreeWidgetItem, self).__init__(node=node, *args, **kwargs)
         self.setIcon(0, cui_theme.QIcon(themeName="core", iconName="connection"))
 
@@ -92,9 +89,6 @@ class ConnectionTreeWidgetItem(BaseTreeWidgetItem):
 
 class DefaultValueTreeWidgetItem(BaseTreeWidgetItem):
     def __init__(self, node, *args, **kwargs):
-        assert isinstance(
-            node, DefaultValueNode
-        ), "%s is not an instance of DefaultValueNode!" % type(node)
         super(DefaultValueTreeWidgetItem, self).__init__(node=node, *args, **kwargs)
         self.setIcon(0, cui_theme.QIcon(themeName="core", iconName="defaultvalue"))
 

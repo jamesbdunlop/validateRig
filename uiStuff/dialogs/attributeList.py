@@ -93,11 +93,11 @@ class SourceNodeAttributeListWidget(QtWidgets.QWidget):
         self.mainLayout.addWidget(mainGroupBox)
 
         # Store internally
-        self._nodeData = [
+        self._nodeData = (
             self._nodeName,
             self.defaultValuesListWidget,
             self.connsListWidget,
-        ]
+            )
 
         # Populate listWidgets
         self._populateDefaultValuesWidget()
@@ -114,7 +114,7 @@ class SourceNodeAttributeListWidget(QtWidgets.QWidget):
 
     @classmethod
     def fromSourceNode(cls, sourceNode, parent=None):
-        return cls(nodeName=sourceNode.name, sourceNode=sourceNode, parent=parent)
+        return cls(nodeName=sourceNode.longName, sourceNode=sourceNode, parent=parent)
 
 
 class MayaSourceNodeAttributeListWidget(SourceNodeAttributeListWidget):

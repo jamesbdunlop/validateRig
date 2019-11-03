@@ -13,8 +13,8 @@ class Node(object):
 
         :param name: `str` name of the Node
         """
-        self._name = name.split("|")[-1]
-        self._longname = name
+        self._longName = name
+        self._name = name.split("|")[-1].split(":")[-1]
         self._nodeType = nodeType
         self._validationStatus = c_constants.NODE_VALIDATION_NA
 
@@ -33,7 +33,7 @@ class Node(object):
     def longName(self):
         return self._longName
 
-    @name.setter
+    @longName.setter
     def longName(self, longName):
         """
         :param name: `str`
