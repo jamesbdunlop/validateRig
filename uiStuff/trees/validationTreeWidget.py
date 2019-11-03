@@ -48,7 +48,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         :return:
         """
         menu = QtWidgets.QMenu()
-        removeValidator = menu.addAction("removeValidator")
+        removeValidator = menu.addAction("Remove Entire Validator")
         removeValidator.triggered.connect(self.__removeValidator)
         nodeType = self.__getNodeTypeUnderCursor(QPoint)
         if not nodeType:
@@ -125,7 +125,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         :return:
         """
         for sourceNode in sourceNodesList:
-            existingSourceNode = self.validator().findSourceNodeByName(sourceNode.name)
+            existingSourceNode = self.validator().findSourceNodeByLongName(sourceNode.name)
             if existingSourceNode is not None:
                 treeWidgetItem = self.__findTreeWidgetItemByExactName(sourceNode.name)
                 if treeWidgetItem is None:
@@ -203,13 +203,12 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
 
         # Check to see if this exists in the validator we dropped over.
         for nodeName in nodeNames:
-            print("nodeName: {}".format(nodeName))
             if not self.validator().sourceNodeNameExists(nodeName):
                 self.srcNodesWidget = uid_attributeList.MayaSourceNodeAttributeListWidget(
                     nodeName=nodeName, parent=self
                 )
             else:
-                existingSourceNode = self.validator().findSourceNodeByName(nodeName)
+                existingSourceNode = self.validator().findSourceNodeByLongName(nodeName)
                 self.srcNodesWidget = uid_attributeList.MayaSourceNodeAttributeListWidget.fromSourceNode(
                     sourceNode=existingSourceNode, parent=self
                 )

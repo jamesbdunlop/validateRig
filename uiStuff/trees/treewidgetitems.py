@@ -1,5 +1,4 @@
 from PySide2 import QtWidgets, QtCore, QtGui
-from core.nodes import ConnectionValidityNode, DefaultValueNode
 from const import constants as constants
 from uiStuff.themes import factory as cui_theme
 
@@ -46,8 +45,16 @@ class SourceNodeTreeWidgetItem(BaseTreeWidgetItem):
 
         self.updateData()
 
-    def updateData(self):
-        self.setData(0, QtCore.Qt.DisplayRole, self._node.name)
+    def updateData(self, longName=False):
+        """
+
+        :param longName: `bool` Display the longName instead of short
+        """
+        if longName:
+            self.setData(0, QtCore.Qt.DisplayRole, self._node.longName)
+        else:
+            self.setData(0, QtCore.Qt.DisplayRole, self._node.name)
+
         self.setFont(
             0, QtGui.QFont(constants.FONT_NAME, constants.FONT_SIZE, QtGui.QFont.Bold)
         )
@@ -97,21 +104,30 @@ class DefaultValueTreeWidgetItem(BaseTreeWidgetItem):
 
         self.updateData()
 
-    def updateData(self):
-        self.setData(1, QtCore.Qt.DisplayRole, self._node.name)
+    def updateData(self, longName=False):
+        """
+
+        :param longName: `bool` Display the longName instead of short
+        """
+        if longName:
+            self.setData(1, QtCore.Qt.DisplayRole, self._node.longName)
+        else:
+            self.setData(1, QtCore.Qt.DisplayRole, self._node.name)
+
         self.setFont(
             1, QtGui.QFont(constants.FONT_NAME, constants.FONT_SIZE, QtGui.QFont.Bold)
         )
 
         self.setData(2, QtCore.Qt.DisplayRole, str(self._node.defaultValue))
 
-        self.setData(4, QtCore.Qt.DisplayRole, "")
+        self.setData(4, QtCore.Qt.DisplayRole, "--")
 
-        self.setData(5, QtCore.Qt.DisplayRole, "")
+        self.setData(5, QtCore.Qt.DisplayRole, "--")
 
-        self.setData(6, QtCore.Qt.DisplayRole, "")
+        self.setData(6, QtCore.Qt.DisplayRole, "--")
 
         self.setData(7, QtCore.Qt.DisplayRole, self.reportStatus)
         self.setFont(
             7, QtGui.QFont(constants.FONT_NAME, constants.FONT_SIZE, QtGui.QFont.Bold)
         )
+

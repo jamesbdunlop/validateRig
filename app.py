@@ -12,7 +12,7 @@ from uiStuff.trees import treewidgetitems as cuit_treewidgetitems
 from uiStuff.dialogs import saveToJSONFile as uid_saveToJSON
 from uiStuff.dialogs import loadFromJSONFile as uid_loadFromJSON
 from uiStuff.trees import validationTreeWidget as uit_validationTreeWidget
-
+from uiStuff.dialogs import createValidator as uid_createValidator
 logger = logging.getLogger(__name__)
 
 
@@ -48,6 +48,8 @@ class ValidationUI(QtWidgets.QWidget):
         self.treeButtons.addWidget(self.collapseAll)
 
         self.buttonLayout = QtWidgets.QHBoxLayout()
+        self.newButton = QtWidgets.QPushButton("New")
+        self.newButton.clicked.connect(self._addValidatorDialog)
 
         self.loadButton = QtWidgets.QPushButton("Load")
         self.loadButton.clicked.connect(self._loadDialog)
@@ -57,6 +59,7 @@ class ValidationUI(QtWidgets.QWidget):
 
         self.runButton = QtWidgets.QPushButton("Run")
 
+        self.buttonLayout.addWidget(self.newButton)
         self.buttonLayout.addWidget(self.loadButton)
         self.buttonLayout.addWidget(self.saveButton)
         self.buttonLayout.addWidget(self.runButton)
@@ -89,7 +92,7 @@ class ValidationUI(QtWidgets.QWidget):
             logger.warning(msg)
             raise Exception(msg)
 
-        validator = self.createValidator(data)
+        validator = self.createValidatorFromData(data)
         treeWidget = self.createValidationTreeWidget(validator=validator)
         validatorpair = (validator, treeWidget)
         if validatorpair in self._validators:
@@ -100,7 +103,7 @@ class ValidationUI(QtWidgets.QWidget):
         self._validators.append((validator, treeWidget))
         return validator, treeWidget
 
-    def createValidator(self, data):
+    def createValidatorFromData(self, data):
         """
 
         :param data: dict
@@ -109,6 +112,20 @@ class ValidationUI(QtWidgets.QWidget):
         return c_validator.Validator(
             name=data.get(c_serialization.KEY_VALIDATOR_NAME, "")
         )
+
+    def __addNewValidatorByName(self, name):
+        """
+
+        :param name: `str`
+        """
+        validator = c_validator.Validator(name=name)
+        self.addValidatorFromData(validator.toData())
+
+    def _addValidatorDialog(self):
+        self.nameInput = uid_createValidator.CreateValidatorDialog(title="Create Validator")
+        self.nameInput.setStyleSheet(uit_factory.getThemeData(self.theme, self.themeColor))
+        self.nameInput.name.connect(self.__addNewValidatorByName)
+        self.nameInput.show()
 
     def createValidationTreeWidget(self, validator):
         """Creates a treeView widget for the treeWidget/validator pair for adding source nodes to.
@@ -260,8 +277,12 @@ class ValidationUI(QtWidgets.QWidget):
             raise RuntimeError("%s is not valid!" % filepath)
 
         data = c_parser.read(filepath)
-        for validationData in data:
-            inst.addValidatorFromData(data=validationData, expanded=expanded)
+        # Handle loading from either a previously saved session or a Validator.toData()
+        if type(data) == list:
+            for validationData in data:
+                inst.addValidatorFromData(data=validationData, expanded=expanded)
+        else:
+            inst.addValidatorFromData(data=data, expanded=expanded)
 
         return inst
 
@@ -279,8 +300,9 @@ class ValidationUI(QtWidgets.QWidget):
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv).instance()
-    myWin = ValidationUI.from_fileJSON(
-        filepath="T:/software/validateRig/tests/validatorTestData.json"
-    )
+    # myWin = ValidationUI.from_fileJSON(
+    #     filepath="T:/software/validateRig/tests/validatorTestData.json"
+    # )
+    myWin = ValidationUI()
     myWin.show()
     sys.exit(app.exec_())

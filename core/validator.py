@@ -12,8 +12,9 @@ if inside.insideMaya():
 
 
 class Validator:
-    def __init__(self, name, nodes=None):
+    def __init__(self, name, namespace="", nodes=None):
         self._name = name  # name of the validator.
+        self._namespace = namespace
         self._nodes = (
             nodes or list()
         )  # list of SourceNodes with ConnectionValidityNodes
@@ -34,7 +35,15 @@ class Validator:
 
         self._name = name
 
-    def findSourceNodeByName(self, name):
+    @property
+    def namespace(self):
+        return self._namespace
+
+    @namespace.setter
+    def namespace(self, namespace):
+        self._namespace = namespace
+
+    def findSourceNodeByLongName(self, name):
         """
 
         :param name: `str`
@@ -238,7 +247,7 @@ class MayaValidator(Validator):
             nodeType = validityNode.nodeType()
 
             mSel = om2.MSelectionList()
-            mSel.add(validityNode.name)
+            mSel.add("{}:{}".format(self.namespace, validityNode.name))
             srcMFn = om2.MFnDependencyNode(mSel.getDependNode(0))
 
     def remedyFailedValidations(self):

@@ -23,18 +23,22 @@ class Test_Validator(unittest.TestCase):
         self.assertIsInstance(validator, c_validator.MayaValidator)
 
     def test_createSourceNode(self):
-        sourceNode = validationAPI.createSourceNode(name=self.sourceNodeName)
+        sourceNode = validationAPI.createSourceNode(name=self.sourceNodeName,
+                                                    longName=self.sourceNodeName)
         self.assertIsInstance(sourceNode, c_nodes.SourceNode)
 
     def test_createDefaultValueNode(self):
         defaultValueNode = validationAPI.createDefaultValueNode(
-            name=self.defaultValueNodeName, defaultValue=False
+            name=self.defaultValueNodeName,
+            longName=self.defaultValueNodeName,
+            defaultValue=False
         )
         self.assertIsInstance(defaultValueNode, c_nodes.DefaultValueNode)
 
     def test_createConnectionValidityNode(self):
         connectionNode = validationAPI.createConnectionValidityNode(
             name=self.connectionNodeName,
+            longName=self.connectionNodeName,
             sourceNodeAttributeName="test",
             sourceNodeAttributeValue=0,
             desinationNodeAttributeName="test",

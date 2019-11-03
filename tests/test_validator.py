@@ -20,10 +20,12 @@ class Test_Validator(unittest.TestCase):
         self.connectionValidityNodeAttrName = c_testdata.VALIDITY_DEST_ATTRNAME
         self.connectionValidityNodeAttrValue = c_testdata.VALIDITY_DEST_ATTRVALUE
 
-        self.sourceNode = c_nodes.SourceNode(name=self.sourceNodeName)
+        self.sourceNode = c_nodes.SourceNode(name=self.sourceNodeName,
+                                             longName=self.sourceNodeName)
 
         self.connectionValidityNode = c_nodes.ConnectionValidityNode(
-            name=self.connectionValidityNodeName
+            name=self.connectionValidityNodeName,
+            longName=self.connectionValidityNodeName
         )
         self.connectionValidityNode.destAttrName = self.connectionValidityNodeAttrName
         self.connectionValidityNode.destAttrValue = self.connectionValidityNodeAttrValue
@@ -40,10 +42,12 @@ class Test_Validator(unittest.TestCase):
             c_serialization.KEY_VALIDATOR_NODES: [
                 {
                     c_serialization.KEY_NODENAME: self.sourceNodeName,
+                    c_serialization.KEY_NODELONGNAME: self.sourceNodeName,
                     c_serialization.KEY_NODETYPE: c_testdata.SRC_NODETYPE,
                     c_serialization.KEY_VAILIDITYNODES: [
                         {
                             c_serialization.KEY_NODENAME: self.connectionValidityNodeName,
+                            c_serialization.KEY_NODELONGNAME: self.connectionValidityNodeName,
                             c_serialization.KEY_NODETYPE: c_testdata.VALIDITY_NODETYPE,
                             c_serialization.KEY_DEST_ATTRIBUTENAME: self.connectionValidityNodeAttrName,
                             c_serialization.KEY_DEST_ATTRIBUTEVALUE: self.connectionValidityNodeAttrValue,
@@ -64,7 +68,8 @@ class Test_Validator(unittest.TestCase):
 
     def test_addSourceNode(self):
         nodeName = "2ndSourceNode"
-        srcNode = c_nodes.SourceNode(name=nodeName)
+        srcNode = c_nodes.SourceNode(name=nodeName,
+                                     longName=nodeName)
         self.validator.addSourceNode(srcNode)
         self.assertTrue(
             self.validator.sourceNodeExists(srcNode),
@@ -72,7 +77,9 @@ class Test_Validator(unittest.TestCase):
         )
 
     def test_removeSourceNode(self):
-        tmpSourceNode = c_nodes.SourceNode(name="toRemove")
+        nodeName = "toRemove"
+        tmpSourceNode = c_nodes.SourceNode(name=nodeName,
+                                           longName=nodeName)
         self.validator.addSourceNode(tmpSourceNode)
         self.assertTrue(
             self.validator.removeSourceNode(tmpSourceNode),
@@ -85,12 +92,12 @@ class Test_Validator(unittest.TestCase):
             "Failed to replaceExistingSourceNode!",
         )
 
-    def test_findSourceNodeByName(self):
-        sourceNode = self.validator.findSourceNodeByName(name=self.sourceNodeName)
+    def test_findSourceNodeByLongName(self):
+        sourceNode = self.validator.findSourceNodeByLongName(name=self.sourceNodeName)
         self.assertEqual(
             sourceNode,
             self.sourceNode,
-            "self.validator.findSourceNodeByName() is not self.sourceNode!",
+            "self.validator.findSourceNodeByLongName() is not self.sourceNode!",
         )
 
     def test_sourceNodeExists(self):

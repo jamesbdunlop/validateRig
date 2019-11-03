@@ -221,7 +221,7 @@ class MayaSourceNodeAttributeListWidget(SourceNodeAttributeListWidget):
         )
 
         if self.sourceNode() is None:
-            return SourceNode(name=nodeName, validityNodes=validityNodes)
+            return SourceNode(name=nodeName, longName=nodeName, validityNodes=validityNodes)
         else:
             srcNode = self.sourceNode().appendValidityNodes(validityNodes)
             return srcNode

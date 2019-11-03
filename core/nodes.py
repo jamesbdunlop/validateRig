@@ -7,14 +7,14 @@ logger = logging.getLogger(__name__)
 
 
 class Node(object):
-    def __init__(self, name, nodeType=c_serialization.NT_VALIDATIONNODE):
+    def __init__(self, name, longName, nodeType=c_serialization.NT_VALIDATIONNODE):
         """
         The base Node class inherited by everything else that should contain these fundamental methods/attrs etc
 
         :param name: `str` name of the Node
         """
-        self._longName = name
         self._name = name.split("|")[-1].split(":")[-1]
+        self._longName = longName
         self._nodeType = nodeType
         self._validationStatus = c_constants.NODE_VALIDATION_NA
 
@@ -55,6 +55,7 @@ class Node(object):
     def toData(self):
         self.data = dict()
         self.data[c_serialization.KEY_NODENAME] = self.name
+        self.data[c_serialization.KEY_NODELONGNAME] = self.longName
         self.data[c_serialization.KEY_NODETYPE] = self.nodeType
 
         return self.data
@@ -62,9 +63,10 @@ class Node(object):
     @classmethod
     def fromData(cls, data):
         name = data.get(c_serialization.KEY_NODENAME, "")
+        longName = data.get(c_serialization.KEY_NODELONGNAME, "")
         nodeType = data.get(c_serialization.KEY_NODETYPE, "")
 
-        return cls(name=name, nodeType=nodeType)
+        return cls(name=name, longName=longName, nodeType=nodeType)
 
     def __repr__(self):
         return "shortName: %s\nlongName: %s\nstatus: %s" % (
@@ -75,7 +77,7 @@ class Node(object):
 
 
 class SourceNode(Node):
-    def __init__(self, name, validityNodes=None):
+    def __init__(self, name, longName, validityNodes=None):
         """
         Each ConnectionValidityNode will be considered a child of the sourceNode.
         This parent / child relationship holds everything we need to check a rig for validity.
@@ -102,7 +104,7 @@ class SourceNode(Node):
         :param validityNodes: `list` of ConnectionValidityNodes
         """
         super(SourceNode, self).__init__(
-            name=name, nodeType=c_serialization.NT_SOURCENODE
+            name=name, longName=longName, nodeType=c_serialization.NT_SOURCENODE
         )
         self._validityNodes = validityNodes or list()
 
@@ -184,6 +186,7 @@ class SourceNode(Node):
         :param data: `dict` previously serialized SourceNode.toData()
         """
         sourceNodeName = data.get(c_serialization.KEY_NODENAME, None)
+        sourceNodeLongName = data.get(c_serialization.KEY_NODELONGNAME, None)
         if sourceNodeName is None:
             raise KeyError("sourceNodeName is not valid! %s" % data)
 
@@ -193,7 +196,7 @@ class SourceNode(Node):
             for validityNodeData in serializedValidityNodes
         ]
 
-        inst = cls(name=sourceNodeName, validityNodes=validityNodes)
+        inst = cls(name=sourceNodeName, longName=sourceNodeLongName, validityNodes=validityNodes)
 
         return inst
 
@@ -217,7 +220,7 @@ class SourceNode(Node):
 
 
 class ConnectionValidityNode(Node):
-    def __init__(self, name):
+    def __init__(self, name, longName):
         """
         ConnectionValidityNodes holds sourceNode.srcAttrName data as it makes sense to couple the data here rather than
         try to store data in the sourceData and pair it up with data in here.
@@ -236,7 +239,7 @@ class ConnectionValidityNode(Node):
         :param nodeType: `int`
         """
         super(ConnectionValidityNode, self).__init__(
-            name=name, nodeType=c_serialization.NT_CONNECTIONVALIDITY
+            name=name, longName=longName, nodeType=c_serialization.NT_CONNECTIONVALIDITY
         )
 
         # These should be set using the setters!
@@ -307,8 +310,9 @@ class ConnectionValidityNode(Node):
     @classmethod
     def fromData(cls, data):
         name = data.get(c_serialization.KEY_NODENAME, "")
+        longname = data.get(c_serialization.KEY_NODELONGNAME, "")
 
-        inst = cls(name=name)
+        inst = cls(name=name, longName=longname)
         inst.destAttrName = data.get(c_serialization.KEY_DEST_ATTRIBUTENAME, "na")
         inst.destAttrValue = data.get(c_serialization.KEY_DEST_ATTRIBUTEVALUE, 0)
         inst.srcAttrName = data.get(c_serialization.KEY_SRC_ATTRIBUTENAME, "na")
@@ -318,9 +322,9 @@ class ConnectionValidityNode(Node):
 
 
 class DefaultValueNode(Node):
-    def __init__(self, name, defaultValue=None):
+    def __init__(self, name, longName="", defaultValue=None):
         super(DefaultValueNode, self).__init__(
-            name=name, nodeType=c_serialization.NT_DEFAULTVALUE
+            name=name, longName=longName, nodeType=c_serialization.NT_DEFAULTVALUE
         )
 
         self._defaultValue = defaultValue
@@ -335,8 +339,6 @@ class DefaultValueNode(Node):
 
     def toData(self):
         super(DefaultValueNode, self).toData()
-        self.data[c_serialization.KEY_NODENAME] = self._name
-        self.data[c_serialization.KEY_NODETYPE] = self.nodeType
         self.data[c_serialization.KEY_DEFAULTVALUE] = self._defaultValue
 
         return self.data
@@ -344,6 +346,7 @@ class DefaultValueNode(Node):
     @classmethod
     def fromData(cls, data):
         name = data.get(c_serialization.KEY_NODENAME, "")
+        longname = data.get(c_serialization.KEY_NODELONGNAME, "")
         value = data.get(c_serialization.KEY_DEFAULTVALUE, "")
 
-        return cls(name=name, defaultValue=value)
+        return cls(name=name, longName=longname, defaultValue=value)

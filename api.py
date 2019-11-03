@@ -17,7 +17,7 @@ for e in cmds.ls(sl=True):
         udefinedAttributes = [vrAPI.createDefaultValueNode(name=attr, defaultValue=cmds.getAttr("{}.{}".format(e, attr))) for attr in cmds.listAttr(e, ud=True)]
         sourceNodes += udefinedAttributes
     
-    sourceNode = vrAPI.createSourceNode(name=e, validityNodes=sourceNodes)
+    sourceNode = vrAPI.createSourceNode(name=e.split("|")[-1], longName=e, validityNodes=sourceNodes)
     validator.addSourceNode(sourceNode)
     
 validator.to_fileJSON(filePath="C:/temp/testValidator.json")
@@ -44,22 +44,31 @@ def createMayaValidator(name):
     return c_validator.MayaValidator(name=name)
 
 
-def createSourceNode(name, validityNodes=None):
+def createSourceNode(name, longName, validityNodes=None):
     """
 
     :param name: `str`
+    :param longName: `str`
     :param validityNodes: `list` of either DefaultValueNodes or ConnectionValidityNodes
     :return:
     """
-    return SourceNode(name=name, validityNodes=validityNodes)
+    return SourceNode(name=name, longName=longName, validityNodes=validityNodes)
 
 
-def createDefaultValueNode(name, defaultValue):
-    return DefaultValueNode(name=name, defaultValue=defaultValue)
+def createDefaultValueNode(name, longName, defaultValue):
+    """
+
+    :param name: `str`
+    :param longName: `str`
+    :param defaultValue: `int` | `float` | `bool` | etc
+    :return:
+    """
+    return DefaultValueNode(name=name, longName=longName, defaultValue=defaultValue)
 
 
 def createConnectionValidityNode(
     name,
+    longName,
     sourceNodeAttributeName,
     sourceNodeAttributeValue,
     desinationNodeAttributeName,
@@ -68,13 +77,14 @@ def createConnectionValidityNode(
     """
 
     :param name: `str`
+    :param longName: `str`
     :param sourceNodeAttributeName: `str`
     :param sourceNodeAttributeValue: `int` | `float` | `bool` | etc
     :param desinationNodeAttributeName: `srt`
     :param destinationNodeAttributeValue: `int` | `float` | `bool` | etc
     :return: `ConnectionValidityNode`
     """
-    node = ConnectionValidityNode(name=name)
+    node = ConnectionValidityNode(name=name, longName=longName)
     node.destAttrName = desinationNodeAttributeName
     node.destAttrValue = destinationNodeAttributeValue
     node.srcAttrName = sourceNodeAttributeName

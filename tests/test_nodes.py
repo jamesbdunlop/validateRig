@@ -21,9 +21,11 @@ class Test_Nodes(unittest.TestCase):
         self.connectionValidityNodeType = c_testData.VALIDITY_NODETYPE
 
         # Nodes now
-        self.sourceNode = c_nodes.SourceNode(name=self.sourceNodeName)
+        self.sourceNode = c_nodes.SourceNode(name=self.sourceNodeName,
+                                             longName=self.sourceNodeName)
 
-        self.connectionValidityNode = c_nodes.ConnectionValidityNode(name=self.connectionValidityNodeName)
+        self.connectionValidityNode = c_nodes.ConnectionValidityNode(name=self.connectionValidityNodeName,
+                                                                     longName=self.connectionValidityNodeName)
         self.connectionValidityNode.destAttrName = self.connectionValidityNodeAttrName
         self.connectionValidityNode.destAttrValue = self.connectionValidityNodeAttrValue
         self.connectionValidityNode.srcAttrName = self.srcNodeAttrName
@@ -33,9 +35,11 @@ class Test_Nodes(unittest.TestCase):
 
         self.expectedToData = {
             c_serialization.KEY_NODENAME: self.sourceNodeName,
+            c_serialization.KEY_NODELONGNAME: self.sourceNodeName,
             c_serialization.KEY_NODETYPE: self.sourceNodeType,
             c_serialization.KEY_VAILIDITYNODES: [{
                          c_serialization.KEY_NODENAME: self.connectionValidityNodeName,
+                         c_serialization.KEY_NODELONGNAME: self.connectionValidityNodeName,
                          c_serialization.KEY_NODETYPE: self.connectionValidityNodeType,
                          c_serialization.KEY_DEST_ATTRIBUTENAME: self.connectionValidityNodeAttrName,
                          c_serialization.KEY_DEST_ATTRIBUTEVALUE: self.connectionValidityNodeAttrValue,
