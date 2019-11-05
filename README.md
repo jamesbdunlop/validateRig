@@ -16,16 +16,16 @@
     
 ### Workflow:
 
-The anticipate workflow would be for a rigger to load the rig. Manually
-Set the default state of the rig as it is expected to be delivered.
-
-Then leveraging the UI quickly create a snapshot of this state to store
-to disk for later validation checking.
-
-The tool can run in headless mode to provide the artist an opportunity to
-nest the results in another tool or run the tool as a UI and provide
-visual feedback on a validation check run on a scene in the DCC to fix 
-issues as they see fit.
+    The anticipate workflow would be for a rigger to load the rig. Manually
+    Set the default state of the rig as it is expected to be delivered.
+    
+    Then leveraging the UI quickly create a snapshot of this state to store
+    to disk for later validation checking.
+    
+    The tool can run in headless mode to provide the artist an opportunity to
+    nest the results in another tool or run the tool as a UI and provide
+    visual feedback on a validation check run on a scene in the DCC to fix 
+    issues as they see fit.
 
      
 ![Example01-MainUI](example01.png)
