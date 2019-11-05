@@ -1,3 +1,5 @@
+#  Copyright (c) 2019.  James Dunlop
+
 from core import validator as c_validator
 from core.nodes import SourceNode, DefaultValueNode, ConnectionValidityNode
 

@@ -1,3 +1,5 @@
+#  Copyright (c) 2019.  James Dunlop
+
 import sys
 import os
 import logging
