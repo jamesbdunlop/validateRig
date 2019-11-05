@@ -300,9 +300,9 @@ class ValidationUI(QtWidgets.QWidget):
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv).instance()
-    # myWin = ValidationUI.from_fileJSON(
-    #     filepath="T:/software/validateRig/tests/validatorTestData.json"
-    # )
-    myWin = ValidationUI()
+    myWin = ValidationUI.from_fileJSON(
+        filepath="T:/software/validateRig/tests/testValidator.json"
+    )
+    # myWin = ValidationUI()
     myWin.show()
     sys.exit(app.exec_())

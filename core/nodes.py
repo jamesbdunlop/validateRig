@@ -300,10 +300,10 @@ class ConnectionValidityNode(Node):
 
     def toData(self):
         super(ConnectionValidityNode, self).toData()
-        self.data[c_serialization.KEY_DEST_ATTRIBUTENAME] = self._destAttrName
-        self.data[c_serialization.KEY_DEST_ATTRIBUTEVALUE] = self._destAttrValue
         self.data[c_serialization.KEY_SRC_ATTRIBUTENAME] = self._srcAttrName
         self.data[c_serialization.KEY_SRC_ATTRIBUTEVALUE] = self._srcAttrValue
+        self.data[c_serialization.KEY_DEST_ATTRIBUTENAME] = self._destAttrName
+        self.data[c_serialization.KEY_DEST_ATTRIBUTEVALUE] = self._destAttrValue
 
         return self.data
 
@@ -313,19 +313,17 @@ class ConnectionValidityNode(Node):
         longname = data.get(c_serialization.KEY_NODELONGNAME, "")
 
         inst = cls(name=name, longName=longname)
-        inst.destAttrName = data.get(c_serialization.KEY_DEST_ATTRIBUTENAME, "na")
-        inst.destAttrValue = data.get(c_serialization.KEY_DEST_ATTRIBUTEVALUE, 0)
         inst.srcAttrName = data.get(c_serialization.KEY_SRC_ATTRIBUTENAME, "na")
         inst.srcAttrValue = data.get(c_serialization.KEY_SRC_ATTRIBUTEVALUE, 0)
+        inst.destAttrName = data.get(c_serialization.KEY_DEST_ATTRIBUTENAME, "na")
+        inst.destAttrValue = data.get(c_serialization.KEY_DEST_ATTRIBUTEVALUE, 0)
 
         return inst
 
 
 class DefaultValueNode(Node):
     def __init__(self, name, longName="", defaultValue=None):
-        super(DefaultValueNode, self).__init__(
-            name=name, longName=longName, nodeType=c_serialization.NT_DEFAULTVALUE
-        )
+        super(DefaultValueNode, self).__init__(name=name, longName=longName, nodeType=c_serialization.NT_DEFAULTVALUE)
 
         self._defaultValue = defaultValue
 
