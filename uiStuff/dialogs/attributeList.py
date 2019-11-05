@@ -67,7 +67,7 @@ class SourceNodeAttributeListWidget(QtWidgets.QWidget):
 
         # Add a list widget for each selected sourceNode
         mainGroupBox = QtWidgets.QGroupBox(self._nodeName)
-        mainGroupBoxLayout = QtWidgets.QVBoxLayout(mainGroupBox)
+        mainGroupBoxLayout = QtWidgets.QHBoxLayout(mainGroupBox)
 
         # Default Values
         defaultValuesGroupBox = QtWidgets.QGroupBox("Default Values")
