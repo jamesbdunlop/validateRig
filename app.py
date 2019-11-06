@@ -210,7 +210,13 @@ class ValidationUI(QtWidgets.QWidget):
 
     def dropEvent(self, QDropEvent):
         super(ValidationUI, self).dropEvent(QDropEvent)
+        if not inside.insideMaya() and QDropEvent.mimeData().text().endswith(".json"):
+            self.processJSONDrop(QDropEvent)
         return QDropEvent.accept()
+
+    def processJSONDrop(self, sender):
+        data = c_parser.read(sender.mimeData().text().replace("file:///", ""))
+        self.__addValidatorFromData(data)
 
     # App Create from
     def __addValidatorFromData(self, data, expanded=False):
