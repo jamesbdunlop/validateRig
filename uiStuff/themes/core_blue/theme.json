@@ -1,8 +1,9 @@
 {
   "iconPack": "core",
   "fontFamily": "Madan",
-  "fontBaseSize": "22px",
-  "fontHoverSize": "24px",
+  "fontBaseSize": "12px",
+  "fontHoverSize": "14px",
+  "fontTabSize": "11px",
   "fontColor": "#DCDCDC",
 
   "level00": "#141B24",

@@ -220,7 +220,6 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
 
             self.mainAttrWidget.addListWidget(self.srcNodesWidget)
 
-        self.mainAttrWidget.resize(400, 1000)
         self.mainAttrWidget.sourceNodesAccepted.connect(
             self._processSourceNodeAttributeWidgets
         )

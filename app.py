@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 class ValidationUI(QtWidgets.QWidget):
     def __init__(
-        self, title=constants.UINAME, theme="core", themecolor="", parent=None
+        self, title=constants.UINAME, theme="core", themecolor="green", parent=None
     ):
         super(ValidationUI, self).__init__(parent=parent)
         self.setWindowTitle(title)
