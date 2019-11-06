@@ -37,10 +37,18 @@ class ValidityNodeListWidget(QtWidgets.QWidget):
         self.unhideByCustomFiltersButton.setHidden(True)
         self.unhideByCustomFiltersButton.clicked.connect(self.__unhideDefaults)
 
+        self.hideBySelectedButton = QtWidgets.QPushButton("show Only Selected")
+        self.hideBySelectedButton.clicked.connect(self.__hideSelected)
+        self.showAllButton = QtWidgets.QPushButton("show All")
+        self.showAllButton.setHidden(True)
+        self.showAllButton.clicked.connect(self.__showAll)
+
         filterLayout.addWidget(self._filterInput)
         filterLayout.addWidget(clearSearchButton)
         filterLayout.addWidget(self.hideByCustomFiltersButton)
         filterLayout.addWidget(self.unhideByCustomFiltersButton)
+        filterLayout.addWidget(self.hideBySelectedButton)
+        filterLayout.addWidget(self.showAllButton)
 
         self._mainLayout.addLayout(filterLayout)
         self._mainLayout.addWidget(self._listWidget)
@@ -76,8 +84,25 @@ class ValidityNodeListWidget(QtWidgets.QWidget):
         for x in range(count):
             self._listWidget.item(x).setHidden(False)
 
-        self.hideByCustomFiltersButton.setHidden(False)
-        self.unhideByCustomFiltersButton.setHidden(True)
+        self.hideBySelectedButton.setHidden(False)
+        self.showAllButton.setHidden(True)
+
+    def __hideSelected(self):
+        count = self._listWidget.count()
+        for x in range(count):
+            if not self._listWidget.item(x).isSelected():
+                self._listWidget.item(x).setHidden(True)
+
+        self.hideBySelectedButton.setHidden(True)
+        self.showAllButton.setHidden(False)
+
+    def __showAll(self):
+        count = self._listWidget.count()
+        for x in range(count):
+            self._listWidget.item(x).setHidden(False)
+
+        self.hideBySelectedButton.setHidden(False)
+        self.showAllButton.setHidden(True)
 
     def setSelectionMode(self, selectionMode):
         """convience pass through direct to listWidget"""
