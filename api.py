@@ -9,7 +9,7 @@ import api as vrAPI
 
 validator = vrAPI.createValidator("test")
 sourceNodes = list()
-for e in cmds.ls(sl=True):
+for e in cmds.ls(sl=True, l=True):
     # Default Values
     # Regular Attributes
     attrs = ("translate", "rotate", "scale")
