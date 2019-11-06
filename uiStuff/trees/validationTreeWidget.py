@@ -125,7 +125,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         :return:
         """
         for sourceNode in sourceNodesList:
-            existingSourceNode = self.validator().findSourceNodeByLongName(sourceNode.name)
+            existingSourceNode = self.validator().findSourceNodeByLongName(sourceNode.longName)
             if existingSourceNode is not None:
                 treeWidgetItem = self.__findTreeWidgetItemByExactName(sourceNode.name)
                 if treeWidgetItem is None:
@@ -204,12 +204,14 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
         # Check to see if this exists in the validator we dropped over.
         for nodeName in nodeNames:
             if not self.validator().sourceNodeNameExists(nodeName):
-                self.srcNodesWidget = uid_attributeList.MayaSourceNodeAttributeListWidget(
+                logger.info("SourceNode: {} does not exist creating new sourceNode.".format(nodeName))
+                self.srcNodesWidget = uid_attributeList.MayaValidityNodesSelector(
                     nodeName=nodeName, parent=self
                 )
             else:
+                logger.info("SourceNode: {} exists!".format(nodeName.split("|")[-1]))
                 existingSourceNode = self.validator().findSourceNodeByLongName(nodeName)
-                self.srcNodesWidget = uid_attributeList.MayaSourceNodeAttributeListWidget.fromSourceNode(
+                self.srcNodesWidget = uid_attributeList.MayaValidityNodesSelector.fromSourceNode(
                     sourceNode=existingSourceNode, parent=self
                 )
 
@@ -218,7 +220,7 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
 
             self.mainAttrWidget.addListWidget(self.srcNodesWidget)
 
-        self.mainAttrWidget.resize(600, 900)
+        self.mainAttrWidget.resize(400, 1000)
         self.mainAttrWidget.sourceNodesAccepted.connect(
             self._processSourceNodeAttributeWidgets
         )

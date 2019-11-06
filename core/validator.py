@@ -70,7 +70,7 @@ class Validator:
         :return:
         """
         sourceNodeNames = [n.longName for n in self._nodes]
-        print("{} sourceNodeNameExists: {}".format(sourceNodeLongName, sourceNodeNames))
+        logger.debug("{} sourceNodeNames: {}".format(sourceNodeLongName, sourceNodeNames))
         return sourceNodeLongName in sourceNodeNames
 
     def replaceExistingSourceNode(self, sourceNode):

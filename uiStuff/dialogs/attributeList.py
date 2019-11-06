@@ -1,7 +1,7 @@
 from PySide2 import QtWidgets, QtCore
 from core.nodes import SourceNode, DefaultValueNode, ConnectionValidityNode
 from core import inside
-
+from uiStuff import validityNodeListWidget as ui_validityNodeListWidget
 if inside.insideMaya():
     from maya import cmds
 
@@ -11,18 +11,20 @@ class MultiSourceNodeListWidgets(QtWidgets.QWidget):
 
     def __init__(self, title, parent=None):
         super(MultiSourceNodeListWidgets, self).__init__(parent=parent)
+        """This just allows pig piling up x# of listWidgets into a layout for easier handling of DnD of 
+        multiple sourceNodes
+        """
         self.setWindowTitle(title)
         self.setObjectName("MultiAttributeListWidget_{}".format(title))
 
         self.mainLayout = QtWidgets.QVBoxLayout(self)
-        self.widgetsLayout = QtWidgets.QHBoxLayout(self)
 
         self._listWidgets = list()
+        self.widgetsLayout = QtWidgets.QHBoxLayout()
 
-        # UI STUFF
         self.buttonLayout = QtWidgets.QHBoxLayout()
         self.acceptButton = QtWidgets.QPushButton("Accept")
-        self.acceptButton.clicked.connect(self._accept)
+        self.acceptButton.clicked.connect(self.__accept)
 
         self.closeButton = QtWidgets.QPushButton("Close")
         self.closeButton.clicked.connect(self.close)
@@ -34,8 +36,8 @@ class MultiSourceNodeListWidgets(QtWidgets.QWidget):
         self.mainLayout.addLayout(self.buttonLayout)
 
     def addListWidget(self, listWidget):
-        self.widgetsLayout.addWidget(listWidget)
         if listWidget not in self._listWidgets:
+            self.widgetsLayout.addWidget(listWidget)
             self._listWidgets.append(listWidget)
             return True
 
@@ -45,18 +47,18 @@ class MultiSourceNodeListWidgets(QtWidgets.QWidget):
         for eachListWidgets in self._listWidgets:
             yield eachListWidgets
 
-    def _accept(self):
+    def __accept(self):
         self.sourceNodesAccepted.emit(
             [listWidget.toSourceNode() for listWidget in self.iterListWidgets()]
         )
         self.close()
 
 
-class SourceNodeAttributeListWidget(QtWidgets.QWidget):
+class BaseSourceNodeValidityNodesSelector(QtWidgets.QWidget):
     SEP = "  --->>  "
 
     def __init__(self, nodeName=None, sourceNode=None, parent=None):
-        super(SourceNodeAttributeListWidget, self).__init__(parent=parent)
+        super(BaseSourceNodeValidityNodesSelector, self).__init__(parent=parent)
         self.setWindowFlags(QtCore.Qt.Popup)
         self._nodeName = nodeName
         self._sourceNode = sourceNode
@@ -72,7 +74,7 @@ class SourceNodeAttributeListWidget(QtWidgets.QWidget):
         # Default Values
         defaultValuesGroupBox = QtWidgets.QGroupBox("Default Values")
         defaultValuesGroupBoxlayout = QtWidgets.QVBoxLayout(defaultValuesGroupBox)
-        self.defaultValuesListWidget = QtWidgets.QListWidget()
+        self.defaultValuesListWidget = ui_validityNodeListWidget.ValidityNodeListWidget()
         self.defaultValuesListWidget.setSelectionMode(
             QtWidgets.QAbstractItemView.ExtendedSelection
         )
@@ -81,7 +83,7 @@ class SourceNodeAttributeListWidget(QtWidgets.QWidget):
         # Connections
         connectionsGroupBox = QtWidgets.QGroupBox("Connections")
         connectionsGroupBoxLayout = QtWidgets.QVBoxLayout(connectionsGroupBox)
-        self.connsListWidget = QtWidgets.QListWidget()
+        self.connsListWidget = ui_validityNodeListWidget.ValidityNodeListWidget()
         self.connsListWidget.setSelectionMode(
             QtWidgets.QAbstractItemView.ExtendedSelection
         )
@@ -97,7 +99,7 @@ class SourceNodeAttributeListWidget(QtWidgets.QWidget):
             self._nodeName,
             self.defaultValuesListWidget,
             self.connsListWidget,
-            )
+        )
 
         # Populate listWidgets
         self._populateDefaultValuesWidget()
@@ -117,9 +119,9 @@ class SourceNodeAttributeListWidget(QtWidgets.QWidget):
         return cls(nodeName=sourceNode.longName, sourceNode=sourceNode, parent=parent)
 
 
-class MayaSourceNodeAttributeListWidget(SourceNodeAttributeListWidget):
+class MayaValidityNodesSelector(BaseSourceNodeValidityNodesSelector):
     def __init__(self, nodeName=None, sourceNode=None, parent=None):
-        super(MayaSourceNodeAttributeListWidget, self).__init__(
+        super(MayaValidityNodesSelector, self).__init__(
             nodeName=nodeName, sourceNode=sourceNode, parent=parent
         )
 
@@ -198,7 +200,7 @@ class MayaSourceNodeAttributeListWidget(SourceNodeAttributeListWidget):
         for eachConnPair in connectionsListWidget.selectedItems():
             src, dest = eachConnPair.text().split(self.SEP)
 
-            connectionNode = ConnectionValidityNode(name=dest.split(".")[0])
+            connectionNode = ConnectionValidityNode(name=dest.split(".")[0], longName=dest)
             connectionNode.destAttrName = dest.split(".")[-1]
             connectionNode.destAttrValue = cmds.getAttr(dest)
             connectionNode.srcAttrName = src.split(".")[-1]
@@ -221,7 +223,9 @@ class MayaSourceNodeAttributeListWidget(SourceNodeAttributeListWidget):
         )
 
         if self.sourceNode() is None:
-            return SourceNode(name=nodeName, longName=nodeName, validityNodes=validityNodes)
+            return SourceNode(
+                name=nodeName, longName=nodeName, validityNodes=validityNodes
+            )
         else:
-            srcNode = self.sourceNode().appendValidityNodes(validityNodes)
-            return srcNode
+            self.sourceNode().appendValidityNodes(validityNodes)
+            return self.sourceNode()

@@ -129,8 +129,6 @@ class SourceNode(Node):
             self._validityNodes.append(validityNode)
             return
 
-        logger.warning("ValidityNode already exists!! Skipping")
-
     def appendValidityNodes(self, validityNodeList):
         for eachValidityNode in validityNodeList:
             self.appendValidityNode(eachValidityNode)
