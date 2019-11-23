@@ -1,6 +1,4 @@
-from PySide2 import QtWidgets, QtCore, QtGui
-from const import constants as constants
-from uiStuff.themes import factory as cui_theme
+from PySide2 import QtWidgets, QtCore
 
 
 class BaseTreeWidgetItem(QtWidgets.QTreeWidgetItem):
@@ -14,13 +12,20 @@ class BaseTreeWidgetItem(QtWidgets.QTreeWidgetItem):
 
     def setNode(self, node):
         self._node = node
-        self.updateData()
+        data = {7: (QtCore.Qt.DisplayRole, node.reportStatus)}
+        self.updateData(data)
 
     def nodeType(self):
         return self.node().nodeType
 
-    def updateData(self):
-        raise NotImplemented("Must be overloaded!")
+    def updateData(self, data):
+        """
+
+        :param data: `dict`
+        :return: None
+        """
+        for idx, value in data.items():
+            self.setData(idx, value[0], value[1])
 
     def removeAllChildren(self):
         while self.childCount():
@@ -35,99 +40,3 @@ class BaseTreeWidgetItem(QtWidgets.QTreeWidgetItem):
     def reportStatus(self, status):
         self._reportStatus = status
         self.setData(7, QtCore.Qt.DisplayRole, status)
-
-
-class SourceNodeTreeWidgetItem(BaseTreeWidgetItem):
-    def __init__(self, node, *args, **kwargs):
-        super(SourceNodeTreeWidgetItem, self).__init__(node=node, *args, **kwargs)
-        for x in range(7):
-            self.setBackground(x, QtGui.QBrush(QtGui.QColor(150, 150, 200)))
-
-        self.updateData()
-
-    def updateData(self, longName=False):
-        """
-
-        :param longName: `bool` Display the longName instead of short
-        """
-        if longName:
-            self.setData(0, QtCore.Qt.DisplayRole, self._node.longName)
-        else:
-            self.setData(0, QtCore.Qt.DisplayRole, self._node.name)
-
-        self.setFont(
-            0, QtGui.QFont(constants.FONT_NAME, constants.FONT_SIZE, QtGui.QFont.Bold)
-        )
-        self.setData(7, QtCore.Qt.DisplayRole, self.reportStatus)
-
-
-class ConnectionTreeWidgetItem(BaseTreeWidgetItem):
-    def __init__(self, node, *args, **kwargs):
-        super(ConnectionTreeWidgetItem, self).__init__(node=node, *args, **kwargs)
-        self.setIcon(0, cui_theme.QIcon(themeName="core", iconName="connection"))
-
-        for x in range(1, 7):
-            self.setBackground(x, QtGui.QBrush(QtGui.QColor(255, 255, 153)))
-
-        self.updateData()
-
-    def updateData(self):
-        self.setData(1, QtCore.Qt.DisplayRole, self._node.srcAttrName)
-        self.setFont(
-            1, QtGui.QFont(constants.FONT_NAME, constants.FONT_SIZE, QtGui.QFont.Bold)
-        )
-
-        self.setData(2, QtCore.Qt.DisplayRole, self._node.srcAttrValue)
-
-        self.setData(4, QtCore.Qt.DisplayRole, self._node.name)
-        self.setFont(
-            4, QtGui.QFont(constants.FONT_NAME, constants.FONT_SIZE, QtGui.QFont.Bold)
-        )
-
-        self.setData(5, QtCore.Qt.DisplayRole, self._node.destAttrName)
-
-        self.setData(6, QtCore.Qt.DisplayRole, self._node.destAttrValue)
-
-        self.setData(7, QtCore.Qt.DisplayRole, self.reportStatus)
-        self.setFont(
-            7, QtGui.QFont(constants.FONT_NAME, constants.FONT_SIZE, QtGui.QFont.Bold)
-        )
-
-
-class DefaultValueTreeWidgetItem(BaseTreeWidgetItem):
-    def __init__(self, node, *args, **kwargs):
-        super(DefaultValueTreeWidgetItem, self).__init__(node=node, *args, **kwargs)
-        self.setIcon(0, cui_theme.QIcon(themeName="core", iconName="defaultvalue"))
-
-        for x in range(1, 4):
-            self.setBackground(x, QtGui.QBrush(QtGui.QColor(100, 200, 100)))
-
-        self.updateData()
-
-    def updateData(self, longName=False):
-        """
-
-        :param longName: `bool` Display the longName instead of short
-        """
-        if longName:
-            self.setData(1, QtCore.Qt.DisplayRole, self._node.longName)
-        else:
-            self.setData(1, QtCore.Qt.DisplayRole, self._node.name)
-
-        self.setFont(
-            1, QtGui.QFont(constants.FONT_NAME, constants.FONT_SIZE, QtGui.QFont.Bold)
-        )
-
-        self.setData(2, QtCore.Qt.DisplayRole, str(self._node.defaultValue))
-
-        self.setData(4, QtCore.Qt.DisplayRole, "--")
-
-        self.setData(5, QtCore.Qt.DisplayRole, "--")
-
-        self.setData(6, QtCore.Qt.DisplayRole, "--")
-
-        self.setData(7, QtCore.Qt.DisplayRole, self.reportStatus)
-        self.setFont(
-            7, QtGui.QFont(constants.FONT_NAME, constants.FONT_SIZE, QtGui.QFont.Bold)
-        )
-

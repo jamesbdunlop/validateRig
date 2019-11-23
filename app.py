@@ -10,7 +10,7 @@ from core import inside
 from core import validator as c_validator
 from core import parser as c_parser
 from uiStuff.themes import factory as uit_factory
-from uiStuff.trees import treewidgetitems as cuit_treewidgetitems
+from uiStuff.trees import factory as cuit_factory
 from uiStuff.dialogs import saveToJSONFile as uid_saveToJSON
 from uiStuff.dialogs import loadFromJSONFile as uid_loadFromJSON
 from uiStuff.trees import validationTreeWidget as uit_validationTreeWidget
@@ -234,20 +234,11 @@ class ValidationUI(QtWidgets.QWidget):
             node = validator.addSourceNodeFromData(sourceNodeData)
 
             # Create and add the treeWidgetItem to the treeWidget from the node
-            sourceNodeTreeWItm = cuit_treewidgetitems.SourceNodeTreeWidgetItem(
-                node=node
-            )
+            sourceNodeTreeWItm = cuit_factory.treeWidgetItemFromNode(node=node)
 
             # Populate the rows with the validations for the node
             for eachChild in node.iterValidityNodes():
-                if eachChild.nodeType == c_serialization.NT_DEFAULTVALUE:
-                    treewidgetItem = cuit_treewidgetitems.DefaultValueTreeWidgetItem(
-                        node=eachChild
-                    )
-                elif eachChild.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
-                    treewidgetItem = cuit_treewidgetitems.ConnectionTreeWidgetItem(
-                        node=eachChild
-                    )
+                treewidgetItem = cuit_factory.treeWidgetItemFromNode(eachChild)
                 sourceNodeTreeWItm.addChild(treewidgetItem)
 
             sourceNodeTreeWItm.setExpanded(expanded)

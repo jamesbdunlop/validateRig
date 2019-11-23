@@ -4,7 +4,6 @@ import logging
 import sys
 from PySide2 import QtWidgets, QtCore
 
-
 logger = logging.getLogger(__name__)
 
 
