@@ -96,6 +96,7 @@ class ValidationUI(QtWidgets.QWidget):
         The (validator, treeWidget) tuple pair creator.
 
         :param data: `dict` result of a previously saved ValidationUI.toData()
+        :type data: `dict`
         :return:
         """
         validatorName = data.get(c_serialization.KEY_VALIDATOR_NAME)
@@ -118,7 +119,7 @@ class ValidationUI(QtWidgets.QWidget):
     def __createValidatorFromData(self, data):
         """
 
-        :param data: dict
+        :type data: dict
         :return: `Validator`
         """
         return c_validator.Validator(
@@ -127,7 +128,7 @@ class ValidationUI(QtWidgets.QWidget):
 
     def __createValidationTreeWidget(self, validator):
         """Creates a treeView widget for the treeWidget/validator pair for adding source nodes to.
-        :param validator: `Validator`
+        :type validator: `c_validator.Validator`
         """
         if inside.insideMaya():
             treewidget = uit_validationTreeWidget.MayaValidationTreeWidget(
@@ -142,7 +143,7 @@ class ValidationUI(QtWidgets.QWidget):
     def __addNewValidatorByName(self, name):
         """
 
-        :param name: `str`
+        :type name: `str`
         """
         validator = c_validator.Validator(name=name)
         self.__addValidatorFromData(validator.toData())
@@ -161,8 +162,8 @@ class ValidationUI(QtWidgets.QWidget):
     def __findValidatorByName(self, name):
         """
 
-        :param name: `str` shortName
-        :return: `Validator`
+        :type name: `str`
+        :return: `c_validator.Validator`
         """
         for eachValidator in self.__iterValidators():
             if eachValidator.name == name:
@@ -171,7 +172,7 @@ class ValidationUI(QtWidgets.QWidget):
     def __iterValidators(self):
         """
 
-        :return: `Validator`
+        :return: `c_validator.Validator`
         """
         for eachValidator, _ in self._validators:
             yield eachValidator
@@ -222,9 +223,10 @@ class ValidationUI(QtWidgets.QWidget):
     def __addValidatorFromData(self, data, expanded=False):
         """
         Sets up a new validator/treeWidget for the validation data passed in.
+        :param dict: of validation data
 
-        :param data:`dict`
-        :param expanded:`bool` To auto expand the results or not
+        :type data:`dict`
+        :type expanded:`bool`
         :return:
         """
         validator, treeWidget = self.__createValidationPair(data)
@@ -248,6 +250,12 @@ class ValidationUI(QtWidgets.QWidget):
         self.__createValidationGroupBox(name=groupBoxName, treeWidget=treeWidget)
 
     def __createValidationGroupBox(self, name, treeWidget):
+        """
+
+        :type name: `str`
+        :type treeWidget: `uit_validationTreeWidget.ValidationTreeWidget`
+        :return: ` QtWidgets.QGroupBox`
+        """
         # Validator GBox and treeWidget as child
         groupBox = QtWidgets.QGroupBox(name)
         groupBoxLayout = QtWidgets.QVBoxLayout(groupBox)
@@ -259,7 +267,8 @@ class ValidationUI(QtWidgets.QWidget):
     def __removeValidator(self, validatorList):
         """
 
-        :param validatorList: `list` [Validator, GroupBox]
+        :param validatorList: [Validator, GroupBox]
+        :type validatorList: `list` [Validator, GroupBox]
         """
         validator, groupBox = validatorList
         for eachValidator, treeWidget in self._validators:
@@ -284,8 +293,9 @@ class ValidationUI(QtWidgets.QWidget):
     def to_fileJSON(self, filepath):
         """
 
-        :param filepath: `str`
-        :return:
+        :param filepath: output path to validation.json file
+        :type filepath: `str`
+        :return: `bool`
         """
         data = self.toData()
         c_parser.write(filepath=filepath, data=data)
@@ -296,7 +306,8 @@ class ValidationUI(QtWidgets.QWidget):
     def from_fileJSON(cls, filepath, expanded=False, parent=None):
         """
 
-        :param filepath: `str` path to the a previous validation.json file
+        :param filepath: path to the a previous validation.json file
+        :type filepath: `str`
         :return: `ValidationUI`
         """
         inst = cls(parent=parent)
@@ -304,7 +315,7 @@ class ValidationUI(QtWidgets.QWidget):
             raise RuntimeError("%s is not valid!" % filepath)
 
         data = c_parser.read(filepath)
-        # Handle loading from either a previously saved session or a Validator.toData()
+        # Handle loading from either a previously saved sessionList or a Validator.toData()
         if type(data) == list:
             for validationData in data:
                 inst.__addValidatorFromData(data=validationData, expanded=expanded)

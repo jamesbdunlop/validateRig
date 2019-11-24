@@ -1,9 +1,9 @@
 from PySide2 import QtWidgets, QtCore
 
 
-class BaseTreeWidgetItem(QtWidgets.QTreeWidgetItem):
+class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
     def __init__(self, node, *args, **kwargs):
-        super(BaseTreeWidgetItem, self).__init__(*args, **kwargs)
+        super(TreeWidgetItem, self).__init__(*args, **kwargs)
         self._node = node
         self._reportStatus = node.status
 
