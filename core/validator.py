@@ -1,18 +1,20 @@
 import logging
-from const import serialization as c_serialization
-from core.nodes import SourceNode
+from PySide2 import QtCore
+from PySide2.QtCore import Signal
 from core import parser as c_parser
 from core import inside
+from core.nodes import SourceNode
+from const import serialization as c_serialization
+from core import mayaValidation
 
 logger = logging.getLogger(__name__)
 
-if inside.insideMaya():
-    import maya.api.OpenMaya as om2
-    from maya import cmds
 
+class Validator(QtCore.QObject):
+    validate = Signal(list)
 
-class Validator:
     def __init__(self, name, namespace="", nodes=None):
+        QtCore.QObject.__init__(self, None)
         self._name = name  # name of the validator.
         self._namespace = namespace
         self._nodes = (
@@ -127,10 +129,7 @@ class Validator:
             yield eachNode
 
     def validateSourceNodes(self):
-        raise NotImplementedError("Override this..")
-
-    def remedyFailedValidations(self):
-        raise NotImplementedError("Override this..")
+        self.validate.emit(list(self.iterSourceNodes()))
 
     def toData(self):
         data = dict()
@@ -164,97 +163,22 @@ class Validator:
         return "%s" % self.name
 
 
-class MayaValidator(Validator):
-    def __init__(self, name):
-        super(MayaValidator, self).__init__(name=name)
+def getValidator(name):
+    """
 
-    def getPlugValue(self, plug):
-        """
-        :param plug: MPlug
-        :return: The value of the passed in MPlug or None
-        """
-        # look to clean this up as this is my old MASSIVE plugValue..
-        import maya.api.OpenMaya as om2
+    :param name: The name for the validator. Eg: MyCat
+    :type name: `str`
+    :return: `Validator`
+    """
+    validator = Validator(name=name)
 
-        pAttribute = plug.attribute()
-        apiType = pAttribute.apiType()
+    if inside.insideMaya():
+        validator.validate.connect(mayaValidation.validateSourceNodes)
+    else:
+        validator.validate.connect(_printFailedStandAloneMsg)
 
-        # Float Groups - rotate, translate, scale; Com2pounds
-        if apiType in [
-            om2.MFn.kAttribute3Double,
-            om2.MFn.kAttribute3Float,
-            om2.MFn.kCompoundAttribute,
-        ]:
-            result = []
-            if plug.isCompound:
-                for c in range(plug.numChildren()):
-                    result.append(self.getPlugValue(plug.child(c)))
-                return result
+    return validator
 
-        # Distance
-        elif apiType in [om2.MFn.kDoubleLinearAttribute, om2.MFn.kFloatLinearAttribute]:
-            return plug.asMDistance().asCentimeters()
 
-        # Angle
-        elif apiType in [om2.MFn.kDoubleAngleAttribute, om2.MFn.kFloatAngleAttribute]:
-            return plug.asMAngle().asDegrees()
-
-        # TYPED
-        elif apiType == om2.MFn.kTypedAttribute:
-            pType = om2.MFnTypedAttribute(pAttribute).attrType()
-            # Matrix
-            if pType == om2.MFnData.kMatrix:
-                return om2.MFnMatrixData(plug.asMObject()).matrix()
-            # String
-            elif pType == om2.MFnData.kString:
-                return plug.asString()
-
-        # MATRIX
-        elif apiType == om2.MFn.kMatrixAttribute:
-            return om2.MFnMatrixData(plug.asMObject()).matrix()
-
-        # NUMBERS
-        elif apiType == om2.MFn.kNumericAttribute:
-            pType = om2.MFnNumericAttribute(pAttribute).numericType()
-            if pType == om2.MFnNumericData.kBoolean:
-                return plug.asBool()
-            elif pType in [
-                om2.MFnNumericData.kShort,
-                om2.MFnNumericData.kInt,
-                om2.MFnNumericData.kLong,
-                om2.MFnNumericData.kByte,
-            ]:
-                return plug.asInt()
-            elif pType in [
-                om2.MFnNumericData.kFloat,
-                om2.MFnNumericData.kDouble,
-                om2.MFnNumericData.kAddr,
-            ]:
-                return plug.asDouble()
-
-        # Enum
-        elif apiType == om2.MFn.kEnumAttribute:
-            return plug.asInt()
-
-        return None
-
-    def validateAllSourceNodes(self):
-        """
-        Maya validator checking for values against the expected values!
-        """
-        validationData = dict()
-        for validityNode in self.iterSourceNodes():
-            nodeType = validityNode.nodeType()
-
-            mSel = om2.MSelectionList()
-            mSel.add("{}:{}".format(self.namespace, validityNode.name))
-            srcMFn = om2.MFnDependencyNode(mSel.getDependNode(0))
-
-    def remedyFailedValidations(self):
-        def fixConnections():
-            pass
-
-        def fixDefaultValues():
-            pass
-
-        pass
+def _printFailedStandAloneMsg():
+    print("No stand alone validation is possible!!")

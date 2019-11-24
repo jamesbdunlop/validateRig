@@ -107,6 +107,8 @@ class ValidationUI(QtWidgets.QWidget):
 
         validator = self.__createValidatorFromData(data)
         treeWidget = self.__createValidationTreeWidget(validator=validator)
+        self.runButton.clicked.connect(validator.validateSourceNodes)
+
         validatorpair = (validator, treeWidget)
         if validatorpair in self._validators:
             raise Exception(
@@ -122,22 +124,22 @@ class ValidationUI(QtWidgets.QWidget):
         :type data: dict
         :return: `Validator`
         """
-        return c_validator.Validator(
+        # return c_validator.Validator(
+        #     name=data.get(c_serialization.KEY_VALIDATOR_NAME, "")
+        # )
+        val = c_validator.getValidator(
             name=data.get(c_serialization.KEY_VALIDATOR_NAME, "")
         )
+
+        return val
 
     def __createValidationTreeWidget(self, validator):
         """Creates a treeView widget for the treeWidget/validator pair for adding source nodes to.
         :type validator: `c_validator.Validator`
         """
-        if inside.insideMaya():
-            treewidget = uit_validationTreeWidget.MayaValidationTreeWidget(
-                validator, self
-            )
-        else:
-            treewidget = uit_validationTreeWidget.ValidationTreeWidget(validator, self)
-
+        treewidget = uit_validationTreeWidget.getValidationTreeWidget(validator, self)
         treewidget.remove.connect(self.__removeValidator)
+
         return treewidget
 
     def __addNewValidatorByName(self, name):

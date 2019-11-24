@@ -232,3 +232,18 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
             return None
 
         self.processMayaDrop(QDropEvent)
+
+
+def getValidationTreeWidget(validator, parent):
+    """
+    :param validator: The validtor to be used by the treeWidget
+    :param parent: The QTParent for the treeWidget
+    :type validator: `Validator`
+
+    :return: `ValidationTreeWidget`
+    """
+
+    if inside.insideMaya():
+        return MayaValidationTreeWidget(validator, parent)
+
+    return ValidationTreeWidget(validator, parent)

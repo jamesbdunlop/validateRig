@@ -18,10 +18,6 @@ class Test_Validator(unittest.TestCase):
         validator = validationAPI.createValidator(name=self.validatorName)
         self.assertIsInstance(validator, c_validator.Validator)
 
-    def test_createMayaValidator(self):
-        validator = validationAPI.createMayaValidator(name=self.validatorName)
-        self.assertIsInstance(validator, c_validator.MayaValidator)
-
     def test_createSourceNode(self):
         sourceNode = validationAPI.createSourceNode(name=self.sourceNodeName,
                                                     longName=self.sourceNodeName)

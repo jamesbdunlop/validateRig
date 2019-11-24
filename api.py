@@ -67,16 +67,6 @@ def createValidator(name):
     return c_validator.Validator(name=name)
 
 
-def createMayaValidator(name):
-    """
-
-    :param name:`str`
-    :return: `Validator`
-    """
-
-    return c_validator.MayaValidator(name=name)
-
-
 def createSourceNode(name, longName, validityNodes=None):
     """
 
