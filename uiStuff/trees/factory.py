@@ -1,10 +1,14 @@
 #  Copyright (c) 2019.  James Dunlop
+import copy
 from PySide2 import QtCore, QtGui
 from core import nodes as c_nodes
 from uiStuff.trees import treewidgetitems
 from uiStuff.themes import factory as cui_theme
-
+from const import serialization as c_serialization
 QTDISPLAYROLE = QtCore.Qt.DisplayRole
+SOURCENODE_COLOR = QtGui.QColor(150, 150, 200)
+CONNECTIONNODE_COLOR = QtGui.QColor(255, 255, 153)
+DEFAULTNODE_COLOR = QtGui.QColor(100, 200, 100)
 
 
 def treeWidgetItemFromNode(node):
@@ -13,44 +17,65 @@ def treeWidgetItemFromNode(node):
     :type node: `c_nodes.Node`
     :return: `treewidgetitems.TreeWidgetItem`
     """
-    data = {0: (QTDISPLAYROLE, node.name), 7: (QTDISPLAYROLE, node.status)}
+    defaultdata = {0: (QTDISPLAYROLE, node.name), 7: (QTDISPLAYROLE, node.status)}
+
     twi = treewidgetitems.TreeWidgetItem(node=node)
 
-    if isinstance(node, c_nodes.SourceNode):
-        setRowColors(twi, 1, 7, QtGui.QBrush(QtGui.QColor(150, 150, 200)))
+    if node.nodeType == c_serialization.NT_SOURCENODE:
+        rowdata = defaultdata
+        colorRowRange = (1, 7)
+        colorRowBrush = QtGui.QBrush(SOURCENODE_COLOR)
+        iconName = "defaultvalue"
 
-    elif isinstance(node, c_nodes.ConnectionValidityNode):
-        data[1] = (QTDISPLAYROLE, node.srcAttrName)
-        data[2] = (QTDISPLAYROLE, node.srcAttrValue)
-        data[4] = (QTDISPLAYROLE, node.name)
-        data[5] = (QTDISPLAYROLE, node.destAttrName)
-        data[6] = (QTDISPLAYROLE, node.destAttrValue)
+    elif node.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
+        rowdata = setConnectionValidityNodeData(node, defaultdata)
+        colorRowRange = (1, 7)
+        colorRowBrush = QtGui.QBrush(CONNECTIONNODE_COLOR)
+        iconName = "connection"
 
-        setRowColors(twi, 1, 7, QtGui.QBrush(QtGui.QColor(255, 255, 153)))
-        twi.setIcon(0, cui_theme.QIcon(themeName="core", iconName="connection"))
+    else:
+        rowdata = setDefaultValueNodeData(node, defaultdata)
+        colorRowRange = (1, 4)
+        colorRowBrush = QtGui.QBrush(DEFAULTNODE_COLOR)
+        iconName = "defaultvalue"
 
-    elif isinstance(node, c_nodes.DefaultValueNode):
-        data[1] = (QTDISPLAYROLE, node.name)
-        data[2] = (QTDISPLAYROLE, str(node.defaultValue))
-        data[4] = (QTDISPLAYROLE, "--")
-        data[5] = (QTDISPLAYROLE, "--")
-        data[6] = (QTDISPLAYROLE, "--")
 
-        setRowColors(twi, 1, 4, QtGui.QBrush(QtGui.QColor(100, 200, 100)))
-        twi.setIcon(0, cui_theme.QIcon(themeName="core", iconName="defaultvalue"))
+    twi.updateData(rowdata)
+    setRowColors(twi, colorRowRange, colorRowBrush)
+    setTWIIcon(twi, iconName)
 
-    twi.updateData(data)
     return twi
 
-
-def setRowColors(twi, start, end, qbrush):
+def setRowColors(twi, colorRowRange, colorRowBrush):
     """
 
     :type twi: `treewidgetitems.BaseTreeWidgetItem`
-    :type start: `int`
-    :type end: `int`
-    :type qbrush: `QtGui.QBrush`
+    :type colorRowRange: `tuple`
+    :type colorRowBrush: `QtGui.QBrush`
     :return: None
     """
-    for x in range(start, end):
-        twi.setBackground(x, qbrush)
+    for x in range(colorRowRange[0], colorRowRange[1]):
+        twi.setBackground(x, colorRowBrush)
+
+def setConnectionValidityNodeData(node, rowdata):
+    d = rowdata.copy()
+    d[1] = (QTDISPLAYROLE, node.srcAttrName)
+    d[2] = (QTDISPLAYROLE, node.srcAttrValue)
+    d[4] = (QTDISPLAYROLE, node.name)
+    d[5] = (QTDISPLAYROLE, node.destAttrName)
+    d[6] = (QTDISPLAYROLE, node.destAttrValue)
+
+    return d
+
+def setDefaultValueNodeData(node, rowdata):
+    d = rowdata.copy()
+    d[1] = (QTDISPLAYROLE, node.name)
+    d[2] = (QTDISPLAYROLE, str(node.defaultValue))
+    d[4] = (QTDISPLAYROLE, "--")
+    d[5] = (QTDISPLAYROLE, "--")
+    d[6] = (QTDISPLAYROLE, "--")
+
+    return d
+
+def setTWIIcon(twi, iconName):
+    twi.setIcon(0, cui_theme.QIcon(themeName="core", iconName=iconName))

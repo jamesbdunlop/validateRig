@@ -36,7 +36,7 @@ class ValidationUI(QtWidgets.QWidget):
         self.setAcceptDrops(True)
 
         self._validators = (
-            list()
+            []
         )  # list of tuples of validators and widgets (Validator, QTreeWidget)
 
         self.mainLayout = QtWidgets.QVBoxLayout(self)
@@ -124,14 +124,11 @@ class ValidationUI(QtWidgets.QWidget):
         :type data: dict
         :return: `Validator`
         """
-        # return c_validator.Validator(
-        #     name=data.get(c_serialization.KEY_VALIDATOR_NAME, "")
-        # )
-        val = c_validator.getValidator(
+        validator = c_validator.getValidator(
             name=data.get(c_serialization.KEY_VALIDATOR_NAME, "")
         )
 
-        return val
+        return validator
 
     def __createValidationTreeWidget(self, validator):
         """Creates a treeView widget for the treeWidget/validator pair for adding source nodes to.
@@ -198,9 +195,7 @@ class ValidationUI(QtWidgets.QWidget):
         if dialog.exec_():
             for filepath in dialog.selectedFiles():
                 data = c_parser.read(filepath)
-                if (
-                    type(data) == list
-                ):  # We have a sessionSave from the UI of multiple validators
+                if type(data) == list:  # We have a sessionSave from the UI of multiple validators
                     for validationData in data:
                         self.__addValidatorFromData(validationData, expanded=True)
                 else:
@@ -222,7 +217,7 @@ class ValidationUI(QtWidgets.QWidget):
         self.__addValidatorFromData(data)
 
     # App Create from
-    def __addValidatorFromData(self, data, expanded=False):
+    def __addValidatorFromData(self, data, expanded):
         """
         Sets up a new validator/treeWidget for the validation data passed in.
         :param dict: of validation data
@@ -232,22 +227,18 @@ class ValidationUI(QtWidgets.QWidget):
         :return:
         """
         validator, treeWidget = self.__createValidationPair(data)
-        # Popuplate now
+
         for sourceNodeData in data.get(c_serialization.KEY_VALIDATOR_NODES, list()):
-            # Create and add the validation node to the validator
-            node = validator.addSourceNodeFromData(sourceNodeData)
+            sourceNode = validator.addSourceNodeFromData(sourceNodeData)
 
-            # Create and add the treeWidgetItem to the treeWidget from the node
-            sourceNodeTreeWItm = cuit_factory.treeWidgetItemFromNode(node=node)
+            sourceNodeTreeWItm = cuit_factory.treeWidgetItemFromNode(node=sourceNode)
+            treeWidget.addTopLevelItem(sourceNodeTreeWItm)
 
-            # Populate the rows with the validations for the node
-            for eachChild in node.iterValidityNodes():
-                treewidgetItem = cuit_factory.treeWidgetItemFromNode(eachChild)
+            for eachValidityNode in sourceNode.iterValidityNodes():
+                treewidgetItem = cuit_factory.treeWidgetItemFromNode(eachValidityNode)
                 sourceNodeTreeWItm.addChild(treewidgetItem)
 
             sourceNodeTreeWItm.setExpanded(expanded)
-            treeWidget.addTopLevelItem(sourceNodeTreeWItm)
-
         groupBoxName = data.get(c_serialization.KEY_VALIDATOR_NAME, "None")
         self.__createValidationGroupBox(name=groupBoxName, treeWidget=treeWidget)
 
@@ -316,13 +307,14 @@ class ValidationUI(QtWidgets.QWidget):
         if not os.path.isfile(filepath):
             raise RuntimeError("%s is not valid!" % filepath)
 
-        data = c_parser.read(filepath)
+        previousValidatorAppData = c_parser.read(filepath)
+
         # Handle loading from either a previously saved sessionList or a Validator.toData()
-        if type(data) == list:
-            for validationData in data:
-                inst.__addValidatorFromData(data=validationData, expanded=expanded)
-        else:
-            inst.__addValidatorFromData(data=data, expanded=expanded)
+        if type(previousValidatorAppData) != list:
+            previousValidatorAppData = [previousValidatorAppData]
+
+        for eachValidatiorData in previousValidatorAppData:
+            inst.__addValidatorFromData(data=eachValidatiorData, expanded=expanded)
 
         return inst
 
@@ -330,7 +322,8 @@ class ValidationUI(QtWidgets.QWidget):
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv).instance()
     myWin = ValidationUI.from_fileJSON(
-        filepath="T:/software/validateRig/tests/testValidator.json"
+        filepath="T:/software/validateRig/tests/testValidator.json",
+        expanded=True
     )
     # myWin = ValidationUI()
     myWin.show()

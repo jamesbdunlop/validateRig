@@ -239,7 +239,6 @@ class ConnectionValidityNode(Node):
         super(ConnectionValidityNode, self).__init__(
             name=name, longName=longName, nodeType=c_serialization.NT_CONNECTIONVALIDITY
         )
-
         # These should be set using the setters!
         self._destAttrName = ""
         self._destAttrValue = ""
@@ -322,7 +321,6 @@ class ConnectionValidityNode(Node):
 class DefaultValueNode(Node):
     def __init__(self, name, longName="", defaultValue=None):
         super(DefaultValueNode, self).__init__(name=name, longName=longName, nodeType=c_serialization.NT_DEFAULTVALUE)
-
         self._defaultValue = defaultValue
 
     @property

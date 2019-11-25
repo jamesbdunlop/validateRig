@@ -68,8 +68,8 @@ class Validator(QtCore.QObject):
     def sourceNodeNameExists(self, sourceNodeLongName):
         """
 
-        :param sourceNodeLongName: `str`
-        :return:
+        :type sourceNodeLongName: `str`
+        :return: `bool`
         """
         sourceNodeNames = [n.longName for n in self._nodes]
         logger.debug("{} sourceNodeNames: {}".format(sourceNodeLongName, sourceNodeNames))
@@ -78,23 +78,25 @@ class Validator(QtCore.QObject):
     def replaceExistingSourceNode(self, sourceNode):
         """
         Replace an existing index in the list with the sourceNode
-        :param sourceNode: `SourceNode`
+        :type sourceNode: `SourceNode`
         :return: `bool`
         """
         for x, node in enumerate(self._nodes):
             if node.longName == sourceNode.longName:
                 self._nodes[x] = sourceNode
-                return sourceNode
+                return True
+
+        return False
 
     def addSourceNode(self, sourceNode, force=False):
         """
-        :param sourceNode: `SourceNode`
-        :param force: `bool`
+        :type sourceNode: `SourceNode`
+        :type force: `bool`
         """
 
         if not self.sourceNodeExists(sourceNode):
             self._nodes.append(sourceNode)
-            return sourceNode
+            return True
 
         if self.sourceNodeExists(sourceNode) is not None and force:
             return self.replaceExistingSourceNode(sourceNode)
@@ -104,6 +106,8 @@ class Validator(QtCore.QObject):
                 "%s already exists in validator. Use force=True if you want to overwrite existing!"
                 % sourceNode
             )
+
+        return False
 
     def addSourceNodeFromData(self, data):
         """
@@ -140,23 +144,11 @@ class Validator(QtCore.QObject):
 
         return data
 
-    @classmethod
-    def fromData(cls, data):
-        """
-
-        :param data: `dict`
-        """
-        pass
-
-    @classmethod
-    def from_fileJSON(cls, filePath):
-        data = c_parser.read(filepath=filePath)
-        return cls.fromData(cls, data)
-
     def to_fileJSON(self, filePath):
         logger.info("Writing validator to: %s" % filePath)
         c_parser.write(filepath=filePath, data=self.toData())
         logger.info("Successfully wrote validator to: %s" % filePath)
+
         return True
 
     def __repr__(self):
@@ -175,10 +167,6 @@ def getValidator(name):
     if inside.insideMaya():
         validator.validate.connect(mayaValidation.validateSourceNodes)
     else:
-        validator.validate.connect(_printFailedStandAloneMsg)
+        validator.validate.connect(lambda: print("No stand alone validation is possible!!"))
 
     return validator
-
-
-def _printFailedStandAloneMsg():
-    print("No stand alone validation is possible!!")
