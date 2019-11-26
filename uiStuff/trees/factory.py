@@ -1,14 +1,14 @@
 #  Copyright (c) 2019.  James Dunlop
-import copy
-from PySide2 import QtCore, QtGui
+import logging
+from PySide2 import QtCore
 from core import nodes as c_nodes
 from uiStuff.trees import treewidgetitems
-from uiStuff.themes import factory as cui_theme
 from const import serialization as c_serialization
+
+logger = logging.getLogger(__name__)
+
 QTDISPLAYROLE = QtCore.Qt.DisplayRole
-SOURCENODE_COLOR = QtGui.QColor(150, 150, 200)
-CONNECTIONNODE_COLOR = QtGui.QColor(255, 255, 153)
-DEFAULTNODE_COLOR = QtGui.QColor(100, 200, 100)
+SEPARATOR = "--"
 
 
 def treeWidgetItemFromNode(node):
@@ -17,65 +17,43 @@ def treeWidgetItemFromNode(node):
     :type node: `c_nodes.Node`
     :return: `treewidgetitems.TreeWidgetItem`
     """
-    defaultdata = {0: (QTDISPLAYROLE, node.name), 7: (QTDISPLAYROLE, node.status)}
-
     twi = treewidgetitems.TreeWidgetItem(node=node)
+    rowdataDict = {0: (QTDISPLAYROLE, node.name), 7: (QTDISPLAYROLE, node.status)}
 
-    if node.nodeType == c_serialization.NT_SOURCENODE:
-        rowdata = defaultdata
-        colorRowRange = (1, 7)
-        colorRowBrush = QtGui.QBrush(SOURCENODE_COLOR)
-        iconName = "defaultvalue"
+    if node.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
+        rowsData = (
+            (1, QTDISPLAYROLE, node.srcAttrName),
+            (2, QTDISPLAYROLE, node.srcAttrValue),
+            (4, QTDISPLAYROLE, node.name),
+            (5, QTDISPLAYROLE, node.destAttrName),
+            (6, QTDISPLAYROLE, node.destAttrValue),
+        )
+        rowdataDict = appendRowData(rowdataDict, rowsData)
 
-    elif node.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
-        rowdata = setConnectionValidityNodeData(node, defaultdata)
-        colorRowRange = (1, 7)
-        colorRowBrush = QtGui.QBrush(CONNECTIONNODE_COLOR)
-        iconName = "connection"
+    elif node.nodeType == c_serialization.NT_DEFAULTVALUE:
+        rowsData = (
+            (1, QTDISPLAYROLE, node.name),
+            (2, QTDISPLAYROLE, str(node.defaultValue)),
+            (4, QTDISPLAYROLE, SEPARATOR),
+            (5, QTDISPLAYROLE, SEPARATOR),
+            (6, QTDISPLAYROLE, SEPARATOR),
+        )
+        rowdataDict = appendRowData(rowdataDict, rowsData)
 
-    else:
-        rowdata = setDefaultValueNodeData(node, defaultdata)
-        colorRowRange = (1, 4)
-        colorRowBrush = QtGui.QBrush(DEFAULTNODE_COLOR)
-        iconName = "defaultvalue"
-
-
-    twi.updateData(rowdata)
-    setRowColors(twi, colorRowRange, colorRowBrush)
-    setTWIIcon(twi, iconName)
+    twi.updateData(data=rowdataDict)
 
     return twi
 
-def setRowColors(twi, colorRowRange, colorRowBrush):
+def appendRowData(rowdataDict, rowData):
     """
 
-    :type twi: `treewidgetitems.BaseTreeWidgetItem`
-    :type colorRowRange: `tuple`
-    :type colorRowBrush: `QtGui.QBrush`
-    :return: None
+    :param rowData: Tuple holding the rowData (rowNumber, QtRole, Value)
+    :type rowdataDict: `dict`
+    :type rowData: `tuple`
+    :return: `dict`
     """
-    for x in range(colorRowRange[0], colorRowRange[1]):
-        twi.setBackground(x, colorRowBrush)
-
-def setConnectionValidityNodeData(node, rowdata):
-    d = rowdata.copy()
-    d[1] = (QTDISPLAYROLE, node.srcAttrName)
-    d[2] = (QTDISPLAYROLE, node.srcAttrValue)
-    d[4] = (QTDISPLAYROLE, node.name)
-    d[5] = (QTDISPLAYROLE, node.destAttrName)
-    d[6] = (QTDISPLAYROLE, node.destAttrValue)
+    d = rowdataDict.copy() #Shallow copy should be fine here.
+    for rowNumber, role, value in rowData:
+        d[rowNumber] = (role, value)
 
     return d
-
-def setDefaultValueNodeData(node, rowdata):
-    d = rowdata.copy()
-    d[1] = (QTDISPLAYROLE, node.name)
-    d[2] = (QTDISPLAYROLE, str(node.defaultValue))
-    d[4] = (QTDISPLAYROLE, "--")
-    d[5] = (QTDISPLAYROLE, "--")
-    d[6] = (QTDISPLAYROLE, "--")
-
-    return d
-
-def setTWIIcon(twi, iconName):
-    twi.setIcon(0, cui_theme.QIcon(themeName="core", iconName=iconName))
