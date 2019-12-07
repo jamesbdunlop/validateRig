@@ -20,7 +20,7 @@ DEST_NODENAME_COLUMN = 4
 DEST_ATTR_COLUMN = 5
 DEST_ATTRVALUE_COLUMN = 6
 REPORTSTATUS_COLUMN = 7
-SEPARATOR = "--"
+SEPARATOR = ""
 
 labels = {
     SRC_NODENAME_COLUMN: "SourceNodeName",
@@ -35,4 +35,3 @@ labels = {
 HEADER_LABELS = [""] * TOTALHEADERCOUNT
 for x, label in labels.items():
     HEADER_LABELS[x] = label
-

@@ -18,6 +18,7 @@ from uiStuff.dialogs import createValidator as uid_createValidator
 logger = logging.getLogger(__name__)
 
 # ToDo set stylesheet across all widgets
+# TO DO Attr connections should be children of the main attribute in the tree for expand / collapse
 
 
 class ValidationUI(QtWidgets.QWidget):

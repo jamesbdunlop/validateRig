@@ -261,13 +261,27 @@ def getValidationTreeWidget(validator, parent):
     for sourceNode in validator.iterSourceNodes():
         sourceNodeTreeWItm = cuit_factory.treeWidgetItemFromNode(node=sourceNode)
         treeWidget.addTopLevelItem(sourceNodeTreeWItm)
-        itemWidget = cuit_factory.getItemWidgetFromNode(node=sourceNode)
-        treeWidget.setItemWidget(sourceNodeTreeWItm, 0, itemWidget)
 
+        cuit_factory.setSourceNodeItemWidgetsFromNode(
+            node=sourceNode, treewidget=treeWidget, twi=sourceNodeTreeWItm
+        )
+
+        connectionAttrSrcNames = list()
+        parentNode = None
         for eachValidityNode in sourceNode.iterValidityNodes():
             treewidgetItem = cuit_factory.treeWidgetItemFromNode(node=eachValidityNode)
-            sourceNodeTreeWItm.addChild(treewidgetItem)
-            itemWidget = cuit_factory.getItemWidgetFromNode(node=eachValidityNode)
-            treeWidget.setItemWidget(treewidgetItem, 0, itemWidget)
+
+            if eachValidityNode.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
+                if eachValidityNode.srcAttrName not in connectionAttrSrcNames:
+                    connectionAttrSrcNames.append(eachValidityNode.srcAttrName)
+                    sourceNodeTreeWItm.addChild(treewidgetItem)
+                    parentNode = treewidgetItem
+                else:
+                    parentNode.addChild(treewidgetItem)
+            else:
+                sourceNodeTreeWItm.addChild(treewidgetItem)
+            cuit_factory.setSourceNodeItemWidgetsFromNode(
+                node=eachValidityNode, treewidget=treeWidget, twi=treewidgetItem
+            )
 
     return treeWidget

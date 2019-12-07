@@ -12,18 +12,19 @@ QTDISPLAYROLE = QtCore.Qt.DisplayRole
 
 
 def treeWidgetItemFromNode(node):
-    """
-    :param node: Instance of Node, SourceNode, etc etc
-    :type node: `c_nodes.Node`
-    :return: `treewidgetitems.TreeWidgetItem`
-    """
+    # type: (c_nodes.Node) -> treewidgetitems.TreeWidgetItem
+    """:param node: Instance of Node, SourceNode, etc etc"""
     twi = treewidgetitems.TreeWidgetItem(node=node)
     rowdataDict = {
-        cc_constants.SRC_NODENAME_COLUMN: (QTDISPLAYROLE, node.name),
         cc_constants.REPORTSTATUS_COLUMN: (QTDISPLAYROLE, node.status),
     }
 
-    if node.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
+    if node.nodeType == c_serialization.NT_SOURCENODE:
+        rowdataDict = appendRowData(
+            rowdataDict, ((cc_constants.SRC_NODENAME_COLUMN, QTDISPLAYROLE, node.name),)
+        )
+
+    elif node.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
         rowsData = (
             (cc_constants.SRC_ATTR_COLUMN, QTDISPLAYROLE, node.srcAttrName),
             (cc_constants.SRC_ATTRVALUE_COLUMN, QTDISPLAYROLE, node.srcAttrValue),
@@ -48,15 +49,27 @@ def treeWidgetItemFromNode(node):
     return twi
 
 
-def getItemWidgetFromNode(node):
+def setSourceNodeItemWidgetsFromNode(node, treewidget, twi):
+    # type: (c_nodes.Node, QtWidgets.QTreeWidget, QtWidgets.QTreeWidgetItem) -> None
+    setButton = QtWidgets.QPushButton("Set")
+
     if node.nodeType == c_serialization.NT_SOURCENODE:
-        return QtWidgets.QLabel(node.name)
+        treewidget.setItemWidget(
+            twi, cc_constants.SRC_NODENAME_COLUMN, QtWidgets.QLabel(node.name)
+        )
 
     elif node.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
-        return QtWidgets.QPushButton("VALIDITYNODE")
+        # treewidget.setItemWidget(
+        #     twi, cc_constants.SRC_NODENAME_COLUMN, setButton
+        #     )
+        pass
 
     elif node.nodeType == c_serialization.NT_DEFAULTVALUE:
-        return QtWidgets.QPushButton("DEFAULTVALUE")
+        # treewidget.setItemWidget(
+        #     twi, cc_constants.SRC_NODENAME_COLUMN, setButton
+        # )
+        pass
+
 
 def appendRowData(rowdataDict, rowData):
     # type: (dict, tuple) -> dict
