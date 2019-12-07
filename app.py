@@ -10,7 +10,6 @@ from core import inside
 from core import validator as c_validator
 from core import parser as c_parser
 from uiStuff.themes import factory as uit_factory
-from uiStuff.trees import factory as cuit_factory
 from uiStuff.dialogs import saveToJSONFile as uid_saveToJSON
 from uiStuff.dialogs import loadFromJSONFile as uid_loadFromJSON
 from uiStuff.trees import validationTreeWidget as uit_validationTreeWidget
@@ -90,62 +89,49 @@ class ValidationUI(QtWidgets.QWidget):
         for _, treeWidget in self._validators:
             treeWidget.collapseAll()
 
-    # Create
-    def __createValidationPair(self, data):
-        """
-        The (validator, treeWidget) tuple pair creator.
-
-        :param data: `dict` result of a previously saved ValidationUI.toData()
-        :type data: `dict`
-        :return:
-        """
-        validatorName = data.get(c_serialization.KEY_VALIDATOR_NAME)
-        if self.__findValidatorByName(validatorName) is not None:
-            msg = "Validator named: `%s` already exists! Skipping!" % validatorName
-            logger.warning(msg)
-            raise Exception(msg)
+    def __createValidatorTreeWidgetPair(self, data):
+        # type: (dict) -> tuple
+        """The (validator, treeWidget) tuple pair creator."""
 
         validator = self.__createValidatorFromData(data)
         treeWidget = self.__createValidationTreeWidget(validator=validator)
-        self.runButton.clicked.connect(validator.validateSourceNodes)
-
         validatorpair = (validator, treeWidget)
         if validatorpair in self._validators:
             raise Exception(
                 "Something bad happened! \nThe validation pair exists! But we didn't fail get_validatorbyName!"
             )
 
-        self._validators.append((validator, treeWidget))
-        return validator, treeWidget
+        self._validators.append(validatorpair)
+
+        return validatorpair
 
     def __createValidatorFromData(self, data):
-        """
+        # type: (dict) -> c_validator.Validator
 
-        :type data: dict
-        :return: `Validator`
-        """
+        validatorName = data.get(c_serialization.KEY_VALIDATOR_NAME)
+        if self.__findValidatorByName(validatorName) is not None:
+            msg = "Validator named: `%s` already exists! Skipping!" % validatorName
+            logger.warning(msg)
+            raise Exception(msg)
+
         validator = c_validator.getValidator(
-            name=data.get(c_serialization.KEY_VALIDATOR_NAME, "")
+            name=data.get(c_serialization.KEY_VALIDATOR_NAME, ""), data=data
         )
 
         return validator
 
     def __createValidationTreeWidget(self, validator):
-        """Creates a treeView widget for the treeWidget/validator pair for adding source nodes to.
-        :type validator: `c_validator.Validator`
-        """
+        # type: (c_validator.Validator) -> uit_validationTreeWidget.ValidationTreeWidget
+        """Creates a treeView widget for the treeWidget/validator pair for adding source nodes to."""
         treewidget = uit_validationTreeWidget.getValidationTreeWidget(validator, self)
-        treewidget.remove.connect(self.__removeValidator)
+        treewidget.remove.connect(self.__removeValidatorFromUI)
 
         return treewidget
 
-    def __addNewValidatorByName(self, name):
-        """
-
-        :type name: `str`
-        """
-        validator = c_validator.Validator(name=name)
-        self.__addValidatorFromData(validator.toData())
+    def __createValidatorByName(self, name):
+        # type: (str) -> None
+        validatorData = c_validator.Validator(name=name).toData()
+        self.__addValidatorFromData(data=validatorData)
 
     def __createValidatorNameInputDialog(self):
         self.nameInput = uid_createValidator.CreateValidatorDialog(
@@ -154,25 +140,20 @@ class ValidationUI(QtWidgets.QWidget):
         self.nameInput.setStyleSheet(
             uit_factory.getThemeData(self.theme, self.themeColor)
         )
-        self.nameInput.name.connect(self.__addNewValidatorByName)
+        self.nameInput.name.connect(self.__createValidatorByName)
         self.nameInput.show()
 
     # Search
     def __findValidatorByName(self, name):
-        """
+        # type: (str) -> c_validator.Validator
 
-        :type name: `str`
-        :return: `c_validator.Validator`
-        """
         for eachValidator in self.__iterValidators():
             if eachValidator.name == name:
                 return eachValidator
 
     def __iterValidators(self):
-        """
+        # type: () -> c_validator.Validator
 
-        :return: `c_validator.Validator`
-        """
         for eachValidator, _ in self._validators:
             yield eachValidator
 
@@ -195,7 +176,9 @@ class ValidationUI(QtWidgets.QWidget):
         if dialog.exec_():
             for filepath in dialog.selectedFiles():
                 data = c_parser.read(filepath)
-                if type(data) == list:  # We have a sessionSave from the UI of multiple validators
+                if (
+                    type(data) == list
+                ):  # We have a sessionSave from the UI of multiple validators
                     for validationData in data:
                         self.__addValidatorFromData(validationData, expanded=True)
                 else:
@@ -217,38 +200,26 @@ class ValidationUI(QtWidgets.QWidget):
         self.__addValidatorFromData(data)
 
     # App Create from
-    def __addValidatorFromData(self, data, expanded):
+    def __addValidatorFromData(self, data, expanded=False):
+        # type: (dict, bool) -> None
         """
-        Sets up a new validator/treeWidget for the validation data passed in.
-        :param dict: of validation data
+        Sets up a new validator/treeWidget pair from the validation data and connects the validator to the global RUN button
 
-        :type data:`dict`
-        :type expanded:`bool`
-        :return:
+        :param data: Validation data
         """
-        validator, treeWidget = self.__createValidationPair(data)
+        validator, treeWidget = self.__createValidatorTreeWidgetPair(data)
 
-        for sourceNodeData in data.get(c_serialization.KEY_VALIDATOR_NODES, list()):
-            sourceNode = validator.addSourceNodeFromData(sourceNodeData)
+        self.runButton.clicked.connect(validator.validateSourceNodes)
 
-            sourceNodeTreeWItm = cuit_factory.treeWidgetItemFromNode(node=sourceNode)
-            treeWidget.addTopLevelItem(sourceNodeTreeWItm)
-
-            for eachValidityNode in sourceNode.iterValidityNodes():
-                treewidgetItem = cuit_factory.treeWidgetItemFromNode(eachValidityNode)
-                sourceNodeTreeWItm.addChild(treewidgetItem)
-
-            sourceNodeTreeWItm.setExpanded(expanded)
         groupBoxName = data.get(c_serialization.KEY_VALIDATOR_NAME, "None")
         self.__createValidationGroupBox(name=groupBoxName, treeWidget=treeWidget)
 
-    def __createValidationGroupBox(self, name, treeWidget):
-        """
+        if expanded:
+            treeWidget.expandAll()
 
-        :type name: `str`
-        :type treeWidget: `uit_validationTreeWidget.ValidationTreeWidget`
-        :return: ` QtWidgets.QGroupBox`
-        """
+    def __createValidationGroupBox(self, name, treeWidget):
+        # type: (str, uit_validationTreeWidget.ValidationTreeWidget) -> QtWidgets.QGroupBox
+
         # Validator GBox and treeWidget as child
         groupBox = QtWidgets.QGroupBox(name)
         groupBoxLayout = QtWidgets.QVBoxLayout(groupBox)
@@ -257,12 +228,9 @@ class ValidationUI(QtWidgets.QWidget):
 
         return groupBox
 
-    def __removeValidator(self, validatorList):
-        """
-
-        :param validatorList: [Validator, GroupBox]
-        :type validatorList: `list` [Validator, GroupBox]
-        """
+    def __removeValidatorFromUI(self, validatorList):
+        # type: (list) -> None
+        """:param validatorList: [Validator, GroupBox]"""
         validator, groupBox = validatorList
         for eachValidator, treeWidget in self._validators:
             if validator.name == eachValidator.name:
@@ -272,11 +240,8 @@ class ValidationUI(QtWidgets.QWidget):
 
     # Serialize
     def toData(self):
-        """
-        Collect all the validation data's into a list
-
-        :return: `list` of validator dicts
-        """
+        # type: () -> list
+        """:return: Validator dictionaries"""
         validatorDataList = list()
         for eachValidator, _ in self._validators:
             validatorDataList.append(eachValidator.toData())
@@ -284,12 +249,8 @@ class ValidationUI(QtWidgets.QWidget):
         return validatorDataList
 
     def to_fileJSON(self, filepath):
-        """
-
-        :param filepath: output path to validation.json file
-        :type filepath: `str`
-        :return: `bool`
-        """
+        # type: (str) -> bool
+        """:param filepath: output path to validation.json file"""
         data = self.toData()
         c_parser.write(filepath=filepath, data=data)
 
@@ -297,11 +258,10 @@ class ValidationUI(QtWidgets.QWidget):
 
     @classmethod
     def from_fileJSON(cls, filepath, expanded=False, parent=None):
+        # type: (str, bool, QtWidgets) -> ValidationUI
         """
-
         :param filepath: path to the a previous validation.json file
-        :type filepath: `str`
-        :return: `ValidationUI`
+        :param parent: QtWidget to parent to or None
         """
         inst = cls(parent=parent)
         if not os.path.isfile(filepath):
@@ -322,8 +282,7 @@ class ValidationUI(QtWidgets.QWidget):
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv).instance()
     myWin = ValidationUI.from_fileJSON(
-        filepath="T:/software/validateRig/tests/testValidator.json",
-        expanded=True
+        filepath="T:/software/validateRig/tests/testValidator.json", expanded=True
     )
     # myWin = ValidationUI()
     myWin.show()

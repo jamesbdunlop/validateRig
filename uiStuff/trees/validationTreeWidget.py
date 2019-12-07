@@ -3,6 +3,7 @@ from PySide2 import QtWidgets, QtCore, QtGui
 from const import constants
 from const import serialization as c_serialization
 from core import inside
+from uiStuff.trees import factory as cuit_factory
 from uiStuff.trees import treewidgetitems as cuit_treewidgetitems
 from uiStuff.dialogs import attributeList as uid_attributeList
 
@@ -104,7 +105,9 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
             for x in range(treeWidgetItem.childCount()):
                 treeWidgetItem.takeChild(x)
 
-    def __addValidityNodesToTreeWidgetItemFromSourceNode(self, sourceNode, treeWidgetItem):
+    def __addValidityNodesToTreeWidgetItemFromSourceNode(
+        self, sourceNode, treeWidgetItem
+    ):
         for eachValidityNode in sourceNode.iterValidityNodes():
             if eachValidityNode.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
                 treeWidgetItem.addChild(
@@ -125,7 +128,9 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         :return:
         """
         for sourceNode in sourceNodesList:
-            existingSourceNode = self.validator().findSourceNodeByLongName(sourceNode.longName)
+            existingSourceNode = self.validator().findSourceNodeByLongName(
+                sourceNode.longName
+            )
             if existingSourceNode is not None:
                 treeWidgetItem = self.__findTreeWidgetItemByExactName(sourceNode.name)
                 if treeWidgetItem is None:
@@ -204,7 +209,11 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
         # Check to see if this exists in the validator we dropped over.
         for nodeName in nodeNames:
             if not self.validator().sourceNodeNameExists(nodeName):
-                logger.info("SourceNode: {} does not exist creating new sourceNode.".format(nodeName))
+                logger.info(
+                    "SourceNode: {} does not exist creating new sourceNode.".format(
+                        nodeName
+                    )
+                )
                 self.srcNodesWidget = uid_attributeList.MayaValidityNodesSelector(
                     nodeName=nodeName, parent=self
                 )
@@ -244,6 +253,17 @@ def getValidationTreeWidget(validator, parent):
     """
 
     if inside.insideMaya():
-        return MayaValidationTreeWidget(validator, parent)
+        treeWidget = MayaValidationTreeWidget(validator, parent)
 
-    return ValidationTreeWidget(validator, parent)
+    else:
+        treeWidget = ValidationTreeWidget(validator, parent)
+
+    for sourceNode in validator.iterSourceNodes():
+        sourceNodeTreeWItm = cuit_factory.treeWidgetItemFromNode(node=sourceNode)
+        treeWidget.addTopLevelItem(sourceNodeTreeWItm)
+
+        for eachValidityNode in sourceNode.iterValidityNodes():
+            treewidgetItem = cuit_factory.treeWidgetItemFromNode(eachValidityNode)
+            sourceNodeTreeWItm.addChild(treewidgetItem)
+
+    return treeWidget

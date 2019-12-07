@@ -151,22 +151,34 @@ class Validator(QtCore.QObject):
 
         return True
 
+    @classmethod
+    def fromData(cls, name, data):
+        inst = cls(name)
+        for sourceNodeData in data.get(c_serialization.KEY_VALIDATOR_NODES, list()):
+            inst.addSourceNodeFromData(sourceNodeData)
+
+        return inst
+
     def __repr__(self):
         return "%s" % self.name
 
 
-def getValidator(name):
+def getValidator(name, data=None):
     """
 
     :param name: The name for the validator. Eg: MyCat
     :type name: `str`
     :return: `Validator`
     """
-    validator = Validator(name=name)
+    if data is None:
+        validator = Validator(name=name)
+    else:
+        validator = Validator.fromData(name, data)
 
     if inside.insideMaya():
         validator.validate.connect(mayaValidation.validateSourceNodes)
     else:
-        validator.validate.connect(lambda: print("No stand alone validation is possible!!"))
+        msg = lambda x: logger.info(x)
+        validator.validate.connect(msg("No stand alone validation is possible!!"))
 
     return validator

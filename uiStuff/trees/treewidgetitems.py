@@ -13,6 +13,7 @@ class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
     def setNode(self, node):
         self._node = node
         data = {7: (QtCore.Qt.DisplayRole, node.reportStatus)}
+
         self.updateData(data)
 
     def nodeType(self):

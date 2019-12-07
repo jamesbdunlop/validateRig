@@ -57,6 +57,7 @@ for e in cmds.ls(sl=True, l=True):
 validator.to_fileJSON(filePath="C:/temp/testValidator.json")
 """
 
+
 def createValidator(name):
     """
 
@@ -114,4 +115,3 @@ def createConnectionValidityNode(
     node.destAttrValue = destinationNodeAttributeValue
 
     return node
-
