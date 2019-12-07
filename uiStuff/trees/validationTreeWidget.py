@@ -1,8 +1,8 @@
 import logging
 from PySide2 import QtWidgets, QtCore, QtGui
-from const import constants
-from const import serialization as c_serialization
 from core import inside
+from const import constants as cc_constants
+from const import serialization as c_serialization
 from uiStuff.trees import factory as cuit_factory
 from uiStuff.trees import treewidgetitems as cuit_treewidgetitems
 from uiStuff.dialogs import attributeList as uid_attributeList
@@ -26,7 +26,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         self.resizeColumnToContents(True)
         self.setAcceptDrops(True)
         self.setColumnCount(8)
-        self.setHeaderLabels(constants.HEADER_LABELS)
+        self.setHeaderLabels(cc_constants.HEADER_LABELS)
         self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.widgetUnderMouse = None
         self._validator = validator
@@ -261,9 +261,13 @@ def getValidationTreeWidget(validator, parent):
     for sourceNode in validator.iterSourceNodes():
         sourceNodeTreeWItm = cuit_factory.treeWidgetItemFromNode(node=sourceNode)
         treeWidget.addTopLevelItem(sourceNodeTreeWItm)
+        itemWidget = cuit_factory.getItemWidgetFromNode(node=sourceNode)
+        treeWidget.setItemWidget(sourceNodeTreeWItm, 0, itemWidget)
 
         for eachValidityNode in sourceNode.iterValidityNodes():
-            treewidgetItem = cuit_factory.treeWidgetItemFromNode(eachValidityNode)
+            treewidgetItem = cuit_factory.treeWidgetItemFromNode(node=eachValidityNode)
             sourceNodeTreeWItm.addChild(treewidgetItem)
+            itemWidget = cuit_factory.getItemWidgetFromNode(node=eachValidityNode)
+            treeWidget.setItemWidget(treewidgetItem, 0, itemWidget)
 
     return treeWidget

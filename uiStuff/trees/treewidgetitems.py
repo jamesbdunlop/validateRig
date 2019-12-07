@@ -1,5 +1,5 @@
 from PySide2 import QtWidgets, QtCore
-
+from const import constants as cc_constants
 
 class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
     def __init__(self, node, *args, **kwargs):
@@ -12,7 +12,7 @@ class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
 
     def setNode(self, node):
         self._node = node
-        data = {7: (QtCore.Qt.DisplayRole, node.reportStatus)}
+        data = {cc_constants.REPORTSTATUS_COLUMN: (QtCore.Qt.DisplayRole, node.reportStatus)}
 
         self.updateData(data)
 
@@ -40,4 +40,4 @@ class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
     @reportStatus.setter
     def reportStatus(self, status):
         self._reportStatus = status
-        self.setData(7, QtCore.Qt.DisplayRole, status)
+        self.setData(cc_constants.REPORTSTATUS_COLUMN, QtCore.Qt.DisplayRole, status)
