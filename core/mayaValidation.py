@@ -1,5 +1,5 @@
 # Copyright (c) 2019.  James Dunlop
-
+from core.nodes import SourceNode
 
 # TODO look to clean this up as this is my old MASSIVE mplugValue..
 def getPlugValue(mplug):
@@ -71,12 +71,5 @@ def getPlugValue(mplug):
 
 
 def validateSourceNodes(nodes):
-    """
-
-    :param nodes: All the sourceNodes to process.
-    :type nodes: `list`
-
-    :return: `None`
-    """
-
+    # type: (list[SourceNode]) -> None
     print("nodes: {}".format(nodes))

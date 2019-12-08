@@ -1,5 +1,5 @@
 import logging
-from typing import Generator
+# from typing import Generator
 from PySide2 import QtCore
 from PySide2.QtCore import Signal
 from core import parser as c_parser

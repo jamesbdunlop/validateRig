@@ -1,4 +1,4 @@
-from typing import Generator
+# from typing import Generator
 from PySide2 import QtWidgets, QtCore
 from core.nodes import SourceNode, DefaultValueNode, ConnectionValidityNode
 from core import inside

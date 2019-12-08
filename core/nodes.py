@@ -1,4 +1,4 @@
-from typing import Generator
+# from typing import Generator
 from const import constants as c_constants
 from const import serialization as c_serialization
 from core import parser as c_parser
