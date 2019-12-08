@@ -65,19 +65,16 @@ def setSourceNodeItemWidgetsFromNode(node, treewidget, twi):
     setButton = QtWidgets.QPushButton("Set")
 
     if node.nodeType == c_serialization.NT_SOURCENODE:
-        # treewidget.setItemWidget(
-        #     twi, cc_constants.SRC_NODENAME_COLUMN, QtWidgets.QLabel(node.name)
-        # )
-        pass  # this crashes maya
+        treewidget.setItemWidget(
+            twi, cc_constants.SRC_NODENAME_COLUMN, QtWidgets.QLabel(node.name)
+        )
 
     elif node.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
-        # treewidget.setItemWidget(
-        #     twi, cc_constants.SRC_NODENAME_COLUMN, setButton
-        #     )
-        pass  # this crashes maya
+        treewidget.setItemWidget(
+            twi, cc_constants.SRC_NODENAME_COLUMN, setButton
+            )
 
     elif node.nodeType == c_serialization.NT_DEFAULTVALUE:
-        # treewidget.setItemWidget(
-        #     twi, cc_constants.SRC_NODENAME_COLUMN, setButton
-        # )
-        pass  # this crashes maya
+        treewidget.setItemWidget(
+            twi, cc_constants.SRC_NODENAME_COLUMN, setButton
+        )
