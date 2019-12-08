@@ -65,8 +65,9 @@ def setSourceNodeItemWidgetsFromNode(node, treewidget, twi):
     setButton = QtWidgets.QPushButton("Set")
 
     if node.nodeType == c_serialization.NT_SOURCENODE:
+        label = QtWidgets.QLabel(node.name)
         treewidget.setItemWidget(
-            twi, cc_constants.SRC_NODENAME_COLUMN, QtWidgets.QLabel(node.name)
+            twi, cc_constants.SRC_NODENAME_COLUMN, label
         )
 
     elif node.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
