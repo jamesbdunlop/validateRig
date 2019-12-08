@@ -21,7 +21,7 @@ def treeWidgetItemFromNode(node):
 
     if node.nodeType == c_serialization.NT_SOURCENODE:
         rowdataDict = appendRowData(
-            rowdataDict, ((cc_constants.SRC_NODENAME_COLUMN, QTDISPLAYROLE, node.name),)
+            rowdataDict, ( (cc_constants.SRC_NODENAME_COLUMN, QTDISPLAYROLE, node.longName.split("|")[-1]), )
         )
 
     elif node.nodeType == c_serialization.NT_CONNECTIONVALIDITY:

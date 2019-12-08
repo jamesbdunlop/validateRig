@@ -63,7 +63,7 @@ class Validator(QtCore.QObject):
     def sourceNodeNameExists(self, sourceNodeLongName):
         # type: (str) -> bool
         sourceNodeNames = [n.longName for n in self._nodes]
-        logger.debug(
+        logger.info(
             "{} sourceNodeNames: {}".format(sourceNodeLongName, sourceNodeNames)
         )
         return sourceNodeLongName in sourceNodeNames

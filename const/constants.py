@@ -35,3 +35,26 @@ labels = {
 HEADER_LABELS = [""] * TOTALHEADERCOUNT
 for x, label in labels.items():
     HEADER_LABELS[x] = label
+
+
+MAYA_DEFAULTATTRLIST = [
+    "translate",
+    "translateX",
+    "translateY",
+    "translateZ",
+    "rotate",
+    "rotateX",
+    "rotateY",
+    "rotateZ",
+    "scale",
+    "scaleX",
+    "scaleY",
+    "scaleZ",
+    "parentInverseMatrix",
+    "parentMatrix",
+    "matrix",
+    "inverseMatrix",
+    "worldMatrix",
+    "worldInverseMatrix",
+    "visibility",
+    ]

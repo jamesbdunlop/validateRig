@@ -70,7 +70,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
 
     def __addTopLevelTreeWidgetItemFromSourceNode(self, sourceNode):
         # type: (SourceNode) -> QtWidgets.QTreeWidgetItem
-        item = cuit_treewidgetitems.SourceNodeTreeWidgetItem(node=sourceNode)
+        item = cuit_factory.treeWidgetItemFromNode(node=sourceNode)
         self.addTopLevelItem(item)
 
         return item
@@ -99,14 +99,12 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         for eachValidityNode in sourceNode.iterValidityNodes():
             if eachValidityNode.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
                 treeWidgetItem.addChild(
-                    cuit_treewidgetitems.ConnectionTreeWidgetItem(node=eachValidityNode)
+                    cuit_factory.treeWidgetItemFromNode(node=eachValidityNode)
                 )
 
             if eachValidityNode.nodeType == c_serialization.NT_DEFAULTVALUE:
                 treeWidgetItem.addChild(
-                    cuit_treewidgetitems.DefaultValueTreeWidgetItem(
-                        node=eachValidityNode
-                    )
+                    cuit_factory.treeWidgetItemFromNode(node=eachValidityNode)
                 )
 
     def _processSourceNodeAttributeWidgets(self, sourceNodesList):
@@ -192,6 +190,7 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
 
         # Check to see if this exists in the validator we dropped over.
         for nodeName in nodeNames:
+            nodeName = nodeName.split("|")[-1]
             if not self.validator().sourceNodeNameExists(nodeName):
                 logger.info(
                     "SourceNode: {} does not exist creating new sourceNode.".format(
