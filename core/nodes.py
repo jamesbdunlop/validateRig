@@ -41,6 +41,7 @@ class Node(object):
         self._nodeType = nodeType
         self._validationStatus = c_constants.NODE_VALIDATION_NA
         self._parent = parent
+        self._children = list()
 
     @property
     def name(self):
@@ -82,6 +83,28 @@ class Node(object):
         # type: (str) -> None
         self._validationStatus = status
 
+    def addChild(self, node):
+        # type: (Node) -> None
+        if node not in self._children:
+            self._children.append(node)
+
+    def addChildren(self, nodes):
+        # type: (list[Node]) -> None
+        for node in nodes:
+            if node not in self._children:
+                self._children.append(node)
+
+    def removeChild(self, node):
+        # type: (Node) -> None
+        for eachNode in self._children:
+            if eachNode == node:
+                self._children.remove(node)
+
+    def iterChildren(self):
+        # type: () -> Generator[Node]
+        for eachNode in self._children:
+            yield eachNode
+
     def toData(self):
         self.data = dict()
         self.data[c_serialization.KEY_NODENAME] = self.name
@@ -109,7 +132,7 @@ class Node(object):
 
 
 class SourceNode(Node):
-    def __init__(self, name, longName, validityNodes=None):
+    def __init__(self, name, longName, parent=None, validityNodes=None, **kwargs):
         # type: (str, str, list) -> None
         """
         Args:
@@ -117,54 +140,9 @@ class SourceNode(Node):
             validityNodes: list of nodes [ValidityNode,ValidityNode]
         """
         super(SourceNode, self).__init__(
-            name=name, longName=longName, nodeType=c_serialization.NT_SOURCENODE
+            name=name, longName=longName, parent=parent, nodeType=c_serialization.NT_SOURCENODE
         )
-        self._validityNodes = validityNodes or list()
-
-    def validityNodeExists(self, validityNode):
-        # type: (Node) -> bool
-        """
-        Args:
-            validityNode: short name
-        """
-        for eachValidityNode in self.iterValidityNodes():
-            if eachValidityNode.name == validityNode:
-                return True
-
-        return False
-
-    def appendValidityNode(self, validityNode):
-        # type: (Node) -> None
-        """
-        Args:
-            validityNode: DefaultValueNode or ConnectionValidityNode etc
-        """
-        if not self.validityNodeExists(validityNode.name):
-            self._validityNodes.append(validityNode)
-
-    def appendValidityNodes(self, validityNodeList):
-        # type: (list) -> None
-        """
-        Args:
-            validityNodeList: [DefaultValueNode , ConnectionValidityNode] etc
-        """
-        for eachValidityNode in validityNodeList:
-            self.appendValidityNode(eachValidityNode)
-
-    def removeValidityNode(self, validityNode):
-        # type: (Node) -> None
-        """
-        Args:
-            validityNode: DefaultValueNode or ConnectionValidityNode etc
-        """
-        for eachNode in self.iterValidityNodes():
-            if eachNode == validityNode:
-                self._validityNodes.remove(validityNode)
-
-    def iterValidityNodes(self):
-        # type: () -> Generator[Node]
-        for eachNode in self._validityNodes:
-            yield eachNode
+        self._children = validityNodes or list()
 
     @staticmethod
     def isNodeTypeEqualToDefaultValue(nodeType):
@@ -207,7 +185,7 @@ class SourceNode(Node):
             cls.createValidityNodeFromData(validityNodeData, inst)
             for validityNodeData in serializedValidityNodes
         ]
-        inst.appendValidityNodes(validityNodes)
+        inst.addChildren(validityNodes)
 
         return inst
 

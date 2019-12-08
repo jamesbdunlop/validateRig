@@ -232,5 +232,5 @@ class MayaValidityNodesSelector(BaseSourceNodeValidityNodesSelector):
                 name=nodeName, longName=nodeName, validityNodes=validityNodes
             )
         else:
-            self.sourceNode().appendValidityNodes(validityNodes)
+            self.sourceNode().addChild(validityNodes)
             return self.sourceNode()

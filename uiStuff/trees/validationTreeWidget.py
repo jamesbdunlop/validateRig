@@ -133,12 +133,11 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
 
     def __removeTreeWidgetItems(self):
         for eachTreeWidgetItem in self.selectedItems():
-            sourceNode = eachTreeWidgetItem.parent().node()
-            sourceNode.removeValidityNode(eachTreeWidgetItem.node())
+            node = eachTreeWidgetItem.parent().node()
+            node.removeChild(eachTreeWidgetItem.node())
 
             sourceNodeTreeWidgetItem = eachTreeWidgetItem.parent()
             sourceNodeTreeWidgetItem.removeChild(eachTreeWidgetItem)
-
     def __removeAllChildren(self):
         for eachTreeWidgetItem in self.selectedItems():
             eachTreeWidgetItem.removeAllChildren()
@@ -249,6 +248,8 @@ def getValidationTreeWidget(validator, parent):
         #     node=sourceNode, treewidget=treeWidget, twi=sourceNodeTreeWItm
         # )
 
+    treeWidget.resizeColumnToContents(0)
+
     return treeWidget
 
 
@@ -256,7 +257,7 @@ def addValidatityNodesToTreeWidgetItem(sourceNode, sourceNodeTreeWItm):
     # type: (Node, QtWidgets.QTreeWidgetItem) -> None
     connectionAttrSrcNames = list()
     parentNode = None
-    for eachValidityNode in sourceNode.iterValidityNodes():
+    for eachValidityNode in sourceNode.iterChildren():
         treewidgetItem = cuit_factory.treeWidgetItemFromNode(node=eachValidityNode)
 
         if eachValidityNode.nodeType == c_serialization.NT_CONNECTIONVALIDITY:

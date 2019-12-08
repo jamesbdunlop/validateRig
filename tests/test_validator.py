@@ -33,7 +33,7 @@ class Test_Validator(unittest.TestCase):
         self.connectionValidityNode.srcAttrName = self.srcNodeAttrName
         self.connectionValidityNode.srcAttrValue = self.srcNodeAttrValue
 
-        self.sourceNode.appendValidityNode(self.connectionValidityNode)
+        self.sourceNode.addChild(self.connectionValidityNode)
 
         # Add the sourceNode to the validator now
         self.validator.addSourceNode(self.sourceNode)
