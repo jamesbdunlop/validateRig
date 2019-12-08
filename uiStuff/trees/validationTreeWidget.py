@@ -1,6 +1,8 @@
 import logging
 from PySide2 import QtWidgets, QtCore, QtGui
 from core import inside
+from core.validator import Validator
+from core.nodes import Node, SourceNode
 from const import constants as cc_constants
 from const import serialization as c_serialization
 from uiStuff.trees import factory as cuit_factory
@@ -14,12 +16,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
     remove = QtCore.Signal(list, name="remove")
 
     def __init__(self, validator, parent=None):
-        """
-
-        :param contextMenu: `QMenu`
-        :param validator: `Validator`
-        :param parent: `QtParent`
-        """
+        # type: (Validator, QtWidgets.QWidget) -> None
         super(ValidationTreeWidget, self).__init__(parent=parent)
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.__rightClickMenu)
@@ -42,12 +39,6 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         return item.node().nodeType
 
     def __rightClickMenu(self, QPoint):
-        """
-        Construct node appropriate menu + actions
-
-        :param QPoint: `QPoint`
-        :return:
-        """
         menu = QtWidgets.QMenu()
         removeValidator = menu.addAction("Remove Entire Validator")
         removeValidator.triggered.connect(self.__removeValidator)
@@ -78,27 +69,24 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         self.remove.emit([self.validator(), self.parent()])
 
     def __addTopLevelTreeWidgetItemFromSourceNode(self, sourceNode):
+        # type: (SourceNode) -> QtWidgets.QTreeWidgetItem
         item = cuit_treewidgetitems.SourceNodeTreeWidgetItem(node=sourceNode)
         self.addTopLevelItem(item)
 
         return item
 
     def __findTreeWidgetItemByExactName(self, name):
+        # type: (str) -> QtWidgets.QTreeWidgetItem
         """
-
-        :param name: `str` SourceNode.name
-        :return: `QList`
+        Args:
+            name: SourceNode.name
         """
         itemList = self.findItems(name, QtCore.Qt.MatchExactly)
         if itemList:
             return itemList[0]
 
     def __removeAllTreeWidgetItemChildren(self, treeWidgetItem):
-        """
-
-        :param treeWidgetItem:`QTreeWidgetItem`
-        :return:
-        """
+        # type: (QtWidgets.QTreeWidgetItem) -> None
         # Kinda annoying but QT sucks at just using childCount() for some reason! Most likely the data changes
         # out from under and it just hangs onto the last one or something odd.
         while treeWidgetItem.childCount():
@@ -122,11 +110,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
                 )
 
     def _processSourceNodeAttributeWidgets(self, sourceNodesList):
-        """
-
-        :param sourceNodesList: `list` of SourceNodes
-        :return:
-        """
+        # type: (list[SourceNode]) -> None
         for sourceNode in sourceNodesList:
             existingSourceNode = self.validator().findSourceNodeByLongName(
                 sourceNode.longName
@@ -244,12 +228,11 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
 
 
 def getValidationTreeWidget(validator, parent):
+    # type: (Validator, QtWidgets.QWidget) -> QtWidgets.QTreeWidget
     """
-    :param validator: The validtor to be used by the treeWidget
-    :param parent: The QTParent for the treeWidget
-    :type validator: `Validator`
-
-    :return: `ValidationTreeWidget`
+    Args:
+        validator: The validator to be used by the treeWidget
+        parent: QTWidget for the treeWidget
     """
 
     if inside.insideMaya():
@@ -261,27 +244,35 @@ def getValidationTreeWidget(validator, parent):
     for sourceNode in validator.iterSourceNodes():
         sourceNodeTreeWItm = cuit_factory.treeWidgetItemFromNode(node=sourceNode)
         treeWidget.addTopLevelItem(sourceNodeTreeWItm)
-
-        cuit_factory.setSourceNodeItemWidgetsFromNode(
-            node=sourceNode, treewidget=treeWidget, twi=sourceNodeTreeWItm
-        )
-
-        connectionAttrSrcNames = list()
-        parentNode = None
-        for eachValidityNode in sourceNode.iterValidityNodes():
-            treewidgetItem = cuit_factory.treeWidgetItemFromNode(node=eachValidityNode)
-
-            if eachValidityNode.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
-                if eachValidityNode.srcAttrName not in connectionAttrSrcNames:
-                    connectionAttrSrcNames.append(eachValidityNode.srcAttrName)
-                    sourceNodeTreeWItm.addChild(treewidgetItem)
-                    parentNode = treewidgetItem
-                else:
-                    parentNode.addChild(treewidgetItem)
-            else:
-                sourceNodeTreeWItm.addChild(treewidgetItem)
-            cuit_factory.setSourceNodeItemWidgetsFromNode(
-                node=eachValidityNode, treewidget=treeWidget, twi=treewidgetItem
-            )
+        addValidatityNodesToTreeWidgetItem(sourceNode, sourceNodeTreeWItm)
+        # Crashes maya
+        # cuit_factory.setSourceNodeItemWidgetsFromNode(
+        #     node=sourceNode, treewidget=treeWidget, twi=sourceNodeTreeWItm
+        # )
 
     return treeWidget
+
+def addValidatityNodesToTreeWidgetItem(sourceNode, sourceNodeTreeWItm):
+    # type: (Node, QtWidgets.QTreeWidgetItem) -> None
+    connectionAttrSrcNames = list()
+    parentNode = None
+    for eachValidityNode in sourceNode.iterValidityNodes():
+        treewidgetItem = cuit_factory.treeWidgetItemFromNode(node=eachValidityNode)
+
+        if eachValidityNode.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
+            if eachValidityNode.srcAttrName not in connectionAttrSrcNames:
+                connectionAttrSrcNames.append(eachValidityNode.srcAttrName)
+                sourceNodeTreeWItm.addChild(treewidgetItem)
+                # First found becomes the parentNode
+                parentNode = treewidgetItem
+
+            else:
+                # parent this to the parentNode
+                parentNode.addChild(treewidgetItem)
+        else:
+            sourceNodeTreeWItm.addChild(treewidgetItem)
+
+        # Crashes maya
+        # cuit_factory.setSourceNodeItemWidgetsFromNode(
+        #     node=eachValidityNode, treewidget=treeWidget, twi=treewidgetItem
+        # )

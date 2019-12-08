@@ -1,4 +1,5 @@
 import logging
+from typing import Generator
 from PySide2 import QtCore
 from PySide2.QtCore import Signal
 from core import parser as c_parser
@@ -14,6 +15,7 @@ class Validator(QtCore.QObject):
     validate = Signal(list)
 
     def __init__(self, name, namespace="", nodes=None):
+        # type: (str, str, list) -> None
         QtCore.QObject.__init__(self, None)
         self._name = name  # name of the validator.
         self._namespace = namespace
@@ -27,10 +29,10 @@ class Validator(QtCore.QObject):
 
     @name.setter
     def name(self, name):
+        # type: (str) -> None
         """
-
-        :param name:`str` name of the validator
-        :return:
+        Args:
+            name: name of the validator
         """
         if type(name) != str:
             raise TypeError("name is not of type str!")
@@ -43,44 +45,30 @@ class Validator(QtCore.QObject):
 
     @namespace.setter
     def namespace(self, namespace):
+        # type: (str) -> None
         self._namespace = namespace
 
     def findSourceNodeByLongName(self, name):
-        """
-
-        :param name: `str`
-        :return: `SourceNode`
-        """
+        # type: (str) -> SourceNode
         for eachNode in self.iterSourceNodes():
             if eachNode.longName == name:
                 return eachNode
 
     def sourceNodeExists(self, sourceNode):
-        """
-
-        :param sourceNode: `SourceNode`
-        :return:
-        """
+        # type: (SourceNode) -> bool
         sourceNodeNames = [sn.longName for sn in self._nodes]
 
         return sourceNode.longName in sourceNodeNames
 
     def sourceNodeNameExists(self, sourceNodeLongName):
-        """
-
-        :type sourceNodeLongName: `str`
-        :return: `bool`
-        """
+        # type: (str) -> bool
         sourceNodeNames = [n.longName for n in self._nodes]
         logger.debug("{} sourceNodeNames: {}".format(sourceNodeLongName, sourceNodeNames))
         return sourceNodeLongName in sourceNodeNames
 
     def replaceExistingSourceNode(self, sourceNode):
-        """
-        Replace an existing index in the list with the sourceNode
-        :type sourceNode: `SourceNode`
-        :return: `bool`
-        """
+        # type: (SourceNode) -> bool
+        """Replace an existing index in the list with the sourceNode"""
         for x, node in enumerate(self._nodes):
             if node.longName == sourceNode.longName:
                 self._nodes[x] = sourceNode
@@ -89,11 +77,7 @@ class Validator(QtCore.QObject):
         return False
 
     def addSourceNode(self, sourceNode, force=False):
-        """
-        :type sourceNode: `SourceNode`
-        :type force: `bool`
-        """
-
+        # type: (SourceNode, bool) -> bool
         if not self.sourceNodeExists(sourceNode):
             self._nodes.append(sourceNode)
             return True
@@ -110,17 +94,14 @@ class Validator(QtCore.QObject):
         return False
 
     def addSourceNodeFromData(self, data):
-        """
-
-        :param data: `dict`
-        :return: `SourceNode`
-        """
+        # type: (dict) -> SourceNode
         sourceNode = SourceNode.fromData(data)
         self.addSourceNode(sourceNode)
 
         return sourceNode
 
     def removeSourceNode(self, sourceNode):
+        # type: (SourceNode) -> bool
         for eachSourceNode in self.iterSourceNodes():
             if eachSourceNode == sourceNode:
                 self._nodes.remove(eachSourceNode)
@@ -129,6 +110,7 @@ class Validator(QtCore.QObject):
         return False
 
     def iterSourceNodes(self):
+        # type: (SourceNode) -> Generator[SourceNode]
         for eachNode in self._nodes:
             yield eachNode
 
@@ -164,11 +146,10 @@ class Validator(QtCore.QObject):
 
 
 def getValidator(name, data=None):
+    # type: (str, dict) -> Validator
     """
-
-    :param name: The name for the validator. Eg: MyCat
-    :type name: `str`
-    :return: `Validator`
+    Args:
+        name: The name for the validator. Eg: MyCat
     """
     if data is None:
         validator = Validator(name=name)

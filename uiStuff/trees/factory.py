@@ -48,29 +48,6 @@ def treeWidgetItemFromNode(node):
 
     return twi
 
-
-def setSourceNodeItemWidgetsFromNode(node, treewidget, twi):
-    # type: (c_nodes.Node, QtWidgets.QTreeWidget, QtWidgets.QTreeWidgetItem) -> None
-    setButton = QtWidgets.QPushButton("Set")
-
-    if node.nodeType == c_serialization.NT_SOURCENODE:
-        treewidget.setItemWidget(
-            twi, cc_constants.SRC_NODENAME_COLUMN, QtWidgets.QLabel(node.name)
-        )
-
-    elif node.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
-        # treewidget.setItemWidget(
-        #     twi, cc_constants.SRC_NODENAME_COLUMN, setButton
-        #     )
-        pass
-
-    elif node.nodeType == c_serialization.NT_DEFAULTVALUE:
-        # treewidget.setItemWidget(
-        #     twi, cc_constants.SRC_NODENAME_COLUMN, setButton
-        # )
-        pass
-
-
 def appendRowData(rowdataDict, rowData):
     # type: (dict, tuple) -> dict
     """:param rowData: Tuple holding the rowData (rowNumber, QtRole, Value)"""
@@ -80,3 +57,27 @@ def appendRowData(rowdataDict, rowData):
         d[rowNumber] = (role, value)
 
     return d
+
+def setSourceNodeItemWidgetsFromNode(node, treewidget, twi):
+    # type: (c_nodes.Node, QtWidgets.QTreeWidget, QtWidgets.QTreeWidgetItem) -> None
+    setButton = QtWidgets.QPushButton("Set")
+
+    if node.nodeType == c_serialization.NT_SOURCENODE:
+        # treewidget.setItemWidget(
+        #     twi, cc_constants.SRC_NODENAME_COLUMN, QtWidgets.QLabel(node.name)
+        # )
+        pass #this crashes maya
+
+    elif node.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
+        # treewidget.setItemWidget(
+        #     twi, cc_constants.SRC_NODENAME_COLUMN, setButton
+        #     )
+        pass #this crashes maya
+
+    elif node.nodeType == c_serialization.NT_DEFAULTVALUE:
+        # treewidget.setItemWidget(
+        #     twi, cc_constants.SRC_NODENAME_COLUMN, setButton
+        # )
+        pass #this crashes maya
+
+

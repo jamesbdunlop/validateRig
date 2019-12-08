@@ -2,6 +2,7 @@ import sys
 
 
 def insideMaya():
+    # type: () -> Bool
     inside = True
     if not "maya.api.maya" in sys.modules:
         inside = False

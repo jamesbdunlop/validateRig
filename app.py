@@ -96,6 +96,8 @@ class ValidationUI(QtWidgets.QWidget):
 
         validator = self.__createValidatorFromData(data)
         treeWidget = self.__createValidationTreeWidget(validator=validator)
+        treeWidget.setStyleSheet(self.sheet)
+
         validatorpair = (validator, treeWidget)
         if validatorpair in self._validators:
             raise Exception(
@@ -138,9 +140,7 @@ class ValidationUI(QtWidgets.QWidget):
         self.nameInput = uid_createValidator.CreateValidatorDialog(
             title="Create Validator"
         )
-        self.nameInput.setStyleSheet(
-            uit_factory.getThemeData(self.theme, self.themeColor)
-        )
+        self.nameInput.setStyleSheet(self.sheet)
         self.nameInput.name.connect(self.__createValidatorByName)
         self.nameInput.show()
 
@@ -160,11 +160,7 @@ class ValidationUI(QtWidgets.QWidget):
 
     # Dialogs
     def __saveDialog(self):
-        """
-        Writes to disk all the validation data for each validation treeWidget added to the UI.
-
-        :return:
-        """
+        """Writes to disk all the validation data for each validation treeWidget added to the UI"""
         dialog = uid_saveToJSON.SaveJSONToFileDialog(parent=None)
         dialog.setStyleSheet(self.sheet)
         if dialog.exec_():
@@ -201,7 +197,7 @@ class ValidationUI(QtWidgets.QWidget):
         self.__addValidatorFromData(data)
 
     # App Create from
-    def __addValidatorFromData(self, data, expanded=False):
+    def __addValidatorFromData(self, data, expanded=False, depth=0):
         # type: (dict, bool) -> None
         """
         Sets up a new validator/treeWidget pair from the validation data and connects the validator to the global RUN button
@@ -216,7 +212,7 @@ class ValidationUI(QtWidgets.QWidget):
         self.__createValidationGroupBox(name=groupBoxName, treeWidget=treeWidget)
 
         if expanded:
-            treeWidget.expandAll()
+            treeWidget.expandToDepth(depth)
 
     def __createValidationGroupBox(self, name, treeWidget):
         # type: (str, uit_validationTreeWidget.ValidationTreeWidget) -> QtWidgets.QGroupBox

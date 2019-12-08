@@ -1,3 +1,4 @@
+from typing import Generator
 from PySide2 import QtWidgets, QtCore
 from core.nodes import SourceNode, DefaultValueNode, ConnectionValidityNode
 from core import inside
@@ -10,6 +11,7 @@ class MultiSourceNodeListWidgets(QtWidgets.QWidget):
     sourceNodesAccepted = QtCore.Signal(list)
 
     def __init__(self, title, parent=None):
+        # type: (str, QtWidgets.QWidget) -> None
         super(MultiSourceNodeListWidgets, self).__init__(parent=parent)
         """This just allows pig piling up x# of listWidgets into a layout for easier handling of DnD of 
         multiple sourceNodes
@@ -36,14 +38,13 @@ class MultiSourceNodeListWidgets(QtWidgets.QWidget):
         self.mainLayout.addLayout(self.buttonLayout)
 
     def addListWidget(self, listWidget):
+        # type: (QtWidgets.QListWidget) -> None
         if listWidget not in self._listWidgets:
             self.widgetsLayout.addWidget(listWidget)
             self._listWidgets.append(listWidget)
-            return True
-
-        return False
 
     def iterListWidgets(self):
+        # type: () -> Generator[QtWidgets.QListWidget]
         for eachListWidgets in self._listWidgets:
             yield eachListWidgets
 
@@ -58,6 +59,7 @@ class BaseSourceNodeValidityNodesSelector(QtWidgets.QWidget):
     SEP = "  --->>  "
 
     def __init__(self, nodeName=None, sourceNode=None, parent=None):
+        # type: (str, SourceNode, QtWidgets.QWidget) -> None
         super(BaseSourceNodeValidityNodesSelector, self).__init__(parent=parent)
         self.setWindowFlags(QtCore.Qt.Popup)
         self._nodeName = nodeName
@@ -116,19 +118,19 @@ class BaseSourceNodeValidityNodesSelector(QtWidgets.QWidget):
 
     @classmethod
     def fromSourceNode(cls, sourceNode, parent=None):
+        # type: (SourceNode, QtWidgets.QWidget) -> BaseSourceNodeValidityNodesSelector
         return cls(nodeName=sourceNode.longName, sourceNode=sourceNode, parent=parent)
 
 
 class MayaValidityNodesSelector(BaseSourceNodeValidityNodesSelector):
     def __init__(self, nodeName=None, sourceNode=None, parent=None):
+        # type: (str, SourceNode, QtWidgets.QWidget) -> None
         super(MayaValidityNodesSelector, self).__init__(
             nodeName=nodeName, sourceNode=sourceNode, parent=parent
         )
 
     def _populateDefaultValuesWidget(self):
-        """
-        Populates the listWidget from the nodeName. This should be a unique name in maya or it will fail.
-        """
+        """Populates the listWidget from the nodeName. This should be a unique name in maya or it will fail."""
         for eachAttribute in sorted(cmds.listAttr(self._nodeName)):
             self.defaultValuesListWidget.addItem(eachAttribute)
 
@@ -153,9 +155,7 @@ class MayaValidityNodesSelector(BaseSourceNodeValidityNodesSelector):
         return True
 
     def _populateConnectionsWidget(self):
-        """
-        Populates the listWidget from the nodeName. This should be a unique name in maya or it will fail.
-        """
+        """Populates the listWidget from the nodeName. This should be a unique name in maya or it will fail."""
         conns = cmds.listConnections(
             self._nodeName, c=True, source=False, destination=True, plugs=True
         )
@@ -176,16 +176,14 @@ class MayaValidityNodesSelector(BaseSourceNodeValidityNodesSelector):
                 for eachItem in items:
                     if not self.connsListWidget.isItemSelected(eachItem):
                         self.connsListWidget.setItemSelected(eachItem, True)
-        return True
 
     def __getValidityNodesFromDefaultValuesListWidget(
         self, nodeName, defaultValuesListWidget
     ):
+        # type: (str, QtWidgets.QListWidget) -> list[DefaultValueNode]
         """
-
-        :param nodeName: `str` name of the node to query in maya (this is the destination node not the sourceNode name)
-        :param defaultValuesListWidget: `QListWidget`
-        :return: `list`
+        Args:
+            nodeName: name of the node to query in maya (this is the destination node not the sourceNode.name)
         """
         nodes = list()
         for eachAttr in defaultValuesListWidget.selectedItems():
@@ -196,6 +194,7 @@ class MayaValidityNodesSelector(BaseSourceNodeValidityNodesSelector):
         return nodes
 
     def __getValidityNodesFromConnectionsListWidget(self, connectionsListWidget):
+        # type: (QtWidgets.QListWidget) -> list[ConnectionValidityNode]
         nodes = list()
         for eachConnPair in connectionsListWidget.selectedItems():
             src, dest = eachConnPair.text().split(self.SEP)
@@ -211,6 +210,7 @@ class MayaValidityNodesSelector(BaseSourceNodeValidityNodesSelector):
         return nodes
 
     def toSourceNode(self):
+        # type: () -> SourceNode
         nodeName, defaultValuesListWidget, connsListWidget = self._nodeData
 
         # Collect validityNode children for the SourceNode into a list
