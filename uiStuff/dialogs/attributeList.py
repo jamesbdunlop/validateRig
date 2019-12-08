@@ -3,6 +3,7 @@ from PySide2 import QtWidgets, QtCore
 from core.nodes import SourceNode, DefaultValueNode, ConnectionValidityNode
 from core import inside
 from uiStuff import validityNodeListWidget as ui_validityNodeListWidget
+
 if inside.insideMaya():
     from maya import cmds
 
@@ -76,7 +77,9 @@ class BaseSourceNodeValidityNodesSelector(QtWidgets.QWidget):
         # Default Values
         defaultValuesGroupBox = QtWidgets.QGroupBox("Default Values")
         defaultValuesGroupBoxlayout = QtWidgets.QVBoxLayout(defaultValuesGroupBox)
-        self.defaultValuesListWidget = ui_validityNodeListWidget.ValidityNodeListWidget()
+        self.defaultValuesListWidget = (
+            ui_validityNodeListWidget.ValidityNodeListWidget()
+        )
         self.defaultValuesListWidget.setSelectionMode(
             QtWidgets.QAbstractItemView.ExtendedSelection
         )
@@ -199,7 +202,9 @@ class MayaValidityNodesSelector(BaseSourceNodeValidityNodesSelector):
         for eachConnPair in connectionsListWidget.selectedItems():
             src, dest = eachConnPair.text().split(self.SEP)
 
-            connectionNode = ConnectionValidityNode(name=dest.split(".")[0], longName=dest)
+            connectionNode = ConnectionValidityNode(
+                name=dest.split(".")[0], longName=dest
+            )
             connectionNode.destAttrName = dest.split(".")[-1]
             connectionNode.destAttrValue = cmds.getAttr(dest)
             connectionNode.srcAttrName = src.split(".")[-1]

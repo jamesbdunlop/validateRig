@@ -8,4 +8,3 @@ class LoadFromJSONFileDialog(QtWidgets.QFileDialog):
 
         self.setNameFilter("*{}".format(constants.JSON_EXT))
         self.setViewMode(QtWidgets.QFileDialog.Detail)
-

@@ -20,12 +20,13 @@ class Test_Validator(unittest.TestCase):
         self.connectionValidityNodeAttrName = c_testdata.VALIDITY_DEST_ATTRNAME
         self.connectionValidityNodeAttrValue = c_testdata.VALIDITY_DEST_ATTRVALUE
 
-        self.sourceNode = c_nodes.SourceNode(name=self.sourceNodeName,
-                                             longName=self.sourceNodeName)
+        self.sourceNode = c_nodes.SourceNode(
+            name=self.sourceNodeName, longName=self.sourceNodeName
+        )
 
         self.connectionValidityNode = c_nodes.ConnectionValidityNode(
             name=self.connectionValidityNodeName,
-            longName=self.connectionValidityNodeName
+            longName=self.connectionValidityNodeName,
         )
         self.connectionValidityNode.destAttrName = self.connectionValidityNodeAttrName
         self.connectionValidityNode.destAttrValue = self.connectionValidityNodeAttrValue
@@ -68,18 +69,15 @@ class Test_Validator(unittest.TestCase):
 
     def test_addSourceNode(self):
         nodeName = "2ndSourceNode"
-        srcNode = c_nodes.SourceNode(name=nodeName,
-                                     longName=nodeName)
+        srcNode = c_nodes.SourceNode(name=nodeName, longName=nodeName)
         self.validator.addSourceNode(srcNode)
         self.assertTrue(
-            self.validator.sourceNodeExists(srcNode),
-            "validator.addSourceNode failed!",
+            self.validator.sourceNodeExists(srcNode), "validator.addSourceNode failed!",
         )
 
     def test_removeSourceNode(self):
         nodeName = "toRemove"
-        tmpSourceNode = c_nodes.SourceNode(name=nodeName,
-                                           longName=nodeName)
+        tmpSourceNode = c_nodes.SourceNode(name=nodeName, longName=nodeName)
         self.validator.addSourceNode(tmpSourceNode)
         self.assertTrue(
             self.validator.removeSourceNode(tmpSourceNode),

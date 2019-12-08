@@ -63,7 +63,9 @@ class Validator(QtCore.QObject):
     def sourceNodeNameExists(self, sourceNodeLongName):
         # type: (str) -> bool
         sourceNodeNames = [n.longName for n in self._nodes]
-        logger.debug("{} sourceNodeNames: {}".format(sourceNodeLongName, sourceNodeNames))
+        logger.debug(
+            "{} sourceNodeNames: {}".format(sourceNodeLongName, sourceNodeNames)
+        )
         return sourceNodeLongName in sourceNodeNames
 
     def replaceExistingSourceNode(self, sourceNode):

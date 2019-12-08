@@ -252,6 +252,7 @@ def getValidationTreeWidget(validator, parent):
 
     return treeWidget
 
+
 def addValidatityNodesToTreeWidgetItem(sourceNode, sourceNodeTreeWItm):
     # type: (Node, QtWidgets.QTreeWidgetItem) -> None
     connectionAttrSrcNames = list()

@@ -70,7 +70,6 @@ def getPlugValue(mplug):
         return mplug.asInt()
 
 
-
 def validateSourceNodes(nodes):
     """
 
@@ -80,4 +79,4 @@ def validateSourceNodes(nodes):
     :return: `None`
     """
 
-    print('nodes: {}'.format(nodes))
+    print("nodes: {}".format(nodes))
