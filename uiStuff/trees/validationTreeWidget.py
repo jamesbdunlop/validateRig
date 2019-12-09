@@ -6,7 +6,6 @@ from core.nodes import Node, SourceNode
 from constants import constants as cc_constants
 from constants import serialization as c_serialization
 from uiStuff.trees import factory as cuit_factory
-from uiStuff.trees import treewidgetitems as cuit_treewidgetitems
 from uiStuff.dialogs import attributeList as uid_attributeList
 
 logger = logging.getLogger(__name__)
@@ -138,6 +137,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
 
             sourceNodeTreeWidgetItem = eachTreeWidgetItem.parent()
             sourceNodeTreeWidgetItem.removeChild(eachTreeWidgetItem)
+
     def __removeAllChildren(self):
         for eachTreeWidgetItem in self.selectedItems():
             eachTreeWidgetItem.removeAllChildren()
@@ -224,6 +224,16 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
 
         self.processMayaDrop(QDropEvent)
 
+    def mouseDoubleClickEvent(self, event=QtGui.QMouseEvent):
+        print('test')
+        if not inside.insideMaya():
+            return
+
+        from maya import cmds
+        for eachItem in self.selectedItems():
+            itemName = eachItem.data(0, QtCore.Qt.DisplayRole)
+            cmds.select(itemName)
+        # ValidationTreeWidget.mouseDoubleClickEvent(event)
 
 def getValidationTreeWidget(validator, parent):
     # type: (Validator, QtWidgets.QWidget) -> QtWidgets.QTreeWidget
