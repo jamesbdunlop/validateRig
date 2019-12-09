@@ -1,5 +1,5 @@
 from PySide2 import QtWidgets, QtCore, QtGui
-from const import constants as cc_constants
+from constants import constants as cc_constants
 from core.nodes import Node
 
 

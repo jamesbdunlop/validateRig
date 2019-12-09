@@ -4,8 +4,8 @@ import sys
 import os
 import logging
 from PySide2 import QtWidgets, QtCore
-from const import constants
-from const import serialization as c_serialization
+from constants import constants as c_constants
+from constants import serialization as c_serialization
 from core import inside
 from core import validator as c_validator
 from core import parser as c_parser
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 class ValidationUI(QtWidgets.QWidget):
     def __init__(
-        self, title=constants.UINAME, theme="core", themecolor="", parent=None
+        self, title=c_constants.UINAME, theme="core", themecolor="", parent=None
     ):
         super(ValidationUI, self).__init__(parent=parent)
         self.setWindowTitle(title)

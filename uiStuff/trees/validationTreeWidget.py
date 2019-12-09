@@ -3,8 +3,8 @@ from PySide2 import QtWidgets, QtCore, QtGui
 from core import inside
 from core.validator import Validator
 from core.nodes import Node, SourceNode
-from const import constants as cc_constants
-from const import serialization as c_serialization
+from constants import constants as cc_constants
+from constants import serialization as c_serialization
 from uiStuff.trees import factory as cuit_factory
 from uiStuff.trees import treewidgetitems as cuit_treewidgetitems
 from uiStuff.dialogs import attributeList as uid_attributeList
@@ -96,7 +96,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
     def __addValidityNodesToTreeWidgetItemFromSourceNode(
         self, sourceNode, treeWidgetItem
     ):
-        for eachValidityNode in sourceNode.iterValidityNodes():
+        for eachValidityNode in sourceNode.iterChildren():
             if eachValidityNode.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
                 treeWidgetItem.addChild(
                     cuit_factory.treeWidgetItemFromNode(node=eachValidityNode)

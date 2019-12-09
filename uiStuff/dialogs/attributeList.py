@@ -1,7 +1,7 @@
 # from typing import Generator
 from PySide2 import QtWidgets, QtCore
-from core.nodes import SourceNode, DefaultValueNode, ConnectionValidityNode
 from core import inside
+from core.nodes import SourceNode, DefaultValueNode, ConnectionValidityNode
 from uiStuff import validityNodeListWidget as ui_validityNodeListWidget
 
 if inside.insideMaya():
@@ -143,7 +143,7 @@ class MayaValidityNodesSelector(BaseSourceNodeValidityNodesSelector):
 
         nodeNames = [
             node.name
-            for node in self.sourceNode().iterValidityNodes()
+            for node in self.sourceNode().iterChildren()
             if isinstance(node, DefaultValueNode)
         ]
         if self.sourceNode() is not None:
@@ -172,7 +172,7 @@ class MayaValidityNodesSelector(BaseSourceNodeValidityNodesSelector):
         if self.sourceNode() is not None:
             for nodeName in [
                 n.name
-                for n in self.sourceNode().iterValidityNodes()
+                for n in self.sourceNode().iterChildren()
                 if isinstance(n, ConnectionValidityNode)
             ]:
                 items = self.connsListWidget.findItems(nodeName, QtCore.Qt.MatchExactly)

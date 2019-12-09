@@ -1,8 +1,8 @@
 # from typing import Generator
-from const import constants as c_constants
-from const import serialization as c_serialization
-from core import parser as c_parser
 import logging
+from core import parser as c_parser
+from constants import constants as c_constants
+from constants import serialization as c_serialization
 
 logger = logging.getLogger(__name__)
 
@@ -161,7 +161,7 @@ class SourceNode(Node):
     def toData(self):
         super(SourceNode, self).toData()
         self.data[c_serialization.KEY_VAILIDITYNODES] = list()
-        for eachNode in self.iterValidityNodes():
+        for eachNode in self.iterChildren():
             self.data[c_serialization.KEY_VAILIDITYNODES].append(eachNode.toData())
 
         return self.data

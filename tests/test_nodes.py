@@ -1,7 +1,7 @@
 import unittest
 import logging
-from const import serialization as c_serialization
-from const import testData as c_testData
+from constants import serialization as c_serialization
+from constants import testData as c_testData
 import core.nodes as c_nodes
 
 logger = logging.getLogger(__name__)
@@ -102,7 +102,7 @@ class Test_Nodes(unittest.TestCase):
         )
 
     def test_srcNode_iterValidityNodes(self):
-        nodes = [n for n in self.sourceNode.iterValidityNodes()]
+        nodes = [n for n in self.sourceNode.iterChildren()]
 
         self.assertEqual(len(nodes), 1, "Length of itrNodes is not 1!")
         self.assertEqual(

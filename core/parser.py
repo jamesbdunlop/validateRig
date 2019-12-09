@@ -1,5 +1,5 @@
-import simplejson as json
 import logging
+import simplejson as json
 
 logger = logging.getLogger(__name__)
 

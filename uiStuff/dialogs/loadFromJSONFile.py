@@ -1,5 +1,5 @@
 from PySide2 import QtWidgets
-from const import constants as constants
+from constants import constants as constants
 
 
 class LoadFromJSONFileDialog(QtWidgets.QFileDialog):

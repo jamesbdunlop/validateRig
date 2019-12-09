@@ -3,7 +3,7 @@
 import logging
 import sys
 from PySide2 import QtWidgets, QtCore
-from const import constants as cc_constants
+from constants import constants as c_constants
 logger = logging.getLogger(__name__)
 
 
@@ -62,7 +62,7 @@ class ValidityNodeListWidget(QtWidgets.QWidget):
         for x in range(count):
             listWidgetItem = self._listWidget.item(x)
             listWidgetItem.setHidden(False)
-            if listWidgetItem.text() not in cc_constants.MAYA_DEFAULTATTRLIST:
+            if listWidgetItem.text() not in c_constants.MAYA_DEFAULTATTRLIST:
                 listWidgetItem.setHidden(True)
 
         self.hideByCustomFiltersButton.setHidden(True)
