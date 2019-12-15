@@ -225,7 +225,6 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
         self.processMayaDrop(QDropEvent)
 
     def mouseDoubleClickEvent(self, event=QtGui.QMouseEvent):
-        print('test')
         if not inside.insideMaya():
             return
 

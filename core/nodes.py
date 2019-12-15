@@ -85,7 +85,6 @@ class Node(object):
 
     def addChild(self, node):
         # type: (Node) -> None
-        print(node)
         if node not in self._children:
             self._children.append(node)
 

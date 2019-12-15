@@ -72,7 +72,6 @@ def getPlugValue(mplug):
 
 def validateSourceNodes(sourceNodes):
     # type: (list[SourceNode]) -> None
-    print("sourceNodes: {}".format(sourceNodes))
     for eachSourceNode in sourceNodes:
         for eachValidationNode in eachSourceNode.iterChildren():
             print(eachValidationNode.name)
