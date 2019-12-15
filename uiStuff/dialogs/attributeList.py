@@ -63,9 +63,11 @@ class MultiSourceNodeListWidgets(QtWidgets.QWidget):
             self.scrollWidgetLayout.itemAt(i).widget().setParent(None)
         if sender:
             self.scrollWidgetLayout.addWidget(self._listWidgets[0])
+            self._listWidgets[0].connectionsGroupBox.hide()
         else:
             for listWidget in self._listWidgets:
                 self.scrollWidgetLayout.addWidget(listWidget)
+            self._listWidgets[0].connectionsGroupBox.show()
 
     def iterListWidgets(self):
         # type: () -> Generator[QtWidgets.QListWidget]
@@ -117,8 +119,8 @@ class BaseSourceNodeValidityNodesSelector(QtWidgets.QWidget):
         defaultValuesGroupBoxlayout.addWidget(self.defaultValuesListWidget)
 
         # Connections
-        connectionsGroupBox = QtWidgets.QGroupBox("Connections")
-        connectionsGroupBoxLayout = QtWidgets.QVBoxLayout(connectionsGroupBox)
+        self.connectionsGroupBox = QtWidgets.QGroupBox("Connections") # we hide this when showing only the one in the list all
+        connectionsGroupBoxLayout = QtWidgets.QVBoxLayout(self.connectionsGroupBox)
         self.connsListWidget = ui_validityNodeListWidget.ValidityNodeListWidget()
         self.connsListWidget.setSelectionMode(
             QtWidgets.QAbstractItemView.ExtendedSelection
@@ -126,7 +128,7 @@ class BaseSourceNodeValidityNodesSelector(QtWidgets.QWidget):
         connectionsGroupBoxLayout.addWidget(self.connsListWidget)
 
         mainGroupBoxLayout.addWidget(defaultValuesGroupBox)
-        mainGroupBoxLayout.addWidget(connectionsGroupBox)
+        mainGroupBoxLayout.addWidget(self.connectionsGroupBox)
 
         self.mainLayout.addWidget(mainGroupBox)
 
