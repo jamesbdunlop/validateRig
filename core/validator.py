@@ -147,7 +147,7 @@ class Validator(QtCore.QObject):
         return "%s" % self.name
 
 
-def getValidator(name, data=None):
+def createValidator(name, data=None):
     # type: (str, dict) -> Validator
     """
     Args:

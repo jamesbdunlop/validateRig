@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class Test_Validator(unittest.TestCase):
     def setUp(self):
-        self.validator = c_validator.Validator(name=c_testdata.VALIDATOR_NAME)
+        self.validator = c_validator.createValidator(name=c_testdata.VALIDATOR_NAME)
 
         self.sourceNodeName = c_testdata.SRC_NODENAME
         self.srcNodeAttrName = c_testdata.SRC_ATTRNAME
@@ -60,6 +60,9 @@ class Test_Validator(unittest.TestCase):
             ],
         }
 
+    def test_instanceTypes(self):
+        self.assertIsInstance(self.validator, c_validator.Validator)
+
     def test_Name(self):
         self.assertEqual(
             self.validator.name,
@@ -71,6 +74,15 @@ class Test_Validator(unittest.TestCase):
         nodeName = "2ndSourceNode"
         srcNode = c_nodes.SourceNode(name=nodeName, longName=nodeName)
         self.validator.addSourceNode(srcNode)
+        self.assertTrue(
+            self.validator.sourceNodeExists(srcNode), "validator.addSourceNode failed!",
+        )
+
+    def test_addSourceNodeFromData(self):
+        nodeName = "3rdSourceNode"
+        srcNode = c_nodes.SourceNode(name=nodeName, longName=nodeName)
+        data = srcNode.toData()
+        self.validator.addSourceNodeFromData(data)
         self.assertTrue(
             self.validator.sourceNodeExists(srcNode), "validator.addSourceNode failed!",
         )
@@ -105,7 +117,7 @@ class Test_Validator(unittest.TestCase):
             "SourceNode doesn't exist!",
         )
 
-    def test_iterNodes(self):
+    def test_iterSourceNodes(self):
         nodes = [n for n in self.validator.iterSourceNodes()]
 
         self.assertEqual(1, len(nodes), "Nodes must be len 1!")

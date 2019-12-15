@@ -21,6 +21,10 @@ class Test_Nodes(unittest.TestCase):
         self.connectionValidityNodeAttrValue = c_testData.VALIDITY_DEST_ATTRVALUE
         self.connectionValidityNodeType = c_testData.VALIDITY_NODETYPE
 
+        self.defaultValueNodeName = c_testData.DEFAULT_NODENAME
+        self.defaultValueNodeValue = c_testData.DEFAULT_NODEVALUE
+        self.defaultValueNodeType = c_testData.DEFAULT_NODETYPE
+
         # Nodes now
         self.sourceNode = c_nodes.SourceNode(
             name=self.sourceNodeName, longName=self.sourceNodeName
@@ -35,7 +39,14 @@ class Test_Nodes(unittest.TestCase):
         self.connectionValidityNode.srcAttrName = self.srcNodeAttrName
         self.connectionValidityNode.srcAttrValue = self.srcNodeAttrValue
 
+        self.defaultValueNode = c_nodes.DefaultValueNode(
+            name=self.defaultValueNodeName,
+            longName=self.defaultValueNodeName,
+            defaultValue=self.defaultValueNodeValue
+        )
+
         self.sourceNode.addChild(self.connectionValidityNode)
+        self.sourceNode.addChild(self.defaultValueNode)
 
         self.expectedToData = {
             c_serialization.KEY_NODENAME: self.sourceNodeName,
@@ -50,12 +61,20 @@ class Test_Nodes(unittest.TestCase):
                     c_serialization.KEY_DEST_ATTRIBUTEVALUE: self.connectionValidityNodeAttrValue,
                     c_serialization.KEY_SRC_ATTRIBUTENAME: self.srcNodeAttrName,
                     c_serialization.KEY_SRC_ATTRIBUTEVALUE: self.srcNodeAttrValue,
-                }
+                },
+                {
+                    c_serialization.KEY_NODENAME    : self.defaultValueNodeName,
+                    c_serialization.KEY_NODELONGNAME: self.defaultValueNodeName,
+                    c_serialization.KEY_NODETYPE    : self.defaultValueNodeType,
+                    c_serialization.KEY_DEFAULTVALUE: self.defaultValueNodeValue,
+                    }
             ],
         }
 
     def test_instanceTypes(self):
         self.assertIsInstance(self.sourceNode, c_nodes.Node)
+        self.assertIsInstance(self.defaultValueNode, c_nodes.DefaultValueNode)
+        self.assertIsInstance(self.connectionValidityNode, c_nodes.ConnectionValidityNode)
 
     def test_sourceNodeName(self):
         self.assertEqual(
@@ -64,7 +83,29 @@ class Test_Nodes(unittest.TestCase):
             "srcNodeName is not %s" % self.sourceNodeName,
         )
 
-    def test_connectionValidityNodeName(self):
+    def test_srcNode_iterChildren(self):
+        nodes = [n for n in self.sourceNode.iterChildren()]
+
+        self.assertEqual(len(nodes), 2, "Length of itrNodes is not 1!")
+        self.assertEqual(
+            nodes[0],
+            self.connectionValidityNode,
+            "[0] Node is not %s" % self.connectionValidityNode,
+        )
+        self.assertEqual(
+            nodes[1],
+            self.defaultValueNode,
+            "[0] Node is not %s" % self.defaultValueNode,
+        )
+
+    def test_sourceNode_toData(self):
+        self.assertEqual(
+            self.sourceNode.toData(),
+            self.expectedToData,
+            "%s doesn't match! %s" % (self.sourceNode.toData(), self.expectedToData),
+        )
+
+    def test_connectionValidityNode_name(self):
         self.assertEqual(
             self.connectionValidityNodeName,
             self.connectionValidityNode.name,
@@ -101,22 +142,19 @@ class Test_Nodes(unittest.TestCase):
             "srcAttrValue is not %s" % self.srcNodeAttrValue,
         )
 
-    def test_srcNode_iterValidityNodes(self):
-        nodes = [n for n in self.sourceNode.iterChildren()]
-
-        self.assertEqual(len(nodes), 1, "Length of itrNodes is not 1!")
+    def test_defaultValueNode_name(self):
         self.assertEqual(
-            nodes[0],
-            self.connectionValidityNode,
-            "[0] Node is not %s" % self.connectionValidityNode,
-        )
+            self.defaultValueNodeName,
+            self.defaultValueNode.name,
+            "defaultValueNode.name is not %s" % self.defaultValueNodeName,
+            )
 
-    def test_sourceNode_toData(self):
+    def test_defaultValueNode_value(self):
         self.assertEqual(
-            self.sourceNode.toData(),
-            self.expectedToData,
-            "%s doesn't match! %s" % (self.sourceNode.toData(), self.expectedToData),
-        )
+            self.defaultValueNodeValue,
+            self.defaultValueNode.defaultValue,
+            "defaultValueNode.defaultValue is not %s" % self.defaultValueNodeValue,
+            )
 
 
 if __name__ == "__main__":

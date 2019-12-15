@@ -115,7 +115,7 @@ class ValidationUI(QtWidgets.QWidget):
             logger.warning(msg)
             raise Exception(msg)
 
-        validator = c_validator.getValidator(
+        validator = c_validator.createValidator(
             name=data.get(c_serialization.KEY_VALIDATOR_NAME, ""), data=data
         )
 
