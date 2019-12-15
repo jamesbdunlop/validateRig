@@ -92,9 +92,9 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
             for x in range(treeWidgetItem.childCount()):
                 treeWidgetItem.takeChild(x)
 
-    def __addValidityNodesToTreeWidgetItemFromSourceNode(
-        self, sourceNode, treeWidgetItem
-    ):
+    def __addValidityNodesToTreeWidgetItemFromSourceNode(self, sourceNode, treeWidgetItem):
+        # type: (Node, QtWidgets.QTreeWidgetItem) -> None
+
         for eachValidityNode in sourceNode.iterChildren():
             if eachValidityNode.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
                 treeWidgetItem.addChild(
@@ -235,6 +235,7 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
             cmds.select(itemName)
         # ValidationTreeWidget.mouseDoubleClickEvent(event)
 
+
 def getValidationTreeWidget(validator, parent):
     # type: (Validator, QtWidgets.QWidget) -> QtWidgets.QTreeWidget
     """
@@ -276,7 +277,6 @@ def addValidatityNodesToTreeWidgetItem(sourceNode, sourceNodeTreeWItm):
                 sourceNodeTreeWItm.addChild(treewidgetItem)
                 # First found becomes the parentNode
                 parentNode = treewidgetItem
-
             else:
                 # parent this to the parentNode
                 parentNode.addChild(treewidgetItem)

@@ -70,6 +70,9 @@ def getPlugValue(mplug):
         return mplug.asInt()
 
 
-def validateSourceNodes(nodes):
+def validateSourceNodes(sourceNodes):
     # type: (list[SourceNode]) -> None
-    print("nodes: {}".format(nodes))
+    print("sourceNodes: {}".format(sourceNodes))
+    for eachSourceNode in sourceNodes:
+        for eachValidationNode in eachSourceNode.iterChildren():
+            print(eachValidationNode.name)

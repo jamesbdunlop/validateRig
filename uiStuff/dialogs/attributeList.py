@@ -20,29 +20,52 @@ class MultiSourceNodeListWidgets(QtWidgets.QWidget):
         self.setWindowTitle(title)
         self.setObjectName("MultiAttributeListWidget_{}".format(title))
 
-        self.mainLayout = QtWidgets.QVBoxLayout(self)
+        mainLayout = QtWidgets.QVBoxLayout(self)
+
+        self.sharedAttributes = QtWidgets.QRadioButton("Use first for All")
+        self.sharedAttributes.toggled.connect(self._toggleSharedAttributes)
 
         self._listWidgets = list()
-        self.widgetsLayout = QtWidgets.QHBoxLayout()
 
-        self.buttonLayout = QtWidgets.QHBoxLayout()
-        self.acceptButton = QtWidgets.QPushButton("Accept")
-        self.acceptButton.clicked.connect(self.__accept)
+        self.scrollWidget = QtWidgets.QWidget()
+        self.scrollWidgetLayout = QtWidgets.QVBoxLayout(self.scrollWidget)
 
-        self.closeButton = QtWidgets.QPushButton("Close")
-        self.closeButton.clicked.connect(self.close)
+        self.scrollArea = QtWidgets.QScrollArea()
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setWidget(self.scrollWidget)
 
-        self.buttonLayout.addWidget(self.acceptButton)
-        self.buttonLayout.addWidget(self.closeButton)
+        buttonLayout = QtWidgets.QHBoxLayout()
+        acceptButton = QtWidgets.QPushButton("Accept")
+        acceptButton.clicked.connect(self.__accept)
 
-        self.mainLayout.addLayout(self.widgetsLayout)
-        self.mainLayout.addLayout(self.buttonLayout)
+        closeButton = QtWidgets.QPushButton("Close")
+        closeButton.clicked.connect(self.close)
+
+        buttonLayout.addWidget(acceptButton)
+        buttonLayout.addWidget(closeButton)
+
+        # mainLayout.addLayout(self.listWidgetsLayout)
+        mainLayout.addWidget(self.sharedAttributes)
+        mainLayout.addWidget(self.scrollArea)
+        mainLayout.addLayout(buttonLayout)
+
+        self.resize(800, 400)
 
     def addListWidget(self, listWidget):
         # type: (QtWidgets.QListWidget) -> None
         if listWidget not in self._listWidgets:
-            self.widgetsLayout.addWidget(listWidget)
             self._listWidgets.append(listWidget)
+            self.scrollWidgetLayout.addWidget(listWidget)
+
+    def _toggleSharedAttributes(self, sender):
+        # Remove all children in the list widget
+        for i in reversed(range(self.scrollWidgetLayout.count())):
+            self.scrollWidgetLayout.itemAt(i).widget().setParent(None)
+        if sender:
+            self.scrollWidgetLayout.addWidget(self._listWidgets[0])
+        else:
+            for listWidget in self._listWidgets:
+                self.scrollWidgetLayout.addWidget(listWidget)
 
     def iterListWidgets(self):
         # type: () -> Generator[QtWidgets.QListWidget]
@@ -50,9 +73,17 @@ class MultiSourceNodeListWidgets(QtWidgets.QWidget):
             yield eachListWidgets
 
     def __accept(self):
+        srcListWidget = None
+        if self.sharedAttributes.isChecked():
+            srcListWidget = self._listWidgets[0]
+
         self.sourceNodesAccepted.emit(
-            [listWidget.toSourceNode() for listWidget in self.iterListWidgets()]
+            [
+                listWidget.toSourceNode(srcListWidget)
+                for listWidget in self.iterListWidgets()
+            ]
         )
+
         self.close()
 
 
@@ -202,10 +233,16 @@ class MayaValidityNodesSelector(BaseSourceNodeValidityNodesSelector):
         for eachConnPair in connectionsListWidget.selectedItems():
             src, dest = eachConnPair.text().split(self.SEP)
 
+            attr = dest.split(".")
+            if len(attr) > 2:
+                destAttrName = ".".join(dest.split(".")[1:])
+            else:
+                destAttrName = dest.split(".")[-1]
+
             connectionNode = ConnectionValidityNode(
-                name=dest.split(".")[0], longName=dest
+                name=dest.split(".")[0].split(":")[-1], longName=dest.split(".")[0]
             )
-            connectionNode.destAttrName = dest.split(".")[-1]
+            connectionNode.destAttrName = destAttrName
             connectionNode.destAttrValue = cmds.getAttr(dest)
             connectionNode.srcAttrName = src.split(".")[-1]
             connectionNode.srcAttrValue = cmds.getAttr(src)
@@ -214,16 +251,23 @@ class MayaValidityNodesSelector(BaseSourceNodeValidityNodesSelector):
 
         return nodes
 
-    def toSourceNode(self):
-        # type: () -> SourceNode
-        nodeName, defaultValuesListWidget, connsListWidget = self._nodeData
+    def toSourceNode(self, listWidget=None):
+        # type: (BaseSourceNodeValidityNodesSelector) -> SourceNode
+
+        sourceWidget = self
+        if listWidget is not None:
+            sourceWidget = listWidget
+
+        nodeName, defaultValuesListWidget, connsListWidget = sourceWidget._nodeData
+        if listWidget is not None:
+            nodeName, _, _ = self._nodeData
 
         # Collect validityNode children for the SourceNode into a list
         validityNodes = list()
-        validityNodes += self.__getValidityNodesFromDefaultValuesListWidget(
+        validityNodes += sourceWidget.__getValidityNodesFromDefaultValuesListWidget(
             nodeName, defaultValuesListWidget
         )
-        validityNodes += self.__getValidityNodesFromConnectionsListWidget(
+        validityNodes += sourceWidget.__getValidityNodesFromConnectionsListWidget(
             connsListWidget
         )
 
@@ -232,5 +276,5 @@ class MayaValidityNodesSelector(BaseSourceNodeValidityNodesSelector):
                 name=nodeName, longName=nodeName, validityNodes=validityNodes
             )
         else:
-            self.sourceNode().addChild(validityNodes)
+            self.sourceNode().addChildren(validityNodes)
             return self.sourceNode()
