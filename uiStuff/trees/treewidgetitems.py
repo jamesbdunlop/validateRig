@@ -1,5 +1,5 @@
 from PySide2 import QtWidgets, QtCore, QtGui
-from constants import constants as cc_constants
+from vrConst import constants as cc_constants
 from core.nodes import Node
 
 
@@ -49,6 +49,17 @@ class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
                 self.removeChild(self.child(x))
 
     @property
+    def children(self):
+        children = [self.child(x) for x in range(self.childCount())]
+        return children
+
+    def iterDescendants(self):
+        for c in self.children:
+            yield c
+            for c2 in c.children:
+                yield c2
+
+    @property
     def reportStatus(self):
         return self._reportStatus
 
@@ -56,3 +67,14 @@ class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
     def reportStatus(self, status):
         self._reportStatus = status
         self.setData(cc_constants.REPORTSTATUS_COLUMN, QtCore.Qt.DisplayRole, status)
+        font2 = QtGui.QFont("EA Font", weight=1)
+        font2.setBold(True)
+        font2.setCapitalization(QtGui.QFont.AllUppercase)
+
+        if status == cc_constants.NODE_VALIDATION_PASSED:
+            self.setFont(cc_constants.REPORTSTATUS_COLUMN, font2)
+        else:
+            font2.setItalic(True)
+            font2.setStrikeOut(True)
+            self.setFont(cc_constants.REPORTSTATUS_COLUMN, font2)
+

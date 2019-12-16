@@ -1,7 +1,7 @@
 import unittest
 import logging
-from constants import serialization as c_serialization
-from constants import testData as c_testdata
+from vrConst import serialization as c_serialization
+from vrConst import testData as c_testdata
 import core.nodes as c_nodes
 import core.validator as c_validator
 

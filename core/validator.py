@@ -6,13 +6,15 @@ from core import inside
 from core import mayaValidation
 from core import parser as c_parser
 from core.nodes import SourceNode
-from constants import serialization as c_serialization
+from vrConst import serialization as c_serialization
+from vrConst import constants as c_constants
 
 logger = logging.getLogger(__name__)
 
 
 class Validator(QtCore.QObject):
-    validate = Signal(list)
+    validate = Signal(Validator)
+    repair = Signal(Validator)
 
     def __init__(self, name, namespace="", nodes=None):
         # type: (str, str, list) -> None
@@ -22,6 +24,7 @@ class Validator(QtCore.QObject):
         self._nodes = (
             nodes or list()
         )  # list of SourceNodes with ConnectionValidityNodes
+        self._status = c_constants.NODE_VALIDATION_PASSED
 
     @property
     def name(self):
@@ -47,6 +50,22 @@ class Validator(QtCore.QObject):
     def namespace(self, namespace):
         # type: (str) -> None
         self._namespace = namespace
+
+    @property
+    def status(self):
+        return self._status
+
+    @status.setter
+    def status(self, status):
+        self._status = status
+
+    @property
+    def failed(self):
+        return self.status == c_constants.NODE_VALIDATION_FAILED
+
+    @property
+    def passed(self):
+        return self.status == c_constants.NODE_VALIDATION_PASSED
 
     def findSourceNodeByLongName(self, name):
         # type: (str) -> SourceNode
@@ -117,7 +136,10 @@ class Validator(QtCore.QObject):
             yield eachNode
 
     def validateSourceNodes(self):
-        self.validate.emit(list(self.iterSourceNodes()))
+        self.validate.emit(self)
+
+    def repairSourceNodes(self):
+        self.repair.emit(self)
 
     def toData(self):
         data = dict()
@@ -160,6 +182,8 @@ def createValidator(name, data=None):
 
     if inside.insideMaya():
         validator.validate.connect(mayaValidation.validateSourceNodes)
+        validator.repair.connect(mayaValidation.repairSourceNodes)
+
     else:
         msg = lambda x: logger.info(x)
         validator.validate.connect(msg("No stand alone validation is possible!!"))

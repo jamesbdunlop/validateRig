@@ -1,4 +1,4 @@
-from constants import serialization as c_s
+from vrConst import serialization as c_s
 
 SRC_NODENAME = "myCtrl_ctrl"
 SRC_ATTRNAME = "showCloth"

@@ -3,7 +3,7 @@
 import logging
 import sys
 from PySide2 import QtWidgets, QtCore
-from constants import constants as c_constants
+from vrConst import constants as c_constants
 logger = logging.getLogger(__name__)
 
 

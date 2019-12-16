@@ -1,8 +1,8 @@
 # from typing import Generator
 import logging
 from core import parser as c_parser
-from constants import constants as c_constants
-from constants import serialization as c_serialization
+from vrConst import constants as c_constants
+from vrConst import serialization as c_serialization
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +83,10 @@ class Node(object):
         # type: (str) -> None
         self._validationStatus = status
 
+    @property
+    def children(self):
+        return self._children
+
     def addChild(self, node):
         # type: (Node) -> None
         if node not in self._children:
@@ -101,8 +105,14 @@ class Node(object):
 
     def iterChildren(self):
         # type: () -> Generator[Node]
-        for eachNode in self._children:
+        for eachNode in self.children:
             yield eachNode
+
+    def iterDescendants(self):
+        for eachNode in self.children:
+            yield eachNode
+            for eachChild in eachNode.children:
+                yield eachChild
 
     def toData(self):
         self.data = dict()

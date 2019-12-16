@@ -4,8 +4,8 @@ import sys
 import os
 import logging
 from PySide2 import QtWidgets, QtCore
-from constants import constants as c_constants
-from constants import serialization as c_serialization
+from vrConst import constants as c_constants
+from vrConst import serialization as c_serialization
 from core import inside
 from core import validator as c_validator
 from core import parser as c_parser
@@ -14,6 +14,7 @@ from uiStuff.dialogs import saveToJSONFile as uid_saveToJSON
 from uiStuff.dialogs import loadFromJSONFile as uid_loadFromJSON
 from uiStuff.trees import validationTreeWidget as uit_validationTreeWidget
 from uiStuff.dialogs import createValidator as uid_createValidator
+from functools import partial
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,6 @@ class ValidationUI(QtWidgets.QWidget):
         self.treeButtons.addWidget(self.collapseAll)
         self.treeButtons.addStretch(1)
 
-        #
         self.applicationButtonLayout = QtWidgets.QHBoxLayout()
         self.newButton = QtWidgets.QPushButton("New")
         self.newButton.clicked.connect(self.__createValidatorNameInputDialog)
@@ -66,12 +66,15 @@ class ValidationUI(QtWidgets.QWidget):
         self.saveButton.clicked.connect(self.__saveDialog)
 
         self.runButton = QtWidgets.QPushButton("Run")
+        self.fixAllButton = QtWidgets.QPushButton("Fix All")
+        self.fixAllButton.hide()
 
         # Layout
         self.applicationButtonLayout.addWidget(self.newButton)
         self.applicationButtonLayout.addWidget(self.loadButton)
         self.applicationButtonLayout.addWidget(self.saveButton)
         self.treeButtons.addWidget(self.runButton)
+        self.treeButtons.addWidget(self.fixAllButton)
 
         self.subLayout01.addLayout(self.groupBoxesLayout)
         self.subLayout01.addLayout(self.treeButtons)
@@ -205,12 +208,27 @@ class ValidationUI(QtWidgets.QWidget):
         validator, treeWidget = self.__createValidatorTreeWidgetPair(data)
 
         self.runButton.clicked.connect(validator.validateSourceNodes)
+        self.runButton.clicked.connect(partial(refreshTreeWidget, treeWidget))
+        self.runButton.clicked.connect(self.__toggleRunButton)
+
+        self.fixAllButton.clicked.connect(validator.repairSourceNodes)
+        self.fixAllButton.clicked.connect(partial(refreshTreeWidget, treeWidget))
+        self.fixAllButton.clicked.connect(self.__toggleRunButton)
 
         groupBoxName = data.get(c_serialization.KEY_VALIDATOR_NAME, "None")
         self.__createValidationGroupBox(name=groupBoxName, treeWidget=treeWidget)
 
         if expanded:
             treeWidget.expandToDepth(depth)
+
+    def __toggleRunButton(self):
+        self.runButton.show()
+        self.fixAllButton.hide()
+
+        for eachValidator in self.__iterValidators():
+            if eachValidator.failed:
+                self.runButton.hide()
+                self.fixAllButton.show()
 
     def __createValidationGroupBox(self, name, treeWidget):
         # type: (str, uit_validationTreeWidget.ValidationTreeWidget) -> QtWidgets.QGroupBox
@@ -274,11 +292,26 @@ class ValidationUI(QtWidgets.QWidget):
         return inst
 
 
+def refreshTreeWidget(treeWidget):
+    count = treeWidget.topLevelItemCount()
+    for x in range(count):
+        topLevelItem = treeWidget.topLevelItem(x)
+        sourceNodeStatus = list()
+        for child in topLevelItem.iterDescendants():
+            status = child.node().status
+            child.reportStatus = status
+            sourceNodeStatus.append(status == c_constants.NODE_VALIDATION_PASSED)
+
+        topLevelStatus = all(sourceNodeStatus)
+        topLevelItem.reportStatus = c_constants.NODE_VALIDATION_FAILED
+        if topLevelStatus:
+            topLevelItem.reportStatus = c_constants.NODE_VALIDATION_PASSED
+
+
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv).instance()
     myWin = ValidationUI.from_fileJSON(
         filepath="T:/software/validateRig/tests/testValidator.json", expanded=True
     )
-    # myWin = ValidationUI()
     myWin.show()
     sys.exit(app.exec_())

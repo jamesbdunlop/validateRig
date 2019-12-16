@@ -1,7 +1,7 @@
 import unittest
 import logging
-from constants import serialization as c_serialization
-from constants import testData as c_testData
+from vrConst import serialization as c_serialization
+from vrConst import testData as c_testData
 import core.nodes as c_nodes
 
 logger = logging.getLogger(__name__)

@@ -3,8 +3,8 @@ from PySide2 import QtWidgets, QtCore, QtGui
 from core import inside
 from core.validator import Validator
 from core.nodes import Node, SourceNode
-from constants import constants as cc_constants
-from constants import serialization as c_serialization
+from vrConst import constants as cc_constants
+from vrConst import serialization as c_serialization
 from uiStuff.trees import factory as cuit_factory
 from uiStuff.dialogs import attributeList as uid_attributeList
 
@@ -49,7 +49,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
             removeSourceNodes = menu.addAction("Remove SourceNode(s)")
             removeSourceNodes.triggered.connect(self.__removeTopLevelItems)
             removeAll = menu.addAction("Remove ALL SourceNode ValidationNodes")
-            removeAll.triggered.connect(self.__removeAllChildren)
+            removeAll.triggered.connect(self.__removeAllChildrenFromSelectedItems)
 
         elif (
             nodeType == c_serialization.NT_CONNECTIONVALIDITY
@@ -120,7 +120,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
             sourceNodeTreeWidgetItem = eachTreeWidgetItem.parent()
             sourceNodeTreeWidgetItem.removeChild(eachTreeWidgetItem)
 
-    def __removeAllChildren(self):
+    def __removeAllChildrenFromSelectedItems(self):
         for eachTreeWidgetItem in self.selectedItems():
             eachTreeWidgetItem.removeAllChildren()
 
