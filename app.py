@@ -222,12 +222,10 @@ class ValidationUI(QtWidgets.QWidget):
             treeWidget.expandToDepth(depth)
 
     def __toggleRunButton(self):
-        self.runButton.show()
         self.fixAllButton.hide()
 
         for eachValidator in self.__iterValidators():
             if eachValidator.failed:
-                self.runButton.hide()
                 self.fixAllButton.show()
 
     def __createValidationGroupBox(self, name, treeWidget):
