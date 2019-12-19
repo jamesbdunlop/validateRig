@@ -110,15 +110,18 @@ class Node(QtCore.QObject):
 
     def __createNameSpacedName(self):
         # type: () -> str
+        print((self.nameSpace, self.name))
         ns = "{}:{}".format(self.nameSpace, self.name)
         return ns
 
     def setNameSpaceInDisplayName(self, show):
         # type: (bool) -> None
         if not show:
+            print("Not")
             self.displayName = self.name
             self._showNameSpace = False
         else:
+            print("yes")
             self.displayName = self.__createNameSpacedName()
             self._showNameSpace = True
 

@@ -227,14 +227,20 @@ class MayaValidityNodesSelector(BaseSourceNodeValidityNodesSelector):
         """
         nodes = list()
         for eachAttr in defaultValuesListWidget.selectedItems():
+            value = cmds.getAttr("{}.{}".format(longNodeName, eachAttr.text()))
+            dvNode = DefaultValueNode(name=eachAttr.text(), longName=longNodeName, defaultValue=value)
+
+            if self.sourceNode() is None:
+                nodes.append(dvNode)
+                continue
+
             found = False
             for validityNode in self.sourceNode().iterChildren():
                 if validityNode.name == eachAttr.text():
                     found = True
             if found:
                 continue
-            value = cmds.getAttr("{}.{}".format(longNodeName, eachAttr.text()))
-            dvNode = DefaultValueNode(name=eachAttr.text(), longName=longNodeName, defaultValue=value)
+
             nodes.append(dvNode)
 
         return nodes
@@ -253,13 +259,6 @@ class MayaValidityNodesSelector(BaseSourceNodeValidityNodesSelector):
 
             nodeName = dest.split(".")[0].split(":")[-1]
             longNodeName = dest.split(".")[0]
-            found = False
-            for validityNode in self.sourceNode().iterChildren():
-                if validityNode.name == nodeName:
-                    found = True
-            if found:
-                continue
-
             connectionNode = ConnectionValidityNode(
                 name=nodeName, longName=longNodeName
             )
@@ -267,6 +266,17 @@ class MayaValidityNodesSelector(BaseSourceNodeValidityNodesSelector):
             connectionNode.destAttrValue = cmds.getAttr(dest)
             connectionNode.srcAttrName = src.split(".")[-1]
             connectionNode.srcAttrValue = cmds.getAttr(src)
+
+            if self.sourceNode() is None:
+                nodes.append(connectionNode)
+                continue
+
+            found = False
+            for validityNode in self.sourceNode().iterChildren():
+                if validityNode.name == nodeName:
+                    found = True
+            if found:
+                continue
 
             nodes.append(connectionNode)
 

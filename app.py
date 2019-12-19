@@ -16,6 +16,9 @@ from uiStuff.trees import validationTreeWidget as uit_validationTreeWidget
 from uiStuff.dialogs import createValidator as uid_createValidator
 from functools import partial
 
+if inside.insideMaya():
+    from maya import cmds
+
 logger = logging.getLogger(__name__)
 
 
@@ -65,6 +68,13 @@ class ValidationUI(QtWidgets.QWidget):
         self.treeButtons.addWidget(self.showNamespace)
         self.treeButtons.addStretch(1)
 
+        self.runButton = QtWidgets.QPushButton("Run")
+        self.fixAllButton = QtWidgets.QPushButton("Fix All")
+        self.fixAllButton.hide()
+
+        self.treeButtons.addWidget(self.runButton)
+        self.treeButtons.addWidget(self.fixAllButton)
+
         self.applicationButtonLayout = QtWidgets.QHBoxLayout()
         self.newButton = QtWidgets.QPushButton("New")
         self.newButton.clicked.connect(self.__createValidatorNameInputDialog)
@@ -75,23 +85,41 @@ class ValidationUI(QtWidgets.QWidget):
         self.saveButton = QtWidgets.QPushButton("Save")
         self.saveButton.clicked.connect(self.__saveDialog)
 
-        self.runButton = QtWidgets.QPushButton("Run")
-        self.fixAllButton = QtWidgets.QPushButton("Fix All")
-        self.fixAllButton.hide()
-
-        # Layout
         self.applicationButtonLayout.addWidget(self.newButton)
         self.applicationButtonLayout.addWidget(self.loadButton)
         self.applicationButtonLayout.addWidget(self.saveButton)
-        self.treeButtons.addWidget(self.runButton)
-        self.treeButtons.addWidget(self.fixAllButton)
 
+        self.namespaceLayout = QtWidgets.QHBoxLayout()
+        self.namespaceLabel = QtWidgets.QLabel("Namespace:")
+        self.namespaceInput = QtWidgets.QLineEdit()
+        self.namespaceInput.editingFinished.connect(self.__updateNameSpace)
+        self.namespaceFromDCC = QtWidgets.QPushButton("Assign from scene")
+        self.namespaceFromDCC.clicked.connect(self.__nsFromScene)
+
+        self.namespaceLayout.addWidget(self.namespaceLabel)
+        self.namespaceLayout.addWidget(self.namespaceInput)
+        self.namespaceLayout.addWidget(self.namespaceFromDCC)
+        # Layout
         self.subLayout01.addLayout(self.groupBoxesLayout)
         self.subLayout01.addLayout(self.treeButtons)
         self.mainLayout.addLayout(self.applicationButtonLayout)
+        self.mainLayout.addLayout(self.namespaceLayout)
         self.mainLayout.addLayout(self.subLayout01)
 
         self.resize(1200, 800)
+
+    def __updateNameSpace(self):
+        ns = self.namespaceInput.text()
+        for eachTreeWidgetItem in self.__iterTreeWidgets():
+            if hasattr(eachTreeWidgetItem, "node"):
+                node = eachTreeWidgetItem.node()
+                node.nameSpace = ns
+
+    def __nsFromScene(self):
+        if inside.insideMaya():
+            self.namespaceInput.setText(cmds.ls(sl=True)[0].split(":")[0])
+
+        self.__updateNameSpace()
 
     def __expandAllTreeWidgets(self):
         for _, treeWidget in self._validators:
