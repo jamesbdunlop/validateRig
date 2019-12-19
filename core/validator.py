@@ -7,14 +7,14 @@ from core import mayaValidation
 from core import parser as c_parser
 from core.nodes import SourceNode
 from vrConst import serialization as c_serialization
-from vrConst import constants as c_constants
+from vrConst import constants as vrc_constants
 
 logger = logging.getLogger(__name__)
 
 
 class Validator(QtCore.QObject):
-    validate = Signal(Validator)
-    repair = Signal(Validator)
+    validate = Signal(QtCore.QObject)
+    repair = Signal(QtCore.QObject)
 
     def __init__(self, name, namespace="", nodes=None):
         # type: (str, str, list) -> None
@@ -24,7 +24,7 @@ class Validator(QtCore.QObject):
         self._nodes = (
             nodes or list()
         )  # list of SourceNodes with ConnectionValidityNodes
-        self._status = c_constants.NODE_VALIDATION_PASSED
+        self._status = vrc_constants.NODE_VALIDATION_PASSED
 
     @property
     def name(self):
@@ -61,11 +61,11 @@ class Validator(QtCore.QObject):
 
     @property
     def failed(self):
-        return self.status == c_constants.NODE_VALIDATION_FAILED
+        return self.status == vrc_constants.NODE_VALIDATION_FAILED
 
     @property
     def passed(self):
-        return self.status == c_constants.NODE_VALIDATION_PASSED
+        return self.status == vrc_constants.NODE_VALIDATION_PASSED
 
     def findSourceNodeByLongName(self, name):
         # type: (str) -> SourceNode
@@ -79,7 +79,7 @@ class Validator(QtCore.QObject):
 
         return sourceNode.longName in sourceNodeNames
 
-    def sourceNodeNameExists(self, sourceNodeLongName):
+    def sourceNodeLongNameExists(self, sourceNodeLongName):
         # type: (str) -> bool
         sourceNodeNames = [n.longName for n in self._nodes]
         logger.info(

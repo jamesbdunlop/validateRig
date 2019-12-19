@@ -1,9 +1,10 @@
 # Copyright (c) 2019.  James Dunlop
 import logging
-from maya import cmds
-from core.validator import Validator
+from core import inside
+if inside.insideMaya():
+    from maya import cmds
 from vrConst import serialization as c_serialization
-from vrConst import constants as c_constants
+from vrConst import constants as vrc_constants
 logger = logging.getLogger(__name__)
 
 
@@ -26,7 +27,7 @@ def getPlugValue(mplug):
         result = []
         if mplug.isCompound:
             for c in range(mplug.numChildren()):
-                result.append(self.getPlugValue(mplug.child(c)))
+                result.append(getPlugValue(mplug.child(c)))
             return result
 
     # Distance
@@ -80,10 +81,9 @@ def exists(srcNodeName):
         return False
     return True
 
-
 def validateSourceNodes(validator):
     # type: (Validator) -> None
-    validator.status = c_constants.NODE_VALIDATION_PASSED
+    validator.status = vrc_constants.NODE_VALIDATION_PASSED
     for eachSourceNode in validator.iterSourceNodes():
         srcNodeName = eachSourceNode.longName
         if not exists(srcNodeName):
@@ -96,15 +96,14 @@ def validateSourceNodes(validator):
                 passed = eachValidationNode.defaultValue == cmds.getAttr(attrName)
 
             elif eachValidationNode.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
-                srcAttrName = "{}.{}".format(srcNodeName, eachValidationNode.srcAttrName)
                 destAttrName = "{}.{}".format(eachValidationNode.longName, eachValidationNode.destAttrName)
-                passed = cmds.isConnected(srcAttrName, destAttrName)
+                passed = cmds.isConnected(srcNodeName, destAttrName)
 
             if passed:
-                eachValidationNode.status = c_constants.NODE_VALIDATION_PASSED
+                eachValidationNode.status = vrc_constants.NODE_VALIDATION_PASSED
             else:
-                eachValidationNode.status = c_constants.NODE_VALIDATION_FAILED
-                validator.status = c_constants.NODE_VALIDATION_FAILED
+                eachValidationNode.status = vrc_constants.NODE_VALIDATION_FAILED
+                validator.status = vrc_constants.NODE_VALIDATION_FAILED
 
 def repairSourceNodes(validator):
     # type: (Validator) -> None
@@ -114,19 +113,18 @@ def repairSourceNodes(validator):
             continue
 
         for eachValidationNode in eachSourceNode.iterDescendants():
-            if eachValidationNode.status == c_constants.NODE_VALIDATION_PASSED:
+            if eachValidationNode.status == vrc_constants.NODE_VALIDATION_PASSED:
                 continue
 
             if eachValidationNode.nodeType == c_serialization.NT_DEFAULTVALUE:
                 attrName = "{}.{}".format(srcNodeName, eachValidationNode.name)
 
                 cmds.setAttr(attrName,  eachValidationNode.defaultValue[0]) # TODO handling this crap properly
-                eachValidationNode.status = c_constants.NODE_VALIDATION_PASSED
+                eachValidationNode.status = vrc_constants.NODE_VALIDATION_PASSED
 
             elif eachValidationNode.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
-                srcAttrName = "{}.{}".format(srcNodeName, eachValidationNode.srcAttrName)
                 destAttrName = "{}.{}".format(eachValidationNode.longName, eachValidationNode.destAttrName)
-                cmds.connectAttr(srcAttrName, destAttrName, f=True)
-                eachValidationNode.status = c_constants.NODE_VALIDATION_PASSED
+                cmds.connectAttr(srcNodeName, destAttrName, f=True)
+                eachValidationNode.status = vrc_constants.NODE_VALIDATION_PASSED
 
-    validator.status = c_constants.NODE_VALIDATION_PASSED
+    validator.status = vrc_constants.NODE_VALIDATION_PASSED

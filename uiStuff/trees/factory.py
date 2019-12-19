@@ -4,7 +4,7 @@ from PySide2 import QtCore, QtWidgets
 from core import nodes as c_nodes
 from uiStuff.trees import treewidgetitems
 from vrConst import serialization as c_serialization
-from vrConst import constants as cc_constants
+from vrConst import constants as vrc_constants
 
 logger = logging.getLogger(__name__)
 
@@ -15,36 +15,40 @@ def treeWidgetItemFromNode(node):
     # type: (c_nodes.Node) -> treewidgetitems.TreeWidgetItem
     """:param node: Instance of Node, SourceNode, etc etc"""
     twi = treewidgetitems.TreeWidgetItem(node=node)
+
     rowdataDict = {
-        cc_constants.REPORTSTATUS_COLUMN: (QTDISPLAYROLE, node.status),
+        vrc_constants.REPORTSTATUS_COLUMN: (QTDISPLAYROLE, node.status),
     }
 
     if node.nodeType == c_serialization.NT_SOURCENODE:
         rowdataDict = appendRowData(
-            rowdataDict, ( (cc_constants.SRC_NODENAME_COLUMN, QTDISPLAYROLE, node.longName.split("|")[-1]), )
+            rowdataDict, ( (vrc_constants.SRC_NODENAME_COLUMN, QTDISPLAYROLE, node.displayName), )
         )
 
     elif node.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
         rowsData = (
-            (cc_constants.SRC_ATTR_COLUMN, QTDISPLAYROLE, node.srcAttrName),
-            (cc_constants.SRC_ATTRVALUE_COLUMN, QTDISPLAYROLE, node.srcAttrValue),
-            (cc_constants.DEST_NODENAME_COLUMN, QTDISPLAYROLE, node.name),
-            (cc_constants.DEST_ATTR_COLUMN, QTDISPLAYROLE, node.destAttrName),
-            (cc_constants.DEST_ATTRVALUE_COLUMN, QTDISPLAYROLE, node.destAttrValue),
+            (vrc_constants.SRC_ATTR_COLUMN, QTDISPLAYROLE, node.srcAttrName),
+            (vrc_constants.SRC_ATTRVALUE_COLUMN, QTDISPLAYROLE, node.srcAttrValue),
+            (vrc_constants.DEST_NODENAME_COLUMN, QTDISPLAYROLE, node.displayName),
+            (vrc_constants.DEST_ATTR_COLUMN, QTDISPLAYROLE, node.destAttrName),
+            (vrc_constants.DEST_ATTRVALUE_COLUMN, QTDISPLAYROLE, node.destAttrValue),
         )
         rowdataDict = appendRowData(rowdataDict, rowsData)
 
     elif node.nodeType == c_serialization.NT_DEFAULTVALUE:
         rowsData = (
-            (cc_constants.SRC_ATTR_COLUMN, QTDISPLAYROLE, node.name),
-            (cc_constants.SRC_ATTRVALUE_COLUMN, QTDISPLAYROLE, str(node.defaultValue)),
-            (cc_constants.DEST_NODENAME_COLUMN, QTDISPLAYROLE, cc_constants.SEPARATOR),
-            (cc_constants.DEST_ATTR_COLUMN, QTDISPLAYROLE, cc_constants.SEPARATOR),
-            (cc_constants.DEST_ATTRVALUE_COLUMN, QTDISPLAYROLE, cc_constants.SEPARATOR),
+            (vrc_constants.SRC_ATTR_COLUMN, QTDISPLAYROLE, node.displayName),
+            (vrc_constants.SRC_ATTRVALUE_COLUMN, QTDISPLAYROLE, str(node.defaultValue)),
+            (vrc_constants.DEST_NODENAME_COLUMN, QTDISPLAYROLE, vrc_constants.SEPARATOR),
+            (vrc_constants.DEST_ATTR_COLUMN, QTDISPLAYROLE, vrc_constants.SEPARATOR),
+            (vrc_constants.DEST_ATTRVALUE_COLUMN, QTDISPLAYROLE, vrc_constants.SEPARATOR),
         )
         rowdataDict = appendRowData(rowdataDict, rowsData)
 
-    twi.updateData(data=rowdataDict)
+    for colID, data in rowdataDict.items():
+        qtRole = data[0]
+        value = data[1]
+        twi.updateColumnData(columnId=colID, qtRole=qtRole, value=value)
 
     return twi
 
@@ -67,15 +71,15 @@ def setSourceNodeItemWidgetsFromNode(node, treewidget, twi):
     if node.nodeType == c_serialization.NT_SOURCENODE:
         label = QtWidgets.QLabel(node.name)
         treewidget.setItemWidget(
-            twi, cc_constants.SRC_NODENAME_COLUMN, label
+            twi, vrc_constants.SRC_NODENAME_COLUMN, label
         )
 
     elif node.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
         treewidget.setItemWidget(
-            twi, cc_constants.SRC_NODENAME_COLUMN, setButton
+            twi, vrc_constants.SRC_NODENAME_COLUMN, setButton
             )
 
     elif node.nodeType == c_serialization.NT_DEFAULTVALUE:
         treewidget.setItemWidget(
-            twi, cc_constants.SRC_NODENAME_COLUMN, setButton
+            twi, vrc_constants.SRC_NODENAME_COLUMN, setButton
         )

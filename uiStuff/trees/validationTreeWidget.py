@@ -3,7 +3,7 @@ from PySide2 import QtWidgets, QtCore, QtGui
 from core import inside
 from core.validator import Validator
 from core.nodes import Node, SourceNode
-from vrConst import constants as cc_constants
+from vrConst import constants as vrc_constants
 from vrConst import serialization as c_serialization
 from uiStuff.trees import factory as cuit_factory
 from uiStuff.dialogs import attributeList as uid_attributeList
@@ -22,13 +22,28 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         self.resizeColumnToContents(True)
         self.setAcceptDrops(True)
         self.setColumnCount(8)
-        self.setHeaderLabels(cc_constants.HEADER_LABELS)
+        self.setHeaderLabels(vrc_constants.HEADER_LABELS)
         self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.widgetUnderMouse = None
         self._validator = validator
 
     def validator(self):
         return self._validator
+
+    def showNameSpace(self, show):
+        # type: (bool) -> None
+        for twi in self.iterTopLevelTreeWidgetItems():
+            twi.toggleNameSpace(show)
+
+    def showLongName(self, show):
+        # type: (bool) -> None
+        for twi in self.iterTopLevelTreeWidgetItems():
+            twi.toggleLongName(show)
+
+    def iterTopLevelTreeWidgetItems(self):
+        for x in range(self.topLevelItemCount()):
+            treeWidgetItem = self.topLevelItem(x)
+            yield treeWidgetItem
 
     def __getNodeTypeUnderCursor(self, QPoint):
         item = self.itemAt(QPoint)
@@ -56,7 +71,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
             or nodeType == c_serialization.NT_DEFAULTVALUE
         ):
             remove = menu.addAction("Remove ValidationNode")
-            remove.triggered.connect(self.__removeTreeWidgetItems)
+            remove.triggered.connect(self.__removeSelectedTreeWidgetItems)
 
         else:
             clearAll = menu.addAction("Clear ALL SourceNodes")
@@ -112,7 +127,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
             treeWidgetItem = self.__addTopLevelTreeWidgetItemFromSourceNode(sourceNode)
             addValidatityNodesToTreeWidgetItem(sourceNode, treeWidgetItem)
 
-    def __removeTreeWidgetItems(self):
+    def __removeSelectedTreeWidgetItems(self):
         for eachTreeWidgetItem in self.selectedItems():
             node = eachTreeWidgetItem.parent().node()
             node.removeChild(eachTreeWidgetItem.node())
@@ -170,21 +185,16 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
         )
 
         # Check to see if this exists in the validator we dropped over.
-        for nodeName in nodeNames:
-            nodeName = nodeName.split("|")[-1]
-            if not self.validator().sourceNodeNameExists(nodeName):
-                logger.info(
-                    "SourceNode: {} does not exist creating new sourceNode.".format(
-                        nodeName
-                    )
-                )
+        for longNodeName in nodeNames:
+            if not self.validator().sourceNodeLongNameExists(longNodeName):
+                logger.info("Creating new sourceNode.")
                 self.srcNodesWidget = uid_attributeList.MayaValidityNodesSelector(
-                    nodeName=nodeName, parent=self
+                    longNodeName=longNodeName, parent=self
                 )
 
             else:
-                logger.info("SourceNode: {} exists!".format(nodeName.split("|")[-1]))
-                existingSourceNode = self.validator().findSourceNodeByLongName(nodeName)
+                logger.info("SourceNode: {} exists!".format(longNodeName))
+                existingSourceNode = self.validator().findSourceNodeByLongName(longNodeName)
                 self.srcNodesWidget = uid_attributeList.MayaValidityNodesSelector.fromSourceNode(
                     sourceNode=existingSourceNode, parent=self
                 )
@@ -253,7 +263,6 @@ def addValidatityNodesToTreeWidgetItem(sourceNode, sourceNodeTreeWItm):
     parentNode = None
     for eachValidityNode in sourceNode.iterChildren():
         treewidgetItem = cuit_factory.treeWidgetItemFromNode(node=eachValidityNode)
-
         if eachValidityNode.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
             if eachValidityNode.srcAttrName not in connectionAttrSrcNames:
                 connectionAttrSrcNames.append(eachValidityNode.srcAttrName)

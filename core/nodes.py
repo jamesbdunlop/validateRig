@@ -1,9 +1,9 @@
 # from typing import Generator
 import logging
+from PySide2 import QtCore
 from core import parser as c_parser
-from vrConst import constants as c_constants
+from vrConst import constants as vrc_constants
 from vrConst import serialization as c_serialization
-
 logger = logging.getLogger(__name__)
 
 """
@@ -31,17 +31,20 @@ to disk as part of the SourceNode data.
 """
 
 
-class Node(object):
+class Node(QtCore.QObject):
     def __init__(
         self, name, longName, parent=None, nodeType=c_serialization.NT_VALIDATIONNODE
     ):
         # type: (str, str, int) -> None
-        self._name = name.split("|")[-1].split(":")[-1]
+        self._name = name
         self._longName = longName
         self._nodeType = nodeType
-        self._validationStatus = c_constants.NODE_VALIDATION_NA
+        self._validationStatus = vrc_constants.NODE_VALIDATION_NA
         self._parent = parent
         self._children = list()
+        self._nameSpace = self._longName.split("|")[-1].split(":")[0]
+        self._showNameSpace = False
+        self._displayName = self._name
 
     @property
     def name(self):
@@ -51,6 +54,24 @@ class Node(object):
     def name(self, name):
         # type: (str) -> None
         self._name = name
+
+    @property
+    def nameSpace(self):
+        return self._nameSpace
+
+    @name.setter
+    def nameSpace(self, nameSpace):
+        # type: (str) -> None
+        self._nameSpace = nameSpace
+
+    @property
+    def displayName(self):
+        return self._displayName
+
+    @displayName.setter
+    def displayName(self, name):
+        # type: (str) -> None
+        self._displayName = name
 
     @property
     def longName(self):
@@ -87,6 +108,31 @@ class Node(object):
     def children(self):
         return self._children
 
+    def __createNameSpacedName(self):
+        # type: () -> str
+        ns = "{}:{}".format(self.nameSpace, self.name)
+        return ns
+
+    def setNameSpaceInDisplayName(self, show):
+        # type: (bool) -> None
+        if not show:
+            self.displayName = self.name
+            self._showNameSpace = False
+        else:
+            self.displayName = self.__createNameSpacedName()
+            self._showNameSpace = True
+
+    def setLongNameInDisplayName(self, show):
+        # type: (bool) -> None
+        if show:
+            self.displayName = self.longName
+            return
+        elif not show and self._showNameSpace:
+            self.displayName = self.__createNameSpacedName()
+            return
+        else:
+            self.displayName = self.name
+
     def addChild(self, node):
         # type: (Node) -> None
         if node not in self._children:
@@ -118,6 +164,8 @@ class Node(object):
         self.data = dict()
         self.data[c_serialization.KEY_NODENAME] = self.name
         self.data[c_serialization.KEY_NODELONGNAME] = self.longName
+        self.data[c_serialization.KEY_NODEDISPLAYNAME] = self.displayName
+        self.data[c_serialization.KEY_NODENAMESPACE] = self.nameSpace
         self.data[c_serialization.KEY_NODETYPE] = self.nodeType
 
         return self.data
@@ -127,14 +175,21 @@ class Node(object):
         # type: (dict) -> Node
         name = data.get(c_serialization.KEY_NODENAME, "")
         longName = data.get(c_serialization.KEY_NODELONGNAME, "")
+        displayName = data.get(c_serialization.KEY_NODEDISPLAYNAME, "")
+        nameSpace = data.get(c_serialization.KEY_NODENAMESPACE, "")
         nodeType = data.get(c_serialization.KEY_NODETYPE, "")
 
-        return cls(name=name, longName=longName, nodeType=nodeType)
+        inst = cls(name=name, longName=longName, nodeType=nodeType)
+        inst.displayName = displayName
+        inst.nameSpace = nameSpace
+
+        return inst
 
     def __repr__(self):
-        return "shortName: %s\nlongName: %s\nnodeType: %s\nstatus: %s" % (
+        return "shortName: %s\nlongName: %s\ndisplayName: %s\nnodeType: %s\nstatus: %s" % (
             self.name,
             self.longName,
+            self.displayName,
             self.nodeType,
             self.status,
         )
