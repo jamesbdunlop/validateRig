@@ -59,7 +59,7 @@ class Node(QtCore.QObject):
     def nameSpace(self):
         return self._nameSpace
 
-    @name.setter
+    @nameSpace.setter
     def nameSpace(self, nameSpace):
         # type: (str) -> None
         self._nameSpace = nameSpace
@@ -110,18 +110,22 @@ class Node(QtCore.QObject):
 
     def __createNameSpacedName(self):
         # type: () -> str
-        print((self.nameSpace, self.name))
         ns = "{}:{}".format(self.nameSpace, self.name)
         return ns
+
+    def updateNameSpaceInLongName(self, oldNameSpace, newNameSpace):
+        # type: (str) -> None
+        currentName = self.longName
+        currentName = currentName.replace(oldNameSpace, newNameSpace)
+        print(oldNameSpace, newNameSpace, currentName)
+        self.longName = currentName
 
     def setNameSpaceInDisplayName(self, show):
         # type: (bool) -> None
         if not show:
-            print("Not")
             self.displayName = self.name
             self._showNameSpace = False
         else:
-            print("yes")
             self.displayName = self.__createNameSpacedName()
             self._showNameSpace = True
 

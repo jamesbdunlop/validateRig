@@ -90,9 +90,10 @@ class ValidationUI(QtWidgets.QWidget):
         self.applicationButtonLayout.addWidget(self.saveButton)
 
         self.namespaceLayout = QtWidgets.QHBoxLayout()
-        self.namespaceLabel = QtWidgets.QLabel("Namespace:")
+        self.namespaceLabel = QtWidgets.QLabel("Use Custom Namespace:")
         self.namespaceInput = QtWidgets.QLineEdit()
-        self.namespaceInput.editingFinished.connect(self.__updateNameSpace)
+        self.namespaceInput.textChanged.connect(self.__updateNameSpace)
+
         self.namespaceFromDCC = QtWidgets.QPushButton("Assign from scene")
         self.namespaceFromDCC.clicked.connect(self.__nsFromScene)
 
@@ -109,11 +110,14 @@ class ValidationUI(QtWidgets.QWidget):
         self.resize(1200, 800)
 
     def __updateNameSpace(self):
-        ns = self.namespaceInput.text()
-        for eachTreeWidgetItem in self.__iterTreeWidgets():
-            if hasattr(eachTreeWidgetItem, "node"):
-                node = eachTreeWidgetItem.node()
-                node.nameSpace = ns
+        nameSpace = self.namespaceInput.text()
+        for eachValidationTreeWidget in self.__iterTreeWidgets():
+            topLevelItems = list(eachValidationTreeWidget.iterTopLevelTreeWidgetItems())
+            for eachTWI in topLevelItems:
+                node = eachTWI.node()
+                currentNS = node.nameSpace
+                node.updateNameSpaceInLongName(currentNS, nameSpace)
+                node.nameSpace = nameSpace
 
     def __nsFromScene(self):
         if inside.insideMaya():
