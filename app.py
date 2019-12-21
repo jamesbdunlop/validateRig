@@ -69,8 +69,11 @@ class ValidationUI(QtWidgets.QWidget):
         self.treeButtons.addStretch(1)
 
         self.runButton = QtWidgets.QPushButton("Run")
+        self.runButton.clicked.connect(self.__updateValidationStatus)
+
         self.fixAllButton = QtWidgets.QPushButton("Fix All")
         self.fixAllButton.hide()
+        self.fixAllButton.clicked.connect(self.__updateValidationStatus)
 
         self.treeButtons.addWidget(self.runButton)
         self.treeButtons.addWidget(self.fixAllButton)
@@ -106,9 +109,6 @@ class ValidationUI(QtWidgets.QWidget):
         self.mainLayout.addLayout(self.applicationButtonLayout)
         self.mainLayout.addLayout(self.namespaceLayout)
         self.mainLayout.addLayout(self.subLayout01)
-
-        self.runButton.clicked.connect(self.__updateValidationStatus)
-        self.fixAllButton.clicked.connect(self.__updateValidationStatus)
 
         self.resize(1200, 800)
 

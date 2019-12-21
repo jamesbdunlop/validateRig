@@ -1,6 +1,7 @@
 #  Copyright (c) 2019.  James Dunlop
 
 from core import validator as c_validator
+from core import parser as c_parser
 from core.nodes import SourceNode, DefaultValueNode, ConnectionValidityNode
 
 """
@@ -115,3 +116,13 @@ def createConnectionValidityNode(
     node.destAttrValue = destinationNodeAttributeValue
 
     return node
+
+
+def saveValidatorsToFile(validators, filepath):
+    # type: (list, str) -> bool
+    validatorDataList = list()
+    for eachValidator in validators:
+        validatorDataList.append(eachValidator.toData())
+
+    c_parser.write(filepath=filepath, data=validatorDataList)
+    return True

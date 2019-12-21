@@ -42,7 +42,7 @@ class Test_Nodes(unittest.TestCase):
         self.defaultValueNode = c_nodes.DefaultValueNode(
             name=self.defaultValueNodeName,
             longName=self.defaultValueNodeName,
-            defaultValue=self.defaultValueNodeValue
+            defaultValue=self.defaultValueNodeValue,
         )
 
         self.sourceNode.addChild(self.connectionValidityNode)
@@ -52,29 +52,39 @@ class Test_Nodes(unittest.TestCase):
             c_serialization.KEY_NODENAME: self.sourceNodeName,
             c_serialization.KEY_NODELONGNAME: self.sourceNodeName,
             c_serialization.KEY_NODETYPE: self.sourceNodeType,
+            c_serialization.KEY_NODEDISPLAYNAME: self.sourceNodeName,
+            c_serialization.KEY_NODENAMESPACE: self.sourceNodeName,
             c_serialization.KEY_VAILIDITYNODES: [
                 {
                     c_serialization.KEY_NODENAME: self.connectionValidityNodeName,
                     c_serialization.KEY_NODELONGNAME: self.connectionValidityNodeName,
                     c_serialization.KEY_NODETYPE: self.connectionValidityNodeType,
+                    c_serialization.KEY_NODEDISPLAYNAME: self.connectionValidityNodeName,
+                    c_serialization.KEY_NODENAMESPACE  : self.connectionValidityNodeName,
+
                     c_serialization.KEY_DEST_ATTRIBUTENAME: self.connectionValidityNodeAttrName,
                     c_serialization.KEY_DEST_ATTRIBUTEVALUE: self.connectionValidityNodeAttrValue,
                     c_serialization.KEY_SRC_ATTRIBUTENAME: self.srcNodeAttrName,
                     c_serialization.KEY_SRC_ATTRIBUTEVALUE: self.srcNodeAttrValue,
                 },
                 {
-                    c_serialization.KEY_NODENAME    : self.defaultValueNodeName,
+                    c_serialization.KEY_NODENAME: self.defaultValueNodeName,
                     c_serialization.KEY_NODELONGNAME: self.defaultValueNodeName,
-                    c_serialization.KEY_NODETYPE    : self.defaultValueNodeType,
+                    c_serialization.KEY_NODETYPE: self.defaultValueNodeType,
+                    c_serialization.KEY_NODEDISPLAYNAME: self.defaultValueNodeName,
+                    c_serialization.KEY_NODENAMESPACE  : self.defaultValueNodeName,
+
                     c_serialization.KEY_DEFAULTVALUE: self.defaultValueNodeValue,
-                    }
+                },
             ],
         }
 
     def test_instanceTypes(self):
         self.assertIsInstance(self.sourceNode, c_nodes.Node)
         self.assertIsInstance(self.defaultValueNode, c_nodes.DefaultValueNode)
-        self.assertIsInstance(self.connectionValidityNode, c_nodes.ConnectionValidityNode)
+        self.assertIsInstance(
+            self.connectionValidityNode, c_nodes.ConnectionValidityNode
+        )
 
     def test_sourceNodeName(self):
         self.assertEqual(
@@ -147,14 +157,14 @@ class Test_Nodes(unittest.TestCase):
             self.defaultValueNodeName,
             self.defaultValueNode.name,
             "defaultValueNode.name is not %s" % self.defaultValueNodeName,
-            )
+        )
 
     def test_defaultValueNode_value(self):
         self.assertEqual(
             self.defaultValueNodeValue,
             self.defaultValueNode.defaultValue,
             "defaultValueNode.defaultValue is not %s" % self.defaultValueNodeValue,
-            )
+        )
 
 
 if __name__ == "__main__":

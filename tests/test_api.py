@@ -43,6 +43,10 @@ class Test_Validator(unittest.TestCase):
         )
         self.assertIsInstance(connectionNode, c_nodes.ConnectionValidityNode)
 
+    def test_toFile(self):
+        validator = validationAPI.createValidator(name=self.validatorName)
+        self.assertTrue(validationAPI.saveValidatorsToFile(validators=[validator], filepath="C:/temp/test.json"))
+
 
 if __name__ == "__main__":
     runner = unittest.TextTestRunner()
