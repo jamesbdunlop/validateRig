@@ -1,3 +1,4 @@
+#  Copyright (c) 2019.  James Dunlop
 from PySide2 import QtWidgets
 from vrConst import constants as vrc_constants
 

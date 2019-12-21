@@ -1,5 +1,4 @@
 #  Copyright (c) 2019.  James Dunlop
-
 import sys
 import os
 import logging
@@ -14,7 +13,6 @@ from uiStuff.dialogs import saveToJSONFile as uid_saveToJSON
 from uiStuff.dialogs import loadFromJSONFile as uid_loadFromJSON
 from uiStuff.trees import validationTreeWidget as uit_validationTreeWidget
 from uiStuff.dialogs import createValidator as uid_createValidator
-from functools import partial
 
 if inside.insideMaya():
     from maya import cmds
@@ -95,10 +93,10 @@ class ValidationUI(QtWidgets.QWidget):
         self.namespaceLayout = QtWidgets.QHBoxLayout()
         self.namespaceLabel = QtWidgets.QLabel("Use Custom Namespace:")
         self.namespaceInput = QtWidgets.QLineEdit()
-        self.namespaceInput.textChanged.connect(self.__updateNameSpace)
+        self.namespaceInput.textChanged.connect(self.__updateTreeWidgetItemsNameSpace)
 
         self.namespaceFromDCC = QtWidgets.QPushButton("Assign from scene")
-        self.namespaceFromDCC.clicked.connect(self.__nsFromScene)
+        self.namespaceFromDCC.clicked.connect(self.__getNameSpaceFromScene)
 
         self.namespaceLayout.addWidget(self.namespaceLabel)
         self.namespaceLayout.addWidget(self.namespaceInput)
@@ -112,37 +110,39 @@ class ValidationUI(QtWidgets.QWidget):
 
         self.resize(1200, 800)
 
-    def __updateNameSpace(self):
+    # UI Manipulations
+    def __toggleRunButton(self):
+        self.fixAllButton.hide()
+
+        for eachValidator in self.__iterValidators():
+            if eachValidator.failed:
+                self.fixAllButton.show()
+
+    def __updateTreeWidgetItemsNameSpace(self):
         nameSpace = self.namespaceInput.text()
         for eachValidationTreeWidget in self.__iterTreeWidgets():
             topLevelItems = list(eachValidationTreeWidget.iterTopLevelTreeWidgetItems())
-            for eachTWI in topLevelItems:
-                node = eachTWI.node()
+            for eachTWItem in topLevelItems:
+                node = eachTWItem.node()
                 currentNS = node.nameSpace
                 node.updateNameSpaceInLongName(currentNS, nameSpace)
                 node.nameSpace = nameSpace
-                eachTWI.updateDisplayName()
-
-    def __nsFromScene(self):
-        if inside.insideMaya():
-            self.namespaceInput.setText(cmds.ls(sl=True)[0].split(":")[0])
-
-        self.__updateNameSpace()
+                eachTWItem.updateDisplayName()
 
     def __updateValidationStatus(self):
         for eachValidationTreeWidget in self.__iterTreeWidgets():
             topLevelItems = list(eachValidationTreeWidget.iterTopLevelTreeWidgetItems())
-            for eachTWI in topLevelItems:
+            for eachTWItem in topLevelItems:
                 sourceNodeStatus = list()
-                for child in eachTWI.iterDescendants():
+                for child in eachTWItem.iterDescendants():
                     status = child.node().status
                     child.reportStatus = status
                     sourceNodeStatus.append(status == vrc_constants.NODE_VALIDATION_PASSED)
 
                 topLevelStatus = all(sourceNodeStatus)
-                eachTWI.reportStatus = vrc_constants.NODE_VALIDATION_FAILED
+                eachTWItem.reportStatus = vrc_constants.NODE_VALIDATION_FAILED
                 if topLevelStatus:
-                    eachTWI.reportStatus = vrc_constants.NODE_VALIDATION_PASSED
+                    eachTWItem.reportStatus = vrc_constants.NODE_VALIDATION_PASSED
 
     def __expandAllTreeWidgets(self):
         for _, treeWidget in self._validators:
@@ -152,61 +152,14 @@ class ValidationUI(QtWidgets.QWidget):
         for _, treeWidget in self._validators:
             treeWidget.collapseAll()
 
-    def __createValidatorTreeWidgetPair(self, data):
-        # type: (dict) -> tuple
-        """The (validator, treeWidget) tuple pair creator."""
+    # UI Getters
+    def __getNameSpaceFromScene(self):
+        if inside.insideMaya():
+            self.namespaceInput.setText(cmds.ls(sl=True)[0].split(":")[0])
 
-        validator = self.__createValidatorFromData(data)
-        treeWidget = self.__createValidationTreeWidget(validator=validator)
-        treeWidget.setStyleSheet(self.sheet)
+        self.__updateTreeWidgetItemsNameSpace()
 
-        validatorpair = (validator, treeWidget)
-        if validatorpair in self._validators:
-            raise Exception(
-                "Something bad happened! \nThe validation pair exists! But we didn't fail get_validatorbyName!"
-            )
-
-        self._validators.append(validatorpair)
-
-        return validatorpair
-
-    def __createValidatorFromData(self, data):
-        # type: (dict) -> c_validator.Validator
-
-        validatorName = data.get(c_serialization.KEY_VALIDATOR_NAME)
-        if self.__findValidatorByName(validatorName) is not None:
-            msg = "Validator named: `%s` already exists! Skipping!" % validatorName
-            logger.warning(msg)
-            raise Exception(msg)
-
-        validator = c_validator.createValidator(
-            name=data.get(c_serialization.KEY_VALIDATOR_NAME, ""), data=data
-        )
-
-        return validator
-
-    def __createValidationTreeWidget(self, validator):
-        # type: (c_validator.Validator) -> uit_validationTreeWidget.ValidationTreeWidget
-        """Creates a treeView widget for the treeWidget/validator pair for adding source nodes to."""
-        treewidget = uit_validationTreeWidget.getValidationTreeWidget(validator, self)
-        treewidget.remove.connect(self.__removeValidatorFromUI)
-
-        return treewidget
-
-    def __createValidatorByName(self, name):
-        # type: (str) -> None
-        validatorData = c_validator.Validator(name=name).toData()
-        self.__addValidationPairFromData(data=validatorData)
-
-    def __createValidatorNameInputDialog(self):
-        self.nameInput = uid_createValidator.CreateValidatorDialog(
-            title="Create Validator"
-        )
-        self.nameInput.setStyleSheet(self.sheet)
-        self.nameInput.name.connect(self.__createValidatorByName)
-        self.nameInput.show()
-
-    # Search
+    # UI Search
     def __findValidatorByName(self, name):
         # type: (str) -> c_validator.Validator
 
@@ -226,7 +179,7 @@ class ValidationUI(QtWidgets.QWidget):
         for _, treeWidget in self._validators:
             yield treeWidget
 
-    # Dialogs
+    # UI Dialogs
     def __saveDialog(self):
         """Writes to disk all the validation data for each validation treeWidget added to the UI"""
         dialog = uid_saveToJSON.SaveJSONToFileDialog(parent=None)
@@ -249,7 +202,7 @@ class ValidationUI(QtWidgets.QWidget):
                 else:
                     self.__addValidationPairFromData(data, expanded=True)
 
-    # QT Drag and Drop
+    # UI QT Drag and Drop
     def dragEnterEvent(self, QDragEnterEvent):
         super(ValidationUI, self).dragEnterEvent(QDragEnterEvent)
         return QDragEnterEvent.accept()
@@ -291,13 +244,6 @@ class ValidationUI(QtWidgets.QWidget):
         if expanded:
             treeWidget.expandToDepth(depth)
 
-    def __toggleRunButton(self):
-        self.fixAllButton.hide()
-
-        for eachValidator in self.__iterValidators():
-            if eachValidator.failed:
-                self.fixAllButton.show()
-
     def __createValidationGroupBox(self, name, treeWidget):
         # type: (str, uit_validationTreeWidget.ValidationTreeWidget) -> QtWidgets.QGroupBox
 
@@ -318,6 +264,61 @@ class ValidationUI(QtWidgets.QWidget):
                 self._validators.remove((eachValidator, treeWidget))
                 groupBox.setParent(None)
                 del groupBox
+
+    # App Creators
+    def __createValidatorTreeWidgetPair(self, data):
+        # type: (dict) -> tuple
+        """The (validator, treeWidget) tuple pair creator."""
+
+        validator = self.__createValidatorFromData(data)
+        treeWidget = self.__createValidationTreeWidget(validator=validator)
+        treeWidget.setStyleSheet(self.sheet)
+
+        validatorpair = (validator, treeWidget)
+        if validatorpair in self._validators:
+            raise Exception(
+                "Something bad happened! \nThe validation pair exists! But we didn't fail get_validatorbyName!"
+            )
+
+        self._validators.append(validatorpair)
+
+        return validatorpair
+
+    def __createValidatorFromData(self, data):
+        # type: (dict) -> c_validator.Validator
+
+        validatorName = data.get(c_serialization.KEY_VALIDATOR_NAME)
+        if self.__findValidatorByName(validatorName) is not None:
+            msg = "Validator named: `%s` already exists! Skipping!" % validatorName
+            logger.warning(msg)
+            raise Exception(msg)
+
+        validator = c_validator.createValidator(
+            name=data.get(c_serialization.KEY_VALIDATOR_NAME, ""), data=data
+        )
+
+        return validator
+
+    def __createValidationTreeWidget(self, validator):
+        # type: (c_validator.Validator) -> uit_validationTreeWidget.ValidationTreeWidget
+        """Creates a treeView widget for the treeWidget/validator pair for adding source nodes to."""
+        treewidget = uit_validationTreeWidget.getValidationTreeWidget(validator, self)
+        treewidget.remove.connect(self.__removeValidatorFromUI)
+
+        return treewidget
+
+    def __createValidatorNameInputDialog(self):
+        self.nameInput = uid_createValidator.CreateValidatorDialog(
+            title="Create Validator"
+        )
+        self.nameInput.setStyleSheet(self.sheet)
+        self.nameInput.name.connect(self.__createValidatorByName)
+        self.nameInput.show()
+
+    def __createValidatorByName(self, name):
+        # type: (str) -> None
+        validatorData = c_validator.Validator(name=name).toData()
+        self.__addValidationPairFromData(data=validatorData)
 
     # Serialize
     def toData(self):

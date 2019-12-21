@@ -1,3 +1,4 @@
+#  Copyright (c) 2019.  James Dunlop
 import logging
 import simplejson as json
 

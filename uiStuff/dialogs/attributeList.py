@@ -1,4 +1,4 @@
-# from typing import Generator
+#  Copyright (c) 2019.  James Dunlop
 from PySide2 import QtWidgets, QtCore
 from core import inside
 from core.nodes import SourceNode, DefaultValueNode, ConnectionValidityNode

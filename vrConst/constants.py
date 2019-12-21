@@ -1,3 +1,4 @@
+#  Copyright (c) 2019.  James Dunlop
 JSON_EXT = ".json"
 UINAME = "Validate Rig:"
 

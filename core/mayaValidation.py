@@ -1,4 +1,4 @@
-# Copyright (c) 2019.  James Dunlop
+#  Copyright (c) 2019.  James Dunlop
 import logging
 from core import inside
 if inside.insideMaya():

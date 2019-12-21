@@ -1,3 +1,4 @@
+#  Copyright (c) 2019.  James Dunlop
 KEY_NODENAME = "nN"
 KEY_NODELONGNAME = "nLN"
 KEY_NODEDISPLAYNAME = "nDN"

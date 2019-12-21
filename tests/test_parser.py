@@ -1,3 +1,5 @@
+#  Copyright (c) 2019.  James Dunlop
+
 import unittest
 import logging
 from core import parser as c_parser

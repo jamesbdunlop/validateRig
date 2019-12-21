@@ -1,3 +1,4 @@
+#  Copyright (c) 2019.  James Dunlop
 import logging
 from PySide2 import QtWidgets, QtCore, QtGui
 from core import inside

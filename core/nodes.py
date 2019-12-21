@@ -1,4 +1,4 @@
-# from typing import Generator
+#  Copyright (c) 2019.  James Dunlop
 import logging
 from PySide2 import QtCore
 from core import parser as c_parser

@@ -1,9 +1,9 @@
 #  Copyright (c) 2019.  James Dunlop
-
 import logging
 import sys
 from PySide2 import QtWidgets, QtCore
 from vrConst import constants as vrc_constants
+
 logger = logging.getLogger(__name__)
 
 
@@ -86,12 +86,12 @@ class ValidityNodeListWidget(QtWidgets.QWidget):
         self.hideBySelectedButton.setHidden(False)
         self.showAllButton.setHidden(True)
 
+    # ListWidget pass throughs
     def setSelectionMode(self, selectionMode):
         # type: (QtWidgets.QAbstractItemView.SelectionMode) -> None
         """convience pass through direct to listWidget"""
         self._listWidget.setSelectionMode(selectionMode)
 
-    # ListWidget pass through
     def findItems(self, name, filter=QtCore.Qt.MatchExactly):
         # type: (str, QtCore.Qt.MatchFlag) -> None
         """convience pass through direct to listWidget"""
