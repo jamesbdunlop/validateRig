@@ -101,16 +101,50 @@ class ValidationUI(QtWidgets.QWidget):
         self.namespaceLayout.addWidget(self.namespaceLabel)
         self.namespaceLayout.addWidget(self.namespaceInput)
         self.namespaceLayout.addWidget(self.namespaceFromDCC)
+
+        self.searchLayout = QtWidgets.QHBoxLayout()
+        self.searchLabel = QtWidgets.QLabel("Search:")
+        self.searchInput = QtWidgets.QLineEdit()
+        self.searchInput.textChanged.connect(self.__filterTreeWidgetItems)
+
+        self.searchLayout.addWidget(self.searchLabel)
+        self.searchLayout.addWidget(self.searchInput)
+
         # Layout
         self.subLayout01.addLayout(self.groupBoxesLayout)
         self.subLayout01.addLayout(self.treeButtons)
         self.mainLayout.addLayout(self.applicationButtonLayout)
         self.mainLayout.addLayout(self.namespaceLayout)
+        self.mainLayout.addLayout(self.searchLayout)
         self.mainLayout.addLayout(self.subLayout01)
 
         self.resize(1200, 800)
 
     # UI Manipulations
+    def __filterTreeWidgetItems(self):
+        searchString = self.searchInput.text()
+        for eachValidationTreeWidget in self.__iterTreeWidgets():
+            topLevelItems = list(eachValidationTreeWidget.iterTopLevelTreeWidgetItems())
+            for treeWidgetItem in topLevelItems:
+                node = treeWidgetItem.node()
+                if searchString not in node.displayName:
+                    treeWidgetItem.setHidden(True)
+                else:
+                    treeWidgetItem.setHidden(False)
+
+                for x in range(treeWidgetItem.childCount()):
+                    child = treeWidgetItem.child(x)
+                    cNode = child.node()
+                    if searchString not in cNode.displayName:
+                        child.setHidden(True)
+                    else:
+                        child.setHidden(False)
+                        treeWidgetItem.setHidden(False)
+
+        # Actually this is going to be interesting I need to also check the connections / default value nodes for their
+        # attriubute names etc and show those too... sheese ,.... argh
+
+
     def __toggleRunButton(self):
         self.fixAllButton.hide()
 
@@ -122,27 +156,27 @@ class ValidationUI(QtWidgets.QWidget):
         nameSpace = self.namespaceInput.text()
         for eachValidationTreeWidget in self.__iterTreeWidgets():
             topLevelItems = list(eachValidationTreeWidget.iterTopLevelTreeWidgetItems())
-            for eachTWItem in topLevelItems:
-                node = eachTWItem.node()
+            for treeWidgetItem in topLevelItems:
+                node = treeWidgetItem.node()
                 currentNS = node.nameSpace
                 node.updateNameSpaceInLongName(currentNS, nameSpace)
                 node.nameSpace = nameSpace
-                eachTWItem.updateDisplayName()
+                treeWidgetItem.updateDisplayName()
 
     def __updateValidationStatus(self):
         for eachValidationTreeWidget in self.__iterTreeWidgets():
             topLevelItems = list(eachValidationTreeWidget.iterTopLevelTreeWidgetItems())
-            for eachTWItem in topLevelItems:
+            for treeWidgetItem in topLevelItems:
                 sourceNodeStatus = list()
-                for child in eachTWItem.iterDescendants():
+                for child in treeWidgetItem.iterDescendants():
                     status = child.node().status
                     child.reportStatus = status
                     sourceNodeStatus.append(status == vrc_constants.NODE_VALIDATION_PASSED)
 
                 topLevelStatus = all(sourceNodeStatus)
-                eachTWItem.reportStatus = vrc_constants.NODE_VALIDATION_FAILED
+                treeWidgetItem.reportStatus = vrc_constants.NODE_VALIDATION_FAILED
                 if topLevelStatus:
-                    eachTWItem.reportStatus = vrc_constants.NODE_VALIDATION_PASSED
+                    treeWidgetItem.reportStatus = vrc_constants.NODE_VALIDATION_PASSED
 
     def __expandAllTreeWidgets(self):
         for _, treeWidget in self._validators:
