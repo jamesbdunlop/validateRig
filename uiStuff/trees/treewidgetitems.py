@@ -27,8 +27,7 @@ class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
         columnId = vrc_constants.SRC_NODENAME_COLUMN
         qtRole = QTDISPLAYROLE
         value = self.node().displayName
-
-        self.setData(columnId, qtRole, value)
+        self.updateColumnData(columnId, qtRole, value)
 
     def toggleLongName(self, show):
         self.node().setLongNameInDisplayName(show)

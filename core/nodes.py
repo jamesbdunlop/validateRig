@@ -117,7 +117,6 @@ class Node(QtCore.QObject):
         # type: (str) -> None
         currentName = self.longName
         currentName = currentName.replace(oldNameSpace, newNameSpace)
-        print(oldNameSpace, newNameSpace, currentName)
         self.longName = currentName
 
     def setNameSpaceInDisplayName(self, show):

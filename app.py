@@ -107,6 +107,9 @@ class ValidationUI(QtWidgets.QWidget):
         self.mainLayout.addLayout(self.namespaceLayout)
         self.mainLayout.addLayout(self.subLayout01)
 
+        self.runButton.clicked.connect(self.__updateValidationStatus)
+        self.fixAllButton.clicked.connect(self.__updateValidationStatus)
+
         self.resize(1200, 800)
 
     def __updateNameSpace(self):
@@ -118,12 +121,28 @@ class ValidationUI(QtWidgets.QWidget):
                 currentNS = node.nameSpace
                 node.updateNameSpaceInLongName(currentNS, nameSpace)
                 node.nameSpace = nameSpace
+                eachTWI.updateDisplayName()
 
     def __nsFromScene(self):
         if inside.insideMaya():
             self.namespaceInput.setText(cmds.ls(sl=True)[0].split(":")[0])
 
         self.__updateNameSpace()
+
+    def __updateValidationStatus(self):
+        for eachValidationTreeWidget in self.__iterTreeWidgets():
+            topLevelItems = list(eachValidationTreeWidget.iterTopLevelTreeWidgetItems())
+            for eachTWI in topLevelItems:
+                sourceNodeStatus = list()
+                for child in eachTWI.iterDescendants():
+                    status = child.node().status
+                    child.reportStatus = status
+                    sourceNodeStatus.append(status == vrc_constants.NODE_VALIDATION_PASSED)
+
+                topLevelStatus = all(sourceNodeStatus)
+                eachTWI.reportStatus = vrc_constants.NODE_VALIDATION_FAILED
+                if topLevelStatus:
+                    eachTWI.reportStatus = vrc_constants.NODE_VALIDATION_PASSED
 
     def __expandAllTreeWidgets(self):
         for _, treeWidget in self._validators:
@@ -206,6 +225,7 @@ class ValidationUI(QtWidgets.QWidget):
 
         for _, treeWidget in self._validators:
             yield treeWidget
+
     # Dialogs
     def __saveDialog(self):
         """Writes to disk all the validation data for each validation treeWidget added to the UI"""
@@ -256,14 +276,13 @@ class ValidationUI(QtWidgets.QWidget):
 
         # Connect to main UI
         self.runButton.clicked.connect(validator.validateSourceNodes)
-        self.runButton.clicked.connect(partial(refreshTreeWidget, treeWidget))
         self.runButton.clicked.connect(self.__toggleRunButton)
+
 
         self.showLongName.toggled.connect(treeWidget.showLongName)
         self.showNamespace.toggled.connect(treeWidget.showNameSpace)
 
         self.fixAllButton.clicked.connect(validator.repairSourceNodes)
-        self.fixAllButton.clicked.connect(partial(refreshTreeWidget, treeWidget))
         self.fixAllButton.clicked.connect(self.__toggleRunButton)
 
         groupBoxName = data.get(c_serialization.KEY_VALIDATOR_NAME, "None")
@@ -339,22 +358,6 @@ class ValidationUI(QtWidgets.QWidget):
             inst.__addValidationPairFromData(data=eachValidatiorData, expanded=expanded)
 
         return inst
-
-
-def refreshTreeWidget(treeWidget):
-    count = treeWidget.topLevelItemCount()
-    for x in range(count):
-        topLevelItem = treeWidget.topLevelItem(x)
-        sourceNodeStatus = list()
-        for child in topLevelItem.iterDescendants():
-            status = child.node().status
-            child.reportStatus = status
-            sourceNodeStatus.append(status == vrc_constants.NODE_VALIDATION_PASSED)
-
-        topLevelStatus = all(sourceNodeStatus)
-        topLevelItem.reportStatus = vrc_constants.NODE_VALIDATION_FAILED
-        if topLevelStatus:
-            topLevelItem.reportStatus = vrc_constants.NODE_VALIDATION_PASSED
 
 
 if __name__ == "__main__":
