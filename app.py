@@ -125,6 +125,7 @@ class ValidationUI(QtWidgets.QWidget):
         searchString = self.searchInput.text()
         for eachValidationTreeWidget in self.__iterTreeWidgets():
             topLevelItems = list(eachValidationTreeWidget.iterTopLevelTreeWidgetItems())
+
             for treeWidgetItem in topLevelItems:
                 node = treeWidgetItem.node()
                 if searchString not in node.displayName:
@@ -135,15 +136,18 @@ class ValidationUI(QtWidgets.QWidget):
                 for x in range(treeWidgetItem.childCount()):
                     child = treeWidgetItem.child(x)
                     cNode = child.node()
-                    if searchString not in cNode.displayName:
-                        child.setHidden(True)
-                    else:
-                        child.setHidden(False)
-                        treeWidgetItem.setHidden(False)
-
-        # Actually this is going to be interesting I need to also check the connections / default value nodes for their
-        # attriubute names etc and show those too... sheese ,.... argh
-
+                    if cNode.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
+                        if searchString not in cNode.name and searchString not in cNode.srcAttrName and searchString not in cNode.destAttrName:
+                            child.setHidden(True)
+                        else:
+                            child.setHidden(False)
+                            treeWidgetItem.setHidden(False)
+                    elif cNode.nodeType == c_serialization.NT_DEFAULTVALUE:
+                        if searchString not in cNode.name:
+                            child.setHidden(True)
+                        else:
+                            child.setHidden(False)
+                            treeWidgetItem.setHidden(False)
 
     def __toggleRunButton(self):
         self.fixAllButton.hide()
