@@ -269,7 +269,6 @@ class ValidationUI(QtWidgets.QWidget):
         self.runButton.clicked.connect(validator.validateSourceNodes)
         self.runButton.clicked.connect(self.__toggleRunButton)
 
-
         self.showLongName.toggled.connect(treeWidget.showLongName)
         self.showNamespace.toggled.connect(treeWidget.showNameSpace)
 
