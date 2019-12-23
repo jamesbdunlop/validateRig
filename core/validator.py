@@ -135,10 +135,10 @@ class Validator(QtCore.QObject):
         for eachNode in self._nodes:
             yield eachNode
 
-    def validateSourceNodes(self):
+    def validateValidatorSourceNodes(self):
         self.validate.emit(self)
 
-    def repairSourceNodes(self):
+    def repairValidatorSourceNodes(self):
         self.repair.emit(self)
 
     def toData(self):
@@ -181,8 +181,8 @@ def createValidator(name, data=None):
         validator = Validator.fromData(name, data)
 
     if inside.insideMaya():
-        validator.validate.connect(mayaValidation.validateSourceNodes)
-        validator.repair.connect(mayaValidation.repairSourceNodes)
+        validator.validate.connect(mayaValidation.validateValidatorSourceNodes)
+        validator.repair.connect(mayaValidation.repairValidatorSourceNodes)
 
     else:
         msg = lambda x: logger.info(x)

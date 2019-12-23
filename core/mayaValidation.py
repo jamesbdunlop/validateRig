@@ -81,50 +81,97 @@ def exists(srcNodeName):
         return False
     return True
 
-def validateSourceNodes(validator):
+### VALIDATE
+def validateValidatorSourceNodes(validator):
     # type: (Validator) -> None
     validator.status = vrc_constants.NODE_VALIDATION_PASSED
     for eachSourceNode in validator.iterSourceNodes():
         srcNodeName = eachSourceNode.longName
         if not exists(srcNodeName):
             continue
+        defaultStatus = validateDefaultNodes(eachSourceNode)
+        connectionStatus = validateConnectionNodes(eachSourceNode)
 
-        for eachValidationNode in eachSourceNode.iterDescendants():
-            passed = False
-            if eachValidationNode.nodeType == c_serialization.NT_DEFAULTVALUE:
-                attrName = "{}.{}".format(srcNodeName, eachValidationNode.name)
-                passed = eachValidationNode.defaultValue == cmds.getAttr(attrName)
+        failed = all((defaultStatus, connectionStatus))
+        if failed:
+            validator.status = vrc_constants.NODE_VALIDATION_FAILED
 
-            elif eachValidationNode.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
-                destAttrName = "{}.{}".format(eachValidationNode.longName, eachValidationNode.destAttrName)
-                passed = cmds.isConnected(srcNodeName, destAttrName)
+def validateDefaultNodes(sourceNode):
+    # type: (SourceNode) -> bool
+    failed = False
+    for eachValidationNode in sourceNode.iterDescendants():
+        if eachValidationNode.nodeType != c_serialization.NT_DEFAULTVALUE:
+            continue
 
-            if passed:
-                eachValidationNode.status = vrc_constants.NODE_VALIDATION_PASSED
-            else:
-                eachValidationNode.status = vrc_constants.NODE_VALIDATION_FAILED
-                validator.status = vrc_constants.NODE_VALIDATION_FAILED
+        attrName = "{}.{}".format(sourceNode.longName, eachValidationNode.name)
+        result = eachValidationNode.defaultValue == cmds.getAttr(attrName)
+        if not setValidationStatus(eachValidationNode, result):
+            failed = True
 
-def repairSourceNodes(validator):
+    return failed
+
+def validateConnectionNodes(sourceNode):
+    # type: (SourceNode) -> bool
+    failed = False
+    for eachValidationNode in sourceNode.iterDescendants():
+        if eachValidationNode.nodeType != c_serialization.NT_CONNECTIONVALIDITY:
+            continue
+
+        destAttrName = "{}.{}".format(eachValidationNode.longName, eachValidationNode.destAttrName)
+        result = cmds.isConnected(sourceNode.name, destAttrName)
+        if not setValidationStatus(eachValidationNode, result):
+            failed = True
+
+    return failed
+
+### REPAIR
+def repairValidatorSourceNodes(validator):
     # type: (Validator) -> None
     for eachSourceNode in validator.iterSourceNodes():
         srcNodeName = eachSourceNode.longName
         if not exists(srcNodeName):
             continue
 
-        for eachValidationNode in eachSourceNode.iterDescendants():
-            if eachValidationNode.status == vrc_constants.NODE_VALIDATION_PASSED:
-                continue
+        defaultStatus = repairDefaultNodes(eachSourceNode)
+        connectionStatus = repairDefaultNodes(eachSourceNode)
 
-            if eachValidationNode.nodeType == c_serialization.NT_DEFAULTVALUE:
-                attrName = "{}.{}".format(srcNodeName, eachValidationNode.name)
+        failed = all((defaultStatus, connectionStatus))
+        if failed:
+            validator.status = vrc_constants.NODE_VALIDATION_FAILED
 
-                cmds.setAttr(attrName,  eachValidationNode.defaultValue[0]) # TODO handling this crap properly
-                eachValidationNode.status = vrc_constants.NODE_VALIDATION_PASSED
+def repairDefaultNodes(sourceNode):
+    # type: (SourceNode) -> bool
+    for eachValidationNode in sourceNode.iterDescendants():
+        if eachValidationNode.status == vrc_constants.NODE_VALIDATION_PASSED:
+            continue
 
-            elif eachValidationNode.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
-                destAttrName = "{}.{}".format(eachValidationNode.longName, eachValidationNode.destAttrName)
-                cmds.connectAttr(srcNodeName, destAttrName, f=True)
-                eachValidationNode.status = vrc_constants.NODE_VALIDATION_PASSED
+        if eachValidationNode.nodeType != c_serialization.NT_DEFAULTVALUE:
+            continue
 
-    validator.status = vrc_constants.NODE_VALIDATION_PASSED
+        attrName = "{}.{}".format(sourceNode.longName, eachValidationNode.name)
+
+        cmds.setAttr(attrName, eachValidationNode.defaultValue[0])  # TODO handling this crap properly
+        setValidationStatus(eachValidationNode, True)
+
+    return True
+
+def repairConnectionNodes(sourceNode):
+    # type: (SourceNode) -> bool
+    for eachValidationNode in sourceNode.iterDescendants():
+        if eachValidationNode.nodeType != c_serialization.NT_CONNECTIONVALIDITY:
+            continue
+
+        destAttrName = "{}.{}".format(eachValidationNode.longName, eachValidationNode.destAttrName)
+        cmds.connectAttr(sourceNode.name, destAttrName, force=True)
+        setValidationStatus(eachValidationNode, True)
+
+    return True
+
+def setValidationStatus(validationNode, result):
+    # type: (ValidationNode, bool) -> bool
+    if result:
+        validationNode.status = vrc_constants.NODE_VALIDATION_PASSED
+        return True
+
+    validationNode.status = vrc_constants.NODE_VALIDATION_FAILED
+    return False

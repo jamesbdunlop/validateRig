@@ -266,13 +266,13 @@ class ValidationUI(QtWidgets.QWidget):
         validator, treeWidget = self.__createValidatorTreeWidgetPair(data)
 
         # Connect to main UI
-        self.runButton.clicked.connect(validator.validateSourceNodes)
+        self.runButton.clicked.connect(validator.validateValidatorSourceNodes)
         self.runButton.clicked.connect(self.__toggleRunButton)
 
         self.showLongName.toggled.connect(treeWidget.showLongName)
         self.showNamespace.toggled.connect(treeWidget.showNameSpace)
 
-        self.fixAllButton.clicked.connect(validator.repairSourceNodes)
+        self.fixAllButton.clicked.connect(validator.repairValidatorSourceNodes)
         self.fixAllButton.clicked.connect(self.__toggleRunButton)
 
         groupBoxName = data.get(c_serialization.KEY_VALIDATOR_NAME, "None")
