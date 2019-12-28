@@ -6,8 +6,8 @@ from core import inside
 from core import mayaValidation
 from core import parser as c_parser
 from core.nodes import SourceNode
-from vrConst import serialization as c_serialization
-from vrConst import constants as vrc_constants
+from const import serialization as c_serialization
+from const import constants as vrc_constants
 
 logger = logging.getLogger(__name__)
 

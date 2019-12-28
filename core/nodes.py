@@ -2,8 +2,8 @@
 import logging
 from PySide2 import QtCore
 from core import parser as c_parser
-from vrConst import constants as vrc_constants
-from vrConst import serialization as c_serialization
+from const import constants as vrc_constants
+from const import serialization as c_serialization
 logger = logging.getLogger(__name__)
 
 """
@@ -33,9 +33,9 @@ to disk as part of the SourceNode data.
 
 class Node(QtCore.QObject):
     def __init__(
-        self, name, longName, parent=None, nodeType=c_serialization.NT_VALIDATIONNODE
+        self, name, longName, nodeType=c_serialization.NT_VALIDATIONNODE, parent=None,
     ):
-        # type: (str, str, int) -> None
+        # type: (str, str, int, Node) -> None
         self._name = name
         self._longName = longName
         self._nodeType = nodeType
@@ -202,15 +202,15 @@ class Node(QtCore.QObject):
 
 
 class SourceNode(Node):
-    def __init__(self, name, longName, parent=None, validityNodes=None, **kwargs):
-        # type: (str, str, list) -> None
+    def __init__(self, name, longName, validityNodes=None, parent=None, **kwargs):
+        # type: (str, str, list, Node) -> None
         """
         Args:
             name: a unique name of the node as it exists in the dcc
             validityNodes: list of nodes [ValidityNode,ValidityNode]
         """
         super(SourceNode, self).__init__(
-            name=name, longName=longName, parent=parent, nodeType=c_serialization.NT_SOURCENODE
+            name=name, longName=longName, nodeType=c_serialization.NT_SOURCENODE, parent=parent,
         )
         self._children = validityNodes or list()
 

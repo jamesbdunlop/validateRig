@@ -2,7 +2,7 @@
 from PySide2 import QtWidgets, QtCore
 from core import inside
 from core.nodes import SourceNode, DefaultValueNode, ConnectionValidityNode
-from uiStuff import validityNodeListWidget as ui_validityNodeListWidget
+from uiElements import validityNodeListWidget as ui_validityNodeListWidget
 
 if inside.insideMaya():
     from maya import cmds

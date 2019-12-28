@@ -2,9 +2,9 @@
 import logging
 from PySide2 import QtCore, QtWidgets
 from core import nodes as c_nodes
-from uiStuff.trees import treewidgetitems
-from vrConst import serialization as c_serialization
-from vrConst import constants as vrc_constants
+from uiElements.trees import treewidgetitems
+from const import serialization as c_serialization
+from const import constants as vrc_constants
 
 logger = logging.getLogger(__name__)
 

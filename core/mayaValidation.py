@@ -3,8 +3,8 @@ import logging
 from core import inside
 if inside.insideMaya():
     from maya import cmds
-from vrConst import serialization as c_serialization
-from vrConst import constants as vrc_constants
+from const import serialization as c_serialization
+from const import constants as vrc_constants
 logger = logging.getLogger(__name__)
 
 
@@ -92,13 +92,13 @@ def validateValidatorSourceNodes(validator):
         defaultStatus = validateDefaultNodes(eachSourceNode)
         connectionStatus = validateConnectionNodes(eachSourceNode)
 
-        failed = all((defaultStatus, connectionStatus))
-        if failed:
+        passed = all((defaultStatus, connectionStatus))
+        if passed:
             validator.status = vrc_constants.NODE_VALIDATION_FAILED
 
 def validateDefaultNodes(sourceNode):
     # type: (SourceNode) -> bool
-    failed = False
+    passed = True
     for eachValidationNode in sourceNode.iterDescendants():
         if eachValidationNode.nodeType != c_serialization.NT_DEFAULTVALUE:
             continue
@@ -106,23 +106,22 @@ def validateDefaultNodes(sourceNode):
         attrName = "{}.{}".format(sourceNode.longName, eachValidationNode.name)
         result = eachValidationNode.defaultValue == cmds.getAttr(attrName)
         if not setValidationStatus(eachValidationNode, result):
-            failed = True
+            passed = False
 
-    return failed
+    return passed
 
 def validateConnectionNodes(sourceNode):
     # type: (SourceNode) -> bool
-    failed = False
+    passed = True
     for eachValidationNode in sourceNode.iterDescendants():
         if eachValidationNode.nodeType != c_serialization.NT_CONNECTIONVALIDITY:
             continue
 
-        destAttrName = "{}.{}".format(eachValidationNode.longName, eachValidationNode.destAttrName)
-        result = cmds.isConnected(sourceNode.name, destAttrName)
+        result = cmds.isConnected(sourceNode.name, eachValidationNode.longName)
         if not setValidationStatus(eachValidationNode, result):
-            failed = True
+            passed = False
 
-    return failed
+    return passed
 
 ### REPAIR
 def repairValidatorSourceNodes(validator):
@@ -135,8 +134,8 @@ def repairValidatorSourceNodes(validator):
         defaultStatus = repairDefaultNodes(eachSourceNode)
         connectionStatus = repairDefaultNodes(eachSourceNode)
 
-        failed = all((defaultStatus, connectionStatus))
-        if failed:
+        passed = all((defaultStatus, connectionStatus))
+        if passed:
             validator.status = vrc_constants.NODE_VALIDATION_FAILED
 
 def repairDefaultNodes(sourceNode):
@@ -144,13 +143,12 @@ def repairDefaultNodes(sourceNode):
     for eachValidationNode in sourceNode.iterDescendants():
         if eachValidationNode.status == vrc_constants.NODE_VALIDATION_PASSED:
             continue
-
         if eachValidationNode.nodeType != c_serialization.NT_DEFAULTVALUE:
             continue
 
+        # TODO handling this crap properly
         attrName = "{}.{}".format(sourceNode.longName, eachValidationNode.name)
-
-        cmds.setAttr(attrName, eachValidationNode.defaultValue[0])  # TODO handling this crap properly
+        cmds.setAttr(attrName, eachValidationNode.defaultValue[0])
         setValidationStatus(eachValidationNode, True)
 
     return True
@@ -161,8 +159,7 @@ def repairConnectionNodes(sourceNode):
         if eachValidationNode.nodeType != c_serialization.NT_CONNECTIONVALIDITY:
             continue
 
-        destAttrName = "{}.{}".format(eachValidationNode.longName, eachValidationNode.destAttrName)
-        cmds.connectAttr(sourceNode.name, destAttrName, force=True)
+        cmds.connectAttr(sourceNode.name, eachValidationNode.longName, force=True)
         setValidationStatus(eachValidationNode, True)
 
     return True
@@ -171,7 +168,7 @@ def setValidationStatus(validationNode, result):
     # type: (ValidationNode, bool) -> bool
     if result:
         validationNode.status = vrc_constants.NODE_VALIDATION_PASSED
-        return True
+        return result
 
     validationNode.status = vrc_constants.NODE_VALIDATION_FAILED
-    return False
+    return result

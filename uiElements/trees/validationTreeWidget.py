@@ -4,10 +4,10 @@ from PySide2 import QtWidgets, QtCore, QtGui
 from core import inside
 from core.validator import Validator
 from core.nodes import Node, SourceNode
-from vrConst import constants as vrc_constants
-from vrConst import serialization as c_serialization
-from uiStuff.trees import factory as cuit_factory
-from uiStuff.dialogs import attributeList as uid_attributeList
+from const import constants as vrc_constants
+from const import serialization as c_serialization
+from uiElements.trees import factory as cuit_factory
+from uiElements.dialogs import attributeList as uid_attributeList
 
 logger = logging.getLogger(__name__)
 
@@ -120,13 +120,13 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
                     continue
 
                 self.__removeAllTreeWidgetItemChildren(treeWidgetItem)
-                addValidatityNodesToTreeWidgetItem(sourceNode, treeWidgetItem)
+                addValidityNodesToTreeWidgetItem(sourceNode, treeWidgetItem)
                 continue
 
             # New
             self.validator().addSourceNode(sourceNode, True)
             treeWidgetItem = self.__addTopLevelTreeWidgetItemFromSourceNode(sourceNode)
-            addValidatityNodesToTreeWidgetItem(sourceNode, treeWidgetItem)
+            addValidityNodesToTreeWidgetItem(sourceNode, treeWidgetItem)
 
     def __removeSelectedTreeWidgetItems(self):
         for eachTreeWidgetItem in self.selectedItems():
@@ -223,11 +223,11 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
             return
 
         from maya import cmds
-
         for eachItem in self.selectedItems():
             itemName = eachItem.data(0, QtCore.Qt.DisplayRole)
             cmds.select(itemName)
-        # ValidationTreeWidget.mouseDoubleClickEvent(event)
+
+        ValidationTreeWidget.mouseDoubleClickEvent(event)
 
 
 def getValidationTreeWidget(validator, parent):
@@ -247,7 +247,7 @@ def getValidationTreeWidget(validator, parent):
     for sourceNode in validator.iterSourceNodes():
         sourceNodeTreeWItm = cuit_factory.treeWidgetItemFromNode(node=sourceNode)
         treeWidget.addTopLevelItem(sourceNodeTreeWItm)
-        addValidatityNodesToTreeWidgetItem(sourceNode, sourceNodeTreeWItm)
+        addValidityNodesToTreeWidgetItem(sourceNode, sourceNodeTreeWItm)
         # Crashes maya
         # cuit_factory.setSourceNodeItemWidgetsFromNode(
         #     node=sourceNode, treewidget=treeWidget, twi=sourceNodeTreeWItm
@@ -258,7 +258,7 @@ def getValidationTreeWidget(validator, parent):
     return treeWidget
 
 
-def addValidatityNodesToTreeWidgetItem(sourceNode, sourceNodeTreeWItm):
+def addValidityNodesToTreeWidgetItem(sourceNode, sourceNodeTreeWItm):
     # type: (Node, QtWidgets.QTreeWidgetItem) -> None
     connectionAttrSrcNames = list()
     parentNode = None
@@ -275,7 +275,6 @@ def addValidatityNodesToTreeWidgetItem(sourceNode, sourceNodeTreeWItm):
                 parentNode.addChild(treewidgetItem)
         else:
             sourceNodeTreeWItm.addChild(treewidgetItem)
-
         # Crashes maya
         # cuit_factory.setSourceNodeItemWidgetsFromNode(
         #     node=eachValidityNode, treewidget=treeWidget, twi=treewidgetItem

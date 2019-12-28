@@ -1,5 +1,5 @@
 #  Copyright (c) 2019.  James Dunlop
-from vrConst import serialization as c_s
+from const import serialization as c_s
 
 SRC_NODENAME = "myCtrl_ctrl"
 SRC_ATTRNAME = "showCloth"

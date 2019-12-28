@@ -3,16 +3,16 @@ import sys
 import os
 import logging
 from PySide2 import QtWidgets, QtCore
-from vrConst import constants as vrc_constants
-from vrConst import serialization as c_serialization
+from const import constants as vrc_constants
+from const import serialization as c_serialization
 from core import inside
 from core import validator as c_validator
 from core import parser as c_parser
-from uiStuff.themes import factory as uit_factory
-from uiStuff.dialogs import saveToJSONFile as uid_saveToJSON
-from uiStuff.dialogs import loadFromJSONFile as uid_loadFromJSON
-from uiStuff.trees import validationTreeWidget as uit_validationTreeWidget
-from uiStuff.dialogs import createValidator as uid_createValidator
+from uiElements.themes import factory as uit_factory
+from uiElements.dialogs import saveToJSONFile as uid_saveToJSON
+from uiElements.dialogs import loadFromJSONFile as uid_loadFromJSON
+from uiElements.trees import validationTreeWidget as uit_validationTreeWidget
+from uiElements.dialogs import createValidator as uid_createValidator
 
 if inside.insideMaya():
     from maya import cmds
@@ -67,7 +67,6 @@ class ValidationUI(QtWidgets.QWidget):
         self.treeButtons.addStretch(1)
 
         self.runButton = QtWidgets.QPushButton("Run")
-        self.runButton.clicked.connect(self.__updateValidationStatus)
 
         self.fixAllButton = QtWidgets.QPushButton("Fix All")
         self.fixAllButton.hide()
@@ -268,6 +267,7 @@ class ValidationUI(QtWidgets.QWidget):
         # Connect to main UI
         self.runButton.clicked.connect(validator.validateValidatorSourceNodes)
         self.runButton.clicked.connect(self.__toggleRunButton)
+        self.runButton.clicked.connect(self.__updateValidationStatus)
 
         self.showLongName.toggled.connect(treeWidget.showLongName)
         self.showNamespace.toggled.connect(treeWidget.showNameSpace)

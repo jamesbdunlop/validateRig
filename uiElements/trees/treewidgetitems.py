@@ -1,6 +1,6 @@
 #  Copyright (c) 2019.  James Dunlop
 from PySide2 import QtWidgets, QtCore, QtGui
-from vrConst import constants as vrc_constants
+from const import constants as vrc_constants
 from core.nodes import Node
 QTDISPLAYROLE = QtCore.Qt.DisplayRole
 
