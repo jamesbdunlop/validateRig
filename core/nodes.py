@@ -4,31 +4,8 @@ from PySide2 import QtCore
 from core import parser as c_parser
 from const import constants as vrc_constants
 from const import serialization as c_serialization
+
 logger = logging.getLogger(__name__)
-
-"""
-Each ConnectionValidityNode will be considered a child of the sourceNode.
-This parent / child relationship holds everything we need to check a rig for validity.
-eg:
-    myCtrlCrv has 2 attributes on it;
-        - showCloth
-        - headLock
-
-    We can create a sourceNode of this ctrl curve.
-    sourceNode = SourceNode(name="myCtrlCrv")
-
-    Then can we create x# of ConnectionValidityNodes for EACH attribute we want to check is valid!
-    eg:
-    showCloth_geoHrc = ConnectionValidityNode(name="geo_hrc",
-                                    attributeName="visibility", destAttrValue=True,
-                                    srcAttrName="showCloth", srcAttrValue="True"
-                                    )
-    sourceNode.appendValidityNode(showCloth_geoHrc)
-
-It should also be noted we only serialize SourceNodes as ConnectionValidityNodes will be written as dependencies of 
-these
-to disk as part of the SourceNode data.
-"""
 
 
 class Node(QtCore.QObject):
@@ -104,10 +81,6 @@ class Node(QtCore.QObject):
         # type: (str) -> None
         self._validationStatus = status
 
-    @property
-    def children(self):
-        return self._children
-
     def __createNameSpacedName(self):
         # type: () -> str
         ns = "{}:{}".format(self.nameSpace, self.name)
@@ -121,12 +94,12 @@ class Node(QtCore.QObject):
 
     def setNameSpaceInDisplayName(self, show):
         # type: (bool) -> None
-        if not show:
-            self.displayName = self.name
-            self._showNameSpace = False
-        else:
+        if show:
             self.displayName = self.__createNameSpacedName()
             self._showNameSpace = True
+        else:
+            self.displayName = self.name
+            self._showNameSpace = False
 
     def setLongNameInDisplayName(self, show):
         # type: (bool) -> None
@@ -143,6 +116,7 @@ class Node(QtCore.QObject):
         # type: (Node) -> None
         if node not in self._children:
             self._children.append(node)
+            node.parent = self
 
     def addChildren(self, nodes):
         # type: (list[Node]) -> None
@@ -153,17 +127,18 @@ class Node(QtCore.QObject):
         # type: (Node) -> None
         for eachNode in self._children:
             if eachNode == node:
+                node.parent = None
                 self._children.remove(node)
 
     def iterChildren(self):
         # type: () -> Generator[Node]
-        for eachNode in self.children:
+        for eachNode in self._children:
             yield eachNode
 
     def iterDescendants(self):
-        for eachNode in self.children:
+        for eachNode in self._children:
             yield eachNode
-            for eachChild in eachNode.children:
+            for eachChild in eachNode._children:
                 yield eachChild
 
     def toData(self):
@@ -246,7 +221,7 @@ class SourceNode(Node):
         sourceNodeName = data.get(c_serialization.KEY_NODENAME, None)
         sourceNodeLongName = data.get(c_serialization.KEY_NODELONGNAME, None)
         if sourceNodeName is None:
-            raise KeyError("sourceNodeName is not valid! %s" % data)
+            raise KeyError("NoneType is not a valid sourceNodeName!")
 
         inst = cls(name=sourceNodeName, longName=sourceNodeLongName)
 
@@ -258,16 +233,6 @@ class SourceNode(Node):
         inst.addChildren(validityNodes)
 
         return inst
-
-    @classmethod
-    def from_fileJSON(cls, filePath):
-        # type: (str) -> SourceNode
-        data = c_parser.read(filepath=filePath)
-        return cls.fromData(cls, data)
-
-    def to_fileJSON(self, filePath):
-        # type: (str) -> None
-        c_parser.write(filepath=filePath, data=self.toData())
 
 
 class ConnectionValidityNode(Node):

@@ -69,6 +69,40 @@ class Test_Validator(unittest.TestCase):
     def test_instanceTypes(self):
         self.assertIsInstance(self.validator, c_validator.Validator)
 
+    def test_setters(self):
+        testName = "FART"
+        self.validator.name = testName
+        self.assertEqual(
+            self.validator.name,
+            testName,
+            "ValidatorName is not %s" % testName,
+        )
+
+        testNameSpace = "FARTED"
+        self.validator.namespace = testNameSpace
+        self.assertEqual(
+            self.validator.namespace,
+            testNameSpace,
+            "ValidatorName is not %s" % testNameSpace,
+        )
+
+        testStatus = "FAILUREWILLROBINSON"
+        self.validator.status = testStatus
+        self.assertEqual(
+            self.validator.status,
+            testStatus,
+            "ValidatorName is not %s" % testStatus,
+        )
+
+    def test_validationFailed(self):
+        self.assertFalse(self.validator.failed)
+
+    def test_validationPassed(self):
+        self.assertTrue(self.validator.passed)
+
+    def test_sourceNodeLongNameExists(self):
+        self.assertTrue(self.validator.sourceNodeLongNameExists(self.sourceNodeName))
+
     def test_Name(self):
         self.assertEqual(
             self.validator.name,
@@ -79,10 +113,18 @@ class Test_Validator(unittest.TestCase):
     def test_addSourceNode(self):
         nodeName = "2ndSourceNode"
         srcNode = c_nodes.SourceNode(name=nodeName, longName=nodeName)
-        self.validator.addSourceNode(srcNode)
+
         self.assertTrue(
-            self.validator.sourceNodeExists(srcNode), "validator.addSourceNode failed!",
+            self.validator.addSourceNode(srcNode), "validator.addSourceNode failed!",
         )
+
+        self.assertTrue(
+            self.validator.addSourceNode(srcNode, force=True), "validator.addSourceNode failed!",
+        )
+
+        with self.assertRaises(IndexError) as context:
+            self.validator.addSourceNode(srcNode, force=False)
+        self.assertTrue('Use force=True if you want to overwrite existing!' in str(context.exception))
 
     def test_addSourceNodeFromData(self):
         nodeName = "3rdSourceNode"
@@ -100,6 +142,11 @@ class Test_Validator(unittest.TestCase):
         self.assertTrue(
             self.validator.removeSourceNode(tmpSourceNode),
             "Failed to remove tmpSourceNode!",
+        )
+
+        self.assertFalse(
+            self.validator.removeSourceNode(tmpSourceNode),
+            "Removed tmpSourceNode which shouldn't be in the validator anymore!!",
         )
 
     def test_replaceExistingSourceNode(self):

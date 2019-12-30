@@ -37,9 +37,6 @@ class Validator(QtCore.QObject):
         Args:
             name: name of the validator
         """
-        if type(name) != str:
-            raise TypeError("name is not of type str!")
-
         self._name = name
 
     @property
@@ -135,10 +132,10 @@ class Validator(QtCore.QObject):
         for eachNode in self._nodes:
             yield eachNode
 
-    def validateValidatorSourceNodes(self):
+    def validateValidatorSourceNodes(self): # pragma: no cover
         self.validate.emit(self)
 
-    def repairValidatorSourceNodes(self):
+    def repairValidatorSourceNodes(self): # pragma: no cover
         self.repair.emit(self)
 
     def toData(self):

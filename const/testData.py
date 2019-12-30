@@ -1,6 +1,8 @@
 #  Copyright (c) 2019.  James Dunlop
 from const import serialization as c_s
 
+NODENAME = "myNodeName"
+
 SRC_NODENAME = "myCtrl_ctrl"
 SRC_ATTRNAME = "showCloth"
 SRC_ATTRVALUE = True
