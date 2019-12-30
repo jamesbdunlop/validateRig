@@ -58,15 +58,10 @@ validator.to_fileJSON(filePath="C:/temp/testValidator.json")
 """
 
 
-def createValidator(name):
-    """
-
-    :param name:`str`
-    :return: `Validator`
-    """
-
-    return c_validator.Validator(name=name)
-
+def createValidator(name, data=None):
+    # type: (str, dict) -> c_validator.Validator
+    validator = c_validator.createValidator(name=name, data=data)
+    return validator
 
 def createSourceNode(name, longName, validityNodes=None):
     """
@@ -78,7 +73,6 @@ def createSourceNode(name, longName, validityNodes=None):
     """
     return SourceNode(name=name, longName=longName, validityNodes=validityNodes)
 
-
 def createDefaultValueNode(name, longName, defaultValue):
     """
 
@@ -88,7 +82,6 @@ def createDefaultValueNode(name, longName, defaultValue):
     :return:
     """
     return DefaultValueNode(name=name, longName=longName, defaultValue=defaultValue)
-
 
 def createConnectionValidityNode(
     name,
@@ -115,7 +108,6 @@ def createConnectionValidityNode(
     node.destAttrValue = destinationNodeAttributeValue
 
     return node
-
 
 def saveValidatorsToFile(validators, filepath):
     # type: (list, str) -> bool

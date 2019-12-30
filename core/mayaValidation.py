@@ -1,4 +1,5 @@
 #  Copyright (c) 2019.  James Dunlop
+# pragma: no cover
 import logging
 from core import inside
 if inside.insideMaya():
@@ -84,7 +85,7 @@ def exists(srcNodeName):
 ### VALIDATE
 def validateValidatorSourceNodes(validator):
     # type: (Validator) -> None
-    validator.status = vrc_constants.NODE_VALIDATION_PASSED
+    validator.status = vrc_constants.NODE_VALIDATION_FAILED
     for eachSourceNode in validator.iterSourceNodes():
         srcNodeName = eachSourceNode.longName
         if not exists(srcNodeName):
@@ -94,7 +95,7 @@ def validateValidatorSourceNodes(validator):
 
         passed = all((defaultStatus, connectionStatus))
         if passed:
-            validator.status = vrc_constants.NODE_VALIDATION_FAILED
+            validator.status = vrc_constants.NODE_VALIDATION_PASSED
 
 def validateDefaultNodes(sourceNode):
     # type: (SourceNode) -> bool
@@ -117,7 +118,7 @@ def validateConnectionNodes(sourceNode):
         if eachValidationNode.nodeType != c_serialization.NT_CONNECTIONVALIDITY:
             continue
 
-        result = cmds.isConnected(sourceNode.name, eachValidationNode.longName)
+        result = cmds.isConnected(sourceNode.longName, eachValidationNode.longName)
         if not setValidationStatus(eachValidationNode, result):
             passed = False
 

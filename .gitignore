@@ -106,3 +106,7 @@ venv.bak/
 ./idea
 
 Thumbs.db
+
+.coverage
+./tests/htmlcov
+app.spec

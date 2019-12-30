@@ -159,7 +159,8 @@ class Validator(QtCore.QObject):
 
     @classmethod
     def fromData(cls, name, data):
-        inst = cls(name)
+        namespace = data.get(c_serialization.KEY_NODENAMESPACE,"")
+        inst = cls(name, namespace)
         for sourceNodeData in data.get(c_serialization.KEY_VALIDATOR_NODES, list()):
             inst.addSourceNodeFromData(sourceNodeData)
 
@@ -176,15 +177,16 @@ def createValidator(name, data=None):
         name: The name for the validator. Eg: MyCat
     """
     if data is None:
+        # todo check we don't have to pass namespace here and leave it up to user to do
         validator = Validator(name=name)
     else:
         validator = Validator.fromData(name, data)
 
-    if inside.insideMaya():
+    if inside.insideMaya(): # pragma: no cover
         validator.validate.connect(mayaValidation.validateValidatorSourceNodes)
         validator.repair.connect(mayaValidation.repairValidatorSourceNodes)
 
-    else:
+    else: # pragma: no cover
         msg = lambda x: logger.info(x)
         validator.validate.connect(msg("No stand alone validation is possible!!"))
 
