@@ -113,7 +113,6 @@ def connectionsToConnectionNodes(nodeLongName):
                 sourceNodeAttributeValue = None
 
             if not destShortAttributeName in c_const.MAYA_DEFAULTVALUEATTRIBUTE_IGNORES:
-                print(dest)
                 destinationNodeAttributeValue = cmds.getAttr(dest)
             else:
                 destinationNodeAttributeValue = None
