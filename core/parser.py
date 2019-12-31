@@ -25,9 +25,9 @@ def write(filepath, data):
     :param data: `dict`
     :return: `bool`
     """
-    logger.info("Writing data to %s" % filepath)
+    logger.info("Saving data to %s" % filepath)
     with open(filepath, "w") as outfile:
         outfile.write(json.dumps(data, sort_keys=True))
 
-    logger.info("Wrote date to %s" % filepath)
+    logger.info("Successfully saved data to %s" % filepath)
     return True

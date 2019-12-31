@@ -153,9 +153,7 @@ class Validator(QtCore.QObject):
         return data
 
     def to_fileJSON(self, filePath):
-        logger.info("Writing validator to: %s" % filePath)
         c_parser.write(filepath=filePath, data=self.toData())
-        logger.info("Successfully wrote validator to: %s" % filePath)
 
         return True
 
