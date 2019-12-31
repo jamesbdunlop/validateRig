@@ -61,5 +61,7 @@ MAYA_DEFAULTATTRS = [
                         ]
 
 MAYA_DEFAULTVALUEATTRIBUTE_IGNORES = [
-    "message"
+    "message",
+    "controllerObject",
+    "dependNode"
     ]

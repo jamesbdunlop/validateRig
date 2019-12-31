@@ -36,10 +36,14 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         for twi in self.iterTopLevelTreeWidgetItems():
             twi.toggleNameSpace(show)
 
+        self.resizeColumnToContents(0)
+
     def showLongName(self, show):
         # type: (bool) -> None
         for twi in self.iterTopLevelTreeWidgetItems():
             twi.toggleLongName(show)
+
+        self.resizeColumnToContents(0)
 
     def iterTopLevelTreeWidgetItems(self):
         for x in range(self.topLevelItemCount()):

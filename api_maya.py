@@ -33,6 +33,8 @@ validator = vr_mayaApi.createValidator("myTestChar")
 validator.addSourceNodes(sourceNodes, True)
 validator.to_fileJSON(filePath="C:/temp/testValidator.json")
 """
+
+
 def asSourceNode(nodeLongName, attributes=None, connections=False):
     # type: (str, list[str], bool, bool) -> SourceNode
 
@@ -50,11 +52,13 @@ def asSourceNode(nodeLongName, attributes=None, connections=False):
                                   longName=nodeLongName,
                                   validityNodes=validityNodes)
 
+    sourceNode.nameSpace = nodeLongName.split("|")[-1].split(":")[0]
+
     return sourceNode
 
 def cleanMayaLongName(nodeLongName):
     # type: (str) -> str
-    newName = nodeLongName.split("|")[-1].split(":")[-1]
+    newName = nodeLongName.split("|")[-1].split(":")[-1].split(".")[0]
 
     return newName
 
@@ -84,24 +88,40 @@ def connectionsToConnectionNodes(nodeLongName):
     # type: (str) -> ConnectionValidityNode
 
     # We list only the destinations of these attributes.
-    conns = cmds.listConnections(nodeLongName, c=True, source=False, destination=True, plugs=True)
+    conns = cmds.listConnections(nodeLongName,
+                                 connections=True,
+                                 source=False,
+                                 destination=True,
+                                 plugs=True,
+                                 skipConversionNodes=True)
     if conns is not None:
         for x in range(0, len(conns), 2):
             src = conns[x]
             dest = conns[x + 1]
-            srcAttributeName = src.split(".")[-1]
-            if srcAttributeName in c_const.MAYA_ATTRIBUTE_IGNORES:
-                continue
 
-            destShortName = cleanMayaLongName(dest)
-            destAttributeName = dest.split(".")[-1]
-            sourceNodeAttributeValue = cmds.getAttr(src)
-            destinationNodeAttributeValue = cmds.getAttr(dest)
+            srcShortNodeName = cleanMayaLongName(src)
+            srcFullAttributeName = ".".join(src.split(".")[1:])
+            srcShortAttributeName = src.split(".")[-1]
 
-            connectionNode = createConnectionValidityNode(name=destShortName,
-                                                          longName=dest,
-                                                          sourceNodeAttributeName=srcAttributeName,
+            destShortNodeName = cleanMayaLongName(dest)
+            destFullAttributeName = ".".join(dest.split(".")[1:])
+            destShortAttributeName = dest.split(".")[-1]
+
+            if not srcShortAttributeName in c_const.MAYA_DEFAULTVALUEATTRIBUTE_IGNORES:
+                sourceNodeAttributeValue = cmds.getAttr(src)
+            else:
+                sourceNodeAttributeValue = None
+
+            if not destShortAttributeName in c_const.MAYA_DEFAULTVALUEATTRIBUTE_IGNORES:
+                print(dest)
+                destinationNodeAttributeValue = cmds.getAttr(dest)
+            else:
+                destinationNodeAttributeValue = None
+
+            connectionNode = createConnectionValidityNode(name=destShortNodeName,
+                                                          longName=destShortNodeName,
+                                                          sourceNodeAttributeName=srcFullAttributeName,
                                                           sourceNodeAttributeValue=sourceNodeAttributeValue,
-                                                          desinationNodeAttributeName=destAttributeName,
+                                                          desinationNodeAttributeName=destFullAttributeName,
                                                           destinationNodeAttributeValue=destinationNodeAttributeValue)
             yield connectionNode

@@ -85,7 +85,7 @@ def exists(srcNodeName):
 ### VALIDATE
 def validateValidatorSourceNodes(validator):
     # type: (Validator) -> None
-    validator.status = vrc_constants.NODE_VALIDATION_FAILED
+    validator.status = vrc_constants.NODE_VALIDATION_PASSED
     for eachSourceNode in validator.iterSourceNodes():
         srcNodeName = eachSourceNode.longName
         if not exists(srcNodeName):
@@ -94,8 +94,8 @@ def validateValidatorSourceNodes(validator):
         connectionStatus = validateConnectionNodes(eachSourceNode)
 
         passed = all((defaultStatus, connectionStatus))
-        if passed:
-            validator.status = vrc_constants.NODE_VALIDATION_PASSED
+        if not passed:
+            validator.status = vrc_constants.NODE_VALIDATION_FAILED
 
 def validateDefaultNodes(sourceNode):
     # type: (SourceNode) -> bool
@@ -126,7 +126,7 @@ def validateConnectionNodes(sourceNode):
             continue
 
         sourceAttrName = "{}.{}".format(eachValidationNode.parent.longName, eachValidationNode.srcAttrName)
-        destAttrName = eachValidationNode.longName
+        destAttrName = "{}.{}".format(eachValidationNode.longName, eachValidationNode.destAttrName)
 
         result = cmds.isConnected(sourceAttrName, destAttrName)
         if not setValidationStatus(eachValidationNode, result):
@@ -179,7 +179,7 @@ def repairConnectionNodes(sourceNode):
             continue
 
         sourceAttrName = "{}.{}".format(eachValidationNode.parent.longName, eachValidationNode.srcAttrName)
-        destAttrName = eachValidationNode.longName
+        destAttrName = "{}.{}".format(eachValidationNode.longName, eachValidationNode.destAttrName)
 
         cmds.connectAttr(sourceAttrName, destAttrName, force=True)
         setValidationStatus(eachValidationNode, True)

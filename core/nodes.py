@@ -22,6 +22,7 @@ class Node(QtCore.QObject):
         self._nameSpace = self._longName.split("|")[-1].split(":")[0]
         self._showNameSpace = False
         self._displayName = self._name
+        self._nameSpace = ""
 
     @property
     def name(self):
@@ -89,8 +90,9 @@ class Node(QtCore.QObject):
     def updateNameSpaceInLongName(self, oldNameSpace, newNameSpace):
         # type: (str) -> None
         currentName = self.longName
-        currentName = currentName.replace(oldNameSpace, newNameSpace)
-        self.longName = currentName
+        if oldNameSpace in currentName:
+            currentName = currentName.replace(oldNameSpace, newNameSpace)
+            self.longName = currentName
 
     def setNameSpaceInDisplayName(self, show):
         # type: (bool) -> None

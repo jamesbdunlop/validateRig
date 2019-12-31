@@ -55,7 +55,6 @@ class ValidationUI(QtWidgets.QWidget):
 
         self.showLongName = QtWidgets.QRadioButton("Show LongName?")
         self.showLongName.setChecked(False)
-        self.showLongName.setAutoExclusive(False)
 
         self.showNamespace = QtWidgets.QRadioButton("Show nameSpace?")
         self.showNamespace.setChecked(False)
@@ -166,9 +165,10 @@ class ValidationUI(QtWidgets.QWidget):
                 treeWidgetItem.updateDisplayName()
 
     def __updateValidationStatus(self):
-        validators = list(self.__iterValidators())
         treeWidgets = list(self.__iterTreeWidgets())
 
+        # Iterthrough all the descendants of a SourceNode and if ANY of the children fail to pass validation set the
+        # rootTreeWidgetItem to fail and the validation status to failed.
         for x, eachValidationTreeWidget in enumerate(treeWidgets):
             topLevelItems = list(eachValidationTreeWidget.iterTopLevelTreeWidgetItems())
             for treeWidgetItem in topLevelItems:
@@ -180,10 +180,8 @@ class ValidationUI(QtWidgets.QWidget):
 
                 topLevelStatus = all(sourceNodeStatus)
                 treeWidgetItem.reportStatus = vrc_constants.NODE_VALIDATION_FAILED
-                validators[x].status = vrc_constants.NODE_VALIDATION_FAILED
                 if topLevelStatus:
                     treeWidgetItem.reportStatus = vrc_constants.NODE_VALIDATION_PASSED
-                    validators[x].status = vrc_constants.NODE_VALIDATION_PASSED
 
         self.__toggleFixAllButton()
 
@@ -278,6 +276,7 @@ class ValidationUI(QtWidgets.QWidget):
         self.showNamespace.toggled.connect(treeWidget.showNameSpace)
 
         self.fixAllButton.clicked.connect(validator.repairValidatorSourceNodes)
+        self.fixAllButton.clicked.connect(validator.validateValidatorSourceNodes)
         self.fixAllButton.clicked.connect(self.__updateValidationStatus)
 
         groupBoxName = data.get(c_serialization.KEY_VALIDATOR_NAME, "None")
