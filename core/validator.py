@@ -111,6 +111,11 @@ class Validator(QtCore.QObject):
 
         return False
 
+    def addSourceNodes(self, sourceNodes, force=False):
+        # type: (list[SourceNode], bool) -> None
+        for eachSourcenode in sourceNodes:
+            self.addSourceNode(eachSourcenode, force)
+
     def addSourceNodeFromData(self, data):
         # type: (dict) -> SourceNode
         sourceNode = SourceNode.fromData(data)

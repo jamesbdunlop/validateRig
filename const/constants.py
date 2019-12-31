@@ -38,7 +38,7 @@ for x, label in labels.items():
     HEADER_LABELS[x] = label
 
 
-MAYA_DEFAULTATTRLIST = [
+MAYA_DEFAULTATTRS = [
                         "translate",
                         "translateX",
                         "translateY",
@@ -59,3 +59,7 @@ MAYA_DEFAULTATTRLIST = [
                         "worldInverseMatrix",
                         "visibility",
                         ]
+
+MAYA_DEFAULTVALUEATTRIBUTE_IGNORES = [
+    "message"
+    ]

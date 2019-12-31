@@ -62,7 +62,7 @@ class ValidityNodeListWidget(QtWidgets.QWidget):
         for x in range(count):
             listWidgetItem = self._listWidget.item(x)
             listWidgetItem.setHidden(False)
-            if listWidgetItem.text() not in vrc_constants.MAYA_DEFAULTATTRLIST:
+            if listWidgetItem.text() not in vrc_constants.MAYA_DEFAULTATTRS:
                 listWidgetItem.setHidden(True)
 
         self.hideByCustomFiltersButton.setHidden(True)
