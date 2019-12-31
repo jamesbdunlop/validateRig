@@ -99,7 +99,6 @@ def connectionsToConnectionNodes(nodeLongName):
             src = conns[x]
             dest = conns[x + 1]
 
-            srcShortNodeName = cleanMayaLongName(src)
             srcFullAttributeName = ".".join(src.split(".")[1:])
             srcShortAttributeName = src.split(".")[-1]
 
