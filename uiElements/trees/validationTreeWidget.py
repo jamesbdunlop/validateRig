@@ -231,9 +231,6 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
             itemName = eachItem.data(0, QtCore.Qt.DisplayRole)
             cmds.select(itemName)
 
-        ValidationTreeWidget.mouseDoubleClickEvent(event)
-
-
 def getValidationTreeWidget(validator, parent):
     # type: (Validator, QtWidgets.QWidget) -> QtWidgets.QTreeWidget
     """
