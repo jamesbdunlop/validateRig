@@ -83,7 +83,7 @@ class Node(QtCore.QObject):
         # type: (str) -> None
         self._validationStatus = status
 
-    def __createNameSpacedName(self):
+    def createNameSpacedShortName(self):
         # type: () -> str
         ns = "{}:{}".format(self.nameSpace, self.name)
         return ns
@@ -91,15 +91,19 @@ class Node(QtCore.QObject):
     def updateNameSpaceInLongName(self):
         # type: (str) -> None
         longName = self.longName
-        splitPipe = longName.split("|")
-        splitNS = ["{}:{}".format(self.nameSpace, n.split(":")[-1]) for n in splitPipe if n]
-        newLongName = "|".join(splitNS)
+        if "|" in longName:
+            splitPipe = longName.split("|")[1:]
+            splitNS = ["{}:{}".format(self.nameSpace, n.split(":")[-1]) for n in splitPipe]
+            newLongName = "|{}".format("|".join(splitNS))
+        else:
+            newLongName = self.createNameSpacedShortName()
+
         self.longName = newLongName
 
     def setNameSpaceInDisplayName(self, show):
         # type: (bool) -> None
         if show:
-            self.displayName = self.__createNameSpacedName()
+            self.displayName = self.createNameSpacedShortName()
             self._showNameSpace = True
         else:
             self.displayName = self.name
@@ -111,7 +115,7 @@ class Node(QtCore.QObject):
             self.displayName = self.longName
             return
         elif not show and self._showNameSpace:
-            self.displayName = self.__createNameSpacedName()
+            self.displayName = self.createNameSpacedShortName()
             return
         else:
             self.displayName = self.name
@@ -224,6 +228,8 @@ class SourceNode(Node):
         """
         sourceNodeName = data.get(c_serialization.KEY_NODENAME, None)
         sourceNodeLongName = data.get(c_serialization.KEY_NODELONGNAME, None)
+        displayName = data.get(c_serialization.KEY_NODEDISPLAYNAME, "")
+        nameSpace = data.get(c_serialization.KEY_NODENAMESPACE, "")
         if sourceNodeName is None:
             raise KeyError("NoneType is not a valid sourceNodeName!")
 
@@ -235,7 +241,8 @@ class SourceNode(Node):
             for validityNodeData in serializedValidityNodes
         ]
         inst.addChildren(validityNodes)
-
+        inst.displayName = displayName
+        inst.nameSpace = nameSpace
         return inst
 
 
@@ -329,19 +336,24 @@ class ConnectionValidityNode(Node):
     @classmethod
     def fromData(cls, data, parent):
         name = data.get(c_serialization.KEY_NODENAME, "")
-        longname = data.get(c_serialization.KEY_NODELONGNAME, "")
+        longName = data.get(c_serialization.KEY_NODELONGNAME, "")
+        displayName = data.get(c_serialization.KEY_NODEDISPLAYNAME, "")
+        nameSpace = data.get(c_serialization.KEY_NODENAMESPACE, "")
 
-        inst = cls(name=name, longName=longname)
+        inst = cls(name=name, longName=longName)
         inst.srcAttrName = data.get(c_serialization.KEY_SRC_ATTRIBUTENAME, "na")
         inst.srcAttrValue = data.get(c_serialization.KEY_SRC_ATTRIBUTEVALUE, 0)
         inst.destAttrName = data.get(c_serialization.KEY_DEST_ATTRIBUTENAME, "na")
         inst.destAttrValue = data.get(c_serialization.KEY_DEST_ATTRIBUTEVALUE, 0)
 
+        inst.displayName = displayName
+        inst.nameSpace = nameSpace
+
         return inst
 
 
 class DefaultValueNode(Node):
-    def __init__(self, name, longName="", defaultValue=None, parent=None):
+    def __init__(self, name, longName, defaultValue=None, parent=None):
         # type: (str, str, any, Node) -> None
         super(DefaultValueNode, self).__init__(
             name=name,
@@ -370,7 +382,13 @@ class DefaultValueNode(Node):
     def fromData(cls, data, parent):
         # type: (dict, Node) -> DefaultValueNode
         name = data.get(c_serialization.KEY_NODENAME, "")
-        longname = data.get(c_serialization.KEY_NODELONGNAME, "")
+        longName = data.get(c_serialization.KEY_NODELONGNAME, "")
         value = data.get(c_serialization.KEY_DEFAULTVALUE, "")
+        displayName = data.get(c_serialization.KEY_NODEDISPLAYNAME, "")
+        nameSpace = data.get(c_serialization.KEY_NODENAMESPACE, "")
 
-        return cls(name=name, longName=longname, defaultValue=value, parent=parent)
+        inst = cls(name=name, longName=longName, defaultValue=value, parent=parent)
+        inst.displayName = displayName
+        inst.nameSpace = nameSpace
+
+        return inst

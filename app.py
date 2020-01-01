@@ -53,14 +53,18 @@ class ValidationUI(QtWidgets.QWidget):
         self.collapseAll = QtWidgets.QPushButton("collapse All")
         self.collapseAll.clicked.connect(self.__collapseAllTreeWidgets)
 
-        self.showLongName = QtWidgets.QRadioButton("Show LongName?")
+        self.showShortName = QtWidgets.QRadioButton("Show shortName")
+        self.showShortName.setChecked(True)
+
+        self.showLongName = QtWidgets.QRadioButton("Show LongName")
         self.showLongName.setChecked(False)
 
-        self.showNamespace = QtWidgets.QRadioButton("Show nameSpace?")
+        self.showNamespace = QtWidgets.QRadioButton("Show nameSpace")
         self.showNamespace.setChecked(False)
 
         self.treeButtons.addWidget(self.expandAll)
         self.treeButtons.addWidget(self.collapseAll)
+        self.treeButtons.addWidget(self.showShortName)
         self.treeButtons.addWidget(self.showLongName)
         self.treeButtons.addWidget(self.showNamespace)
         self.treeButtons.addStretch(1)
@@ -109,9 +113,12 @@ class ValidationUI(QtWidgets.QWidget):
         self.searchLabel = QtWidgets.QLabel("Search:")
         self.searchInput = QtWidgets.QLineEdit()
         self.searchInput.textChanged.connect(self.__filterTreeWidgetItems)
+        self.clearSearch = QtWidgets.QPushButton("Clear")
+        self.clearSearch.clicked.connect(self.__clearSearch)
 
         self.searchLayout.addWidget(self.searchLabel)
         self.searchLayout.addWidget(self.searchInput)
+        self.searchLayout.addWidget(self.clearSearch)
 
         # Layout
         self.subLayout01.addLayout(self.groupBoxesLayout)
@@ -151,6 +158,9 @@ class ValidationUI(QtWidgets.QWidget):
                             child.setHidden(False)
                             treeWidgetItem.setHidden(False)
 
+    def __clearSearch(self):
+        self.searchInput.setText("")
+
     def __toggleFixAllButton(self):
         self.fixAllButton.hide()
 
@@ -166,6 +176,12 @@ class ValidationUI(QtWidgets.QWidget):
                 node = treeWidgetItem.node()
                 node.nameSpace = nameSpace
                 treeWidgetItem.updateDisplayName()
+
+                for x in range(treeWidgetItem.childCount()):
+                    child = treeWidgetItem.child(x)
+                    childNode = child.node()
+                    childNode.nameSpace = nameSpace
+                    child.updateDisplayName()
 
     def __updateValidationStatus(self):
         treeWidgets = list(self.__iterTreeWidgets())
@@ -199,7 +215,10 @@ class ValidationUI(QtWidgets.QWidget):
     # UI Getters
     def __getNameSpaceFromScene(self):
         if inside.insideMaya():
-            self.namespaceInput.setText(cmds.ls(sl=True)[0].split(":")[0])
+            # Smelly find of NS from : in name.
+            firstSelected = cmds.ls(sl=True)[0]
+            if ":" in firstSelected:
+                self.namespaceInput.setText(cmds.ls(sl=True)[0].split(":")[0])
 
         self.__updateTreeWidgetItemsNameSpace()
 
@@ -344,6 +363,7 @@ class ValidationUI(QtWidgets.QWidget):
 
         self.showLongName.toggled.connect(treeWidget.showLongName)
         self.showNamespace.toggled.connect(treeWidget.showNameSpace)
+        self.showShortName.toggled.connect(treeWidget.showShortName)
 
         self.fixAllButton.clicked.connect(validator.repairValidatorSourceNodes)
         self.fixAllButton.clicked.connect(validator.validateValidatorSourceNodes)
@@ -375,7 +395,6 @@ class ValidationUI(QtWidgets.QWidget):
                 self._validators.remove((eachValidator, treeWidget))
                 groupBox.setParent(None)
                 del groupBox
-
 
     # Serialize
     def toData(self):

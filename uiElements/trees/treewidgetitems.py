@@ -1,6 +1,7 @@
 #  Copyright (c) 2019.  James Dunlop
 from PySide2 import QtWidgets, QtCore, QtGui
 from const import constants as vrc_constants
+from const import serialization as c_serialization
 from core.nodes import Node
 QTDISPLAYROLE = QtCore.Qt.DisplayRole
 
@@ -28,7 +29,16 @@ class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
         columnId = vrc_constants.SRC_NODENAME_COLUMN
         qtRole = QTDISPLAYROLE
         value = self.node().displayName
-        self.updateColumnData(columnId, qtRole, value)
+        if self.nodeType() == c_serialization.NT_SOURCENODE:
+            self.updateColumnData(columnId, qtRole, value)
+
+        if self.nodeType() == c_serialization.NT_CONNECTIONVALIDITY:
+            destNodeNameColId = vrc_constants.DEST_NODENAME_COLUMN
+            self.updateColumnData(destNodeNameColId, qtRole, value)
+
+        for x in range(self.childCount()):
+            childTWI = self.child(x)
+            childTWI.updateDisplayName()
 
     def toggleLongName(self, show):
         self.node().setLongNameInDisplayName(show)
@@ -36,6 +46,16 @@ class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
 
     def toggleNameSpace(self, show):
         self.node().setNameSpaceInDisplayName(show)
+        self.updateDisplayName()
+
+        for x in range(self.childCount()):
+            childTWI = self.child(x)
+            if childTWI.nodeType() == c_serialization.NT_CONNECTIONVALIDITY:
+                childTWI.node().setNameSpaceInDisplayName(show)
+                childTWI.updateDisplayName()
+
+    def toggleShortName(self):
+        self.node().displayName = self.node().name
         self.updateDisplayName()
 
     def updateColumnData(self, columnId, qtRole, value):
@@ -89,4 +109,3 @@ class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
             font2.setItalic(True)
             font2.setStrikeOut(True)
             self.setFont(vrc_constants.REPORTSTATUS_COLUMN, font2)
-

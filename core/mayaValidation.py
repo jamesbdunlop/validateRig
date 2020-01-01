@@ -134,7 +134,6 @@ def validateConnectionNodes(sourceNode):
 
         sourceAttrName = "{}.{}".format(eachValidationNode.parent.longName, eachValidationNode.srcAttrName)
         destAttrName = "{}.{}".format(eachValidationNode.longName, eachValidationNode.destAttrName)
-
         result = cmds.isConnected(sourceAttrName, destAttrName)
         if not setValidationStatus(eachValidationNode, result):
             passed = False

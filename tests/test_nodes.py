@@ -167,10 +167,6 @@ class Test_Nodes(unittest.TestCase):
         self.baseNode.setLongNameInDisplayName(show=False)
         self.assertEqual(self.baseNode.name, self.baseNode.displayName)
 
-    def test_updateNameSpaceInLongName(self):
-        self.baseNode.updateNameSpaceInLongName(self.nodeNameSpace, self.newNamespace)
-        self.assertEqual(self.newNodeLongName, self.baseNode.longName, "Failed to update namespace in longName")
-
     ## SOURCE NODE SPECIFIC
     def test_sourceNode_name(self):
         self.assertEqual(
@@ -253,6 +249,13 @@ class Test_Nodes(unittest.TestCase):
             self.connectionValidityNode.srcAttrValue,
             "srcAttrValue is not %s" % self.srcNodeAttrValue,
         )
+
+    def test_connectionValidityNode_namespaceChanges(self):
+        ns = "FuckingNameSpaces"
+        self.connectionValidityNode.nameSpace = ns
+        self.connectionValidityNode.setNameSpaceInDisplayName(True)
+        nsName = "{}:{}".format(ns, self.connectionValidityNode.name)
+        self.assertEqual(nsName, self.connectionValidityNode.displayName)
 
     ## DEFAULTVALUE NODE SPECIFIC
     def test_defaultValueNode_name(self):

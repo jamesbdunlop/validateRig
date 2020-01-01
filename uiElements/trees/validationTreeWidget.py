@@ -45,6 +45,13 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
 
         self.resizeColumnToContents(0)
 
+    def showShortName(self):
+        # type: (bool) -> None
+        for twi in self.iterTopLevelTreeWidgetItems():
+            twi.toggleShortName()
+
+        self.resizeColumnToContents(0)
+
     def iterTopLevelTreeWidgetItems(self):
         for x in range(self.topLevelItemCount()):
             treeWidgetItem = self.topLevelItem(x)
@@ -228,7 +235,9 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
 
         from maya import cmds
         for eachItem in self.selectedItems():
-            nodeType = eachItem.node().nodeType
+            node = eachItem.node()
+            nodeType = node.nodeType
+            namespace = node.nameSpace
             if nodeType == c_serialization.NT_SOURCENODE:
                 itemName = eachItem.data(0, QtCore.Qt.DisplayRole)
             elif nodeType == c_serialization.NT_CONNECTIONVALIDITY:
@@ -240,6 +249,9 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
                 itemName = ""
 
             modifier = event.modifiers()
+            if namespace not in itemName:
+                itemName = "{}:{}".format(namespace, itemName)
+
             if modifier == QtCore.Qt.ControlModifier:
                 cmds.select(itemName, add=True)
             else:

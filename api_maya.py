@@ -2,6 +2,10 @@
 from api import *
 from core import inside
 from const import constants as c_const
+import logging
+
+logger = logging.getLogger(__name__)
+
 if inside.insideMaya():
     from maya import cmds
 
@@ -52,9 +56,17 @@ def asSourceNode(nodeLongName, attributes=None, connections=False):
                                   longName=nodeLongName,
                                   validityNodes=validityNodes)
 
-    sourceNode.nameSpace = nodeLongName.split("|")[-1].split(":")[0]
+    namespace = getNamespaceFromLongName(nodeLongName)
+    sourceNode.nameSpace = namespace
 
     return sourceNode
+
+def getNamespaceFromLongName(nodeLongName):
+    namespace = ""
+    if ":" in nodeLongName:
+        namespace = nodeLongName.split("|")[-1].split(":")[0]
+    logger.debug("nameSpace: {}".format(namespace))
+    return namespace
 
 def cleanMayaLongName(nodeLongName):
     # type: (str) -> str
@@ -82,6 +94,9 @@ def __createDefaultValueNodes(nodeLongName, defaultAttributes):
                                                   longName=attrName,
                                                   defaultValue=attrValue
                                                   )
+        namespace = getNamespaceFromLongName(nodeLongName)
+        defaultValueNode.nameSpace = namespace
+
         yield defaultValueNode
 
 def __createConnectionNodes(nodeLongName):
@@ -99,12 +114,12 @@ def __createConnectionNodes(nodeLongName):
         for x in range(0, len(conns), 2):
             src = conns[x]
             dest = conns[x + 1]
-
+            namespace = getNamespaceFromLongName(nodeLongName)
             srcFullAttributeName = ".".join(src.split(".")[1:])
             srcShortAttributeName = src.split(".")[-1]
 
-            destShortNodeName = cleanMayaLongName(dest)
-            if cmds.nodeType(destShortNodeName) in c_const.MAYA_CONNECTED_NODETYPES_IGNORES:
+
+            if cmds.nodeType(dest) in c_const.MAYA_CONNECTED_NODETYPES_IGNORES:
                 continue
                 
             destFullAttributeName = ".".join(dest.split(".")[1:])
@@ -120,10 +135,13 @@ def __createConnectionNodes(nodeLongName):
             else:
                 destinationNodeAttributeValue = None
 
+            destShortNodeName = cleanMayaLongName(dest)
             connectionNode = createConnectionValidityNode(name=destShortNodeName,
                                                           longName=destShortNodeName,
                                                           sourceNodeAttributeName=srcFullAttributeName,
                                                           sourceNodeAttributeValue=sourceNodeAttributeValue,
                                                           desinationNodeAttributeName=destFullAttributeName,
                                                           destinationNodeAttributeValue=destinationNodeAttributeValue)
+            connectionNode.nameSpace = namespace
+
             yield connectionNode
