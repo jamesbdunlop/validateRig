@@ -228,8 +228,19 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
 
         from maya import cmds
         for eachItem in self.selectedItems():
-            itemName = eachItem.data(0, QtCore.Qt.DisplayRole)
+            nodeType = eachItem.node().nodeType
+            if nodeType == c_serialization.NT_SOURCENODE:
+                itemName = eachItem.data(0, QtCore.Qt.DisplayRole)
+            elif nodeType == c_serialization.NT_CONNECTIONVALIDITY:
+                itemName = eachItem.data(4, QtCore.Qt.DisplayRole)
+            elif nodeType == c_serialization.NT_DEFAULTVALUE:
+                sourceNodeTWI = eachItem.parent()
+                itemName = sourceNodeTWI.data(0, QtCore.Qt.DisplayRole)
+            else:
+                itemName = ""
+
             cmds.select(itemName)
+
 
 def getValidationTreeWidget(validator, parent):
     # type: (Validator, QtWidgets.QWidget) -> QtWidgets.QTreeWidget
@@ -257,7 +268,6 @@ def getValidationTreeWidget(validator, parent):
     treeWidget.resizeColumnToContents(0)
 
     return treeWidget
-
 
 def addValidityNodesToTreeWidgetItem(sourceNode, sourceNodeTreeWItm):
     # type: (Node, QtWidgets.QTreeWidgetItem) -> None
