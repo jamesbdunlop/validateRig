@@ -239,7 +239,11 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
             else:
                 itemName = ""
 
-            cmds.select(itemName)
+            modifier = event.modifiers()
+            if modifier == QtCore.Qt.ControlModifier:
+                cmds.select(itemName, add=True)
+            else:
+                cmds.select(itemName, r=True)
 
 
 def getValidationTreeWidget(validator, parent):
