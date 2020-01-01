@@ -41,10 +41,10 @@ def asSourceNode(nodeLongName, attributes=None, connections=False):
     validityNodes = list()
 
     if attributes is not None:
-        validityNodes += list(attributesToDefaultValueNodes(nodeLongName, attributes))
+        validityNodes += list(__createDefaultValueNodes(nodeLongName, attributes))
 
     if connections:
-        validityNodes += list(connectionsToConnectionNodes(nodeLongName))
+        validityNodes += list(__createConnectionNodes(nodeLongName))
 
     # Now the sourceNodes
     shortName = cleanMayaLongName(nodeLongName)
@@ -71,7 +71,7 @@ def getAttrValue(nodeLongName, attributeName):
 
     return attrName, value
 
-def attributesToDefaultValueNodes(nodeLongName, defaultAttributes):
+def __createDefaultValueNodes(nodeLongName, defaultAttributes):
     # type: (str, list[str]) -> DefaultValueNode
     for eachAttr in defaultAttributes:
         if eachAttr in c_const.MAYA_DEFAULTVALUEATTRIBUTE_IGNORES:
@@ -84,7 +84,7 @@ def attributesToDefaultValueNodes(nodeLongName, defaultAttributes):
                                                   )
         yield defaultValueNode
 
-def connectionsToConnectionNodes(nodeLongName):
+def __createConnectionNodes(nodeLongName):
     # type: (str) -> ConnectionValidityNode
 
     # We list only the destinations of these attributes.
