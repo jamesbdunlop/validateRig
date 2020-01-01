@@ -47,14 +47,14 @@ class Test_Validator(unittest.TestCase):
                     c_serialization.KEY_NODENAME: self.sourceNodeName,
                     c_serialization.KEY_NODELONGNAME: self.sourceNodeName,
                     c_serialization.KEY_NODEDISPLAYNAME: self.sourceNodeName,
-                    c_serialization.KEY_NODENAMESPACE: self.sourceNodeName,
+                    c_serialization.KEY_NODENAMESPACE: "",
                     c_serialization.KEY_NODETYPE: c_testdata.SRC_NODETYPE,
                     c_serialization.KEY_VAILIDITYNODES: [
                         {
                             c_serialization.KEY_NODENAME: self.connectionValidityNodeName,
                             c_serialization.KEY_NODELONGNAME: self.connectionValidityNodeName,
                             c_serialization.KEY_NODEDISPLAYNAME: self.connectionValidityNodeName,
-                            c_serialization.KEY_NODENAMESPACE: self.connectionValidityNodeName,
+                            c_serialization.KEY_NODENAMESPACE: "",
                             c_serialization.KEY_NODETYPE: c_testdata.VALIDITY_NODETYPE,
                             c_serialization.KEY_DEST_ATTRIBUTENAME: self.connectionValidityNodeAttrName,
                             c_serialization.KEY_DEST_ATTRIBUTEVALUE: self.connectionValidityNodeAttrValue,

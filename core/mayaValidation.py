@@ -2,13 +2,16 @@
 # pragma: no cover
 import logging
 from core import inside
-if inside.insideMaya():
-    from maya import cmds
 from const import serialization as c_serialization
 from const import constants as vrc_constants
+
+if inside.insideMaya():
+    from maya import cmds
+
 logger = logging.getLogger(__name__)
 
-
+##############################################
+# MAYA UTILS
 def getPlugValue(mplug):
     """
     :param mplug: MPlug
@@ -82,19 +85,23 @@ def exists(srcNodeName):
         return False
     return True
 
-### VALIDATE
+##############################################
+# VALIDATE
 def validateValidatorSourceNodes(validator):
     # type: (Validator) -> None
     validator.status = vrc_constants.NODE_VALIDATION_PASSED
     for eachSourceNode in validator.iterSourceNodes():
+        eachSourceNode.status = vrc_constants.NODE_VALIDATION_PASSED
         srcNodeName = eachSourceNode.longName
         if not exists(srcNodeName):
             continue
+
         defaultStatus = validateDefaultNodes(eachSourceNode)
         connectionStatus = validateConnectionNodes(eachSourceNode)
 
         passed = all((defaultStatus, connectionStatus))
         if not passed:
+            eachSourceNode.status = vrc_constants.NODE_VALIDATION_FAILED
             validator.status = vrc_constants.NODE_VALIDATION_FAILED
 
 def validateDefaultNodes(sourceNode):
@@ -134,7 +141,8 @@ def validateConnectionNodes(sourceNode):
 
     return passed
 
-### REPAIR
+##############################################
+# REPAIR
 def repairValidatorSourceNodes(validator):
     # type: (Validator) -> None
     for eachSourceNode in validator.iterSourceNodes():

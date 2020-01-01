@@ -65,3 +65,7 @@ MAYA_DEFAULTVALUEATTRIBUTE_IGNORES = [
     "controllerObject",
     "dependNode"
     ]
+
+MAYA_CONNECTED_NODETYPES_IGNORES = [
+    "nodeGraphEditorInfo"
+    ]

@@ -70,8 +70,14 @@ class ValidationUI(QtWidgets.QWidget):
         self.fixAllButton = QtWidgets.QPushButton("Fix All") # connected in __addValidationPairFromData
         self.fixAllButton.hide()
 
+        self.isolateFailedButton = QtWidgets.QRadioButton("Isolate Failed")
+        self.isolateFailedButton.setChecked(False)
+        self.isolateFailedButton.toggled.connect(self.__toggleIsolateFailed)
+        self.isolateFailedButton.setAutoExclusive(False)
+
         self.treeButtons.addWidget(self.runButton)
         self.treeButtons.addWidget(self.fixAllButton)
+        self.treeButtons.addWidget(self.isolateFailedButton)
 
         self.applicationButtonLayout = QtWidgets.QHBoxLayout()
         self.newButton = QtWidgets.QPushButton("New")
@@ -122,7 +128,6 @@ class ValidationUI(QtWidgets.QWidget):
         searchString = self.searchInput.text()
         for eachValidationTreeWidget in self.__iterTreeWidgets():
             topLevelItems = list(eachValidationTreeWidget.iterTopLevelTreeWidgetItems())
-
             for treeWidgetItem in topLevelItems:
                 node = treeWidgetItem.node()
                 if searchString not in node.displayName:
@@ -159,8 +164,6 @@ class ValidationUI(QtWidgets.QWidget):
             topLevelItems = list(eachValidationTreeWidget.iterTopLevelTreeWidgetItems())
             for treeWidgetItem in topLevelItems:
                 node = treeWidgetItem.node()
-                currentNS = node.nameSpace
-                node.updateNameSpaceInLongName(currentNS, nameSpace)
                 node.nameSpace = nameSpace
                 treeWidgetItem.updateDisplayName()
 
@@ -220,6 +223,18 @@ class ValidationUI(QtWidgets.QWidget):
         for _, treeWidget in self._validators:
             yield treeWidget
 
+    def __toggleIsolateFailed(self, sender):
+        treeWidgets = list(self.__iterTreeWidgets())
+        for eachTWI in treeWidgets:
+            topLevelItems = list(eachTWI.iterTopLevelTreeWidgetItems())
+            for treeWidgetItem in topLevelItems:
+                if not sender:
+                    treeWidgetItem.setHidden(False)
+                    continue
+
+                if treeWidgetItem.node().status == vrc_constants.NODE_VALIDATION_PASSED and sender:
+                    treeWidgetItem.setHidden(True)
+
     # UI Dialogs
     def __saveDialog(self):
         """Writes to disk all the validation data for each validation treeWidget added to the UI"""
@@ -257,54 +272,6 @@ class ValidationUI(QtWidgets.QWidget):
     def processJSONDrop(self, sender):
         data = c_parser.read(sender.mimeData().text().replace("file:///", ""))
         self.__addValidationPairFromData(data)
-
-    # App Create from
-    def __addValidationPairFromData(self, data, expanded=False, depth=0):
-        # type: (dict, bool) -> None
-        """
-        Sets up a new validator/treeWidget pair from the validation data and connects the validator to the global RUN button
-
-        :param data: Validation data
-        """
-        validator, treeWidget = self.__createValidatorTreeWidgetPair(data)
-
-        # Connect to main UI
-        self.runButton.clicked.connect(validator.validateValidatorSourceNodes)
-        self.runButton.clicked.connect(self.__updateValidationStatus)
-
-        self.showLongName.toggled.connect(treeWidget.showLongName)
-        self.showNamespace.toggled.connect(treeWidget.showNameSpace)
-
-        self.fixAllButton.clicked.connect(validator.repairValidatorSourceNodes)
-        self.fixAllButton.clicked.connect(validator.validateValidatorSourceNodes)
-        self.fixAllButton.clicked.connect(self.__updateValidationStatus)
-
-        groupBoxName = data.get(c_serialization.KEY_VALIDATOR_NAME, "None")
-        self.__createValidationGroupBox(name=groupBoxName, treeWidget=treeWidget)
-
-        if expanded:
-            treeWidget.expandToDepth(depth)
-
-    def __createValidationGroupBox(self, name, treeWidget):
-        # type: (str, uit_validationTreeWidget.ValidationTreeWidget) -> QtWidgets.QGroupBox
-
-        # Validator GBox and treeWidget as child
-        groupBox = QtWidgets.QGroupBox(name)
-        groupBoxLayout = QtWidgets.QVBoxLayout(groupBox)
-        groupBoxLayout.addWidget(treeWidget)
-        self.groupBoxesLayout.addWidget(groupBox)
-
-        return groupBox
-
-    def __removeValidatorFromUI(self, validatorList):
-        # type: (list) -> None
-        """:param validatorList: [Validator, GroupBox]"""
-        validator, groupBox = validatorList
-        for eachValidator, treeWidget in self._validators:
-            if validator.name == eachValidator.name:
-                self._validators.remove((eachValidator, treeWidget))
-                groupBox.setParent(None)
-                del groupBox
 
     # App Creators
     def __createValidatorTreeWidgetPair(self, data):
@@ -360,6 +327,55 @@ class ValidationUI(QtWidgets.QWidget):
         # type: (str) -> None
         validatorData = c_validator.Validator(name=name).toData()
         self.__addValidationPairFromData(data=validatorData)
+
+    # App Create from
+    def __addValidationPairFromData(self, data, expanded=False, depth=0):
+        # type: (dict, bool) -> None
+        """
+        Sets up a new validator/treeWidget pair from the validation data and connects the validator to the global RUN button
+
+        :param data: Validation data
+        """
+        validator, treeWidget = self.__createValidatorTreeWidgetPair(data)
+
+        # Connect to main UI
+        self.runButton.clicked.connect(validator.validateValidatorSourceNodes)
+        self.runButton.clicked.connect(self.__updateValidationStatus)
+
+        self.showLongName.toggled.connect(treeWidget.showLongName)
+        self.showNamespace.toggled.connect(treeWidget.showNameSpace)
+
+        self.fixAllButton.clicked.connect(validator.repairValidatorSourceNodes)
+        self.fixAllButton.clicked.connect(validator.validateValidatorSourceNodes)
+        self.fixAllButton.clicked.connect(self.__updateValidationStatus)
+
+        groupBoxName = data.get(c_serialization.KEY_VALIDATOR_NAME, "None")
+        self.__createValidationGroupBox(name=groupBoxName, treeWidget=treeWidget)
+
+        if expanded:
+            treeWidget.expandToDepth(depth)
+
+    def __createValidationGroupBox(self, name, treeWidget):
+        # type: (str, uit_validationTreeWidget.ValidationTreeWidget) -> QtWidgets.QGroupBox
+
+        # Validator GBox and treeWidget as child
+        groupBox = QtWidgets.QGroupBox(name)
+        groupBoxLayout = QtWidgets.QVBoxLayout(groupBox)
+        groupBoxLayout.addWidget(treeWidget)
+        self.groupBoxesLayout.addWidget(groupBox)
+
+        return groupBox
+
+    def __removeValidatorFromUI(self, validatorList):
+        # type: (list) -> None
+        """:param validatorList: [Validator, GroupBox]"""
+        validator, groupBox = validatorList
+        for eachValidator, treeWidget in self._validators:
+            if validator.name == eachValidator.name:
+                self._validators.remove((eachValidator, treeWidget))
+                groupBox.setParent(None)
+                del groupBox
+
 
     # Serialize
     def toData(self):

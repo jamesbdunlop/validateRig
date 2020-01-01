@@ -41,6 +41,7 @@ class Node(QtCore.QObject):
     def nameSpace(self, nameSpace):
         # type: (str) -> None
         self._nameSpace = nameSpace
+        self.updateNameSpaceInLongName()
 
     @property
     def displayName(self):
@@ -87,12 +88,13 @@ class Node(QtCore.QObject):
         ns = "{}:{}".format(self.nameSpace, self.name)
         return ns
 
-    def updateNameSpaceInLongName(self, oldNameSpace, newNameSpace):
+    def updateNameSpaceInLongName(self):
         # type: (str) -> None
-        currentName = self.longName
-        if oldNameSpace in currentName:
-            currentName = currentName.replace(oldNameSpace, newNameSpace)
-            self.longName = currentName
+        longName = self.longName
+        splitPipe = longName.split("|")
+        splitNS = ["{}:{}".format(self.nameSpace, n.split(":")[-1]) for n in splitPipe if n]
+        newLongName = "|".join(splitNS)
+        self.longName = newLongName
 
     def setNameSpaceInDisplayName(self, show):
         # type: (bool) -> None
@@ -264,12 +266,10 @@ class ConnectionValidityNode(Node):
             nodeType=c_serialization.NT_CONNECTIONVALIDITY,
         )
 
-        # Set using the setters!
         self._destAttrName = ""
         self._destAttrValue = ""
         self._srcAttrName = ""
         self._srcAttrValue = ""
-        self._status = False  # This is the report status if it passed or failed the validation test
 
     @property
     def destAttrName(self):

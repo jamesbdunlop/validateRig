@@ -94,6 +94,7 @@ def connectionsToConnectionNodes(nodeLongName):
                                  destination=True,
                                  plugs=True,
                                  skipConversionNodes=True)
+
     if conns is not None:
         for x in range(0, len(conns), 2):
             src = conns[x]
@@ -103,6 +104,9 @@ def connectionsToConnectionNodes(nodeLongName):
             srcShortAttributeName = src.split(".")[-1]
 
             destShortNodeName = cleanMayaLongName(dest)
+            if cmds.nodeType(destShortNodeName) in c_const.MAYA_CONNECTED_NODETYPES_IGNORES:
+                continue
+                
             destFullAttributeName = ".".join(dest.split(".")[1:])
             destShortAttributeName = dest.split(".")[-1]
 
