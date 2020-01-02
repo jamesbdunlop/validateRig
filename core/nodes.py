@@ -100,25 +100,13 @@ class Node(QtCore.QObject):
 
         self.longName = newLongName
 
-    def setNameSpaceInDisplayName(self, show):
+    def setNameSpaceInDisplayName(self):
         # type: (bool) -> None
-        if show:
-            self.displayName = self.createNameSpacedShortName()
-            self._showNameSpace = True
-        else:
-            self.displayName = self.name
-            self._showNameSpace = False
+        self.displayName = self.createNameSpacedShortName()
 
-    def setLongNameInDisplayName(self, show):
+    def setLongNameInDisplayName(self):
         # type: (bool) -> None
-        if show:
-            self.displayName = self.longName
-            return
-        elif not show and self._showNameSpace:
-            self.displayName = self.createNameSpacedShortName()
-            return
-        else:
-            self.displayName = self.name
+        self.displayName = self.longName
 
     def addChild(self, node):
         # type: (Node) -> None

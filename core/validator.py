@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 class Validator(QtCore.QObject):
     validate = Signal(QtCore.QObject)
     repair = Signal(QtCore.QObject)
+    namespaceChanged = Signal(str)
+    displayNameChanged = Signal(bool)
 
     def __init__(self, name, namespace="", nodes=None):
         # type: (str, str, list) -> None
@@ -25,6 +27,7 @@ class Validator(QtCore.QObject):
             nodes or list()
         )  # list of SourceNodes with ConnectionValidityNodes
         self._status = vrc_constants.NODE_VALIDATION_PASSED
+        self.namespaceChanged.connect(self.updateSourceNodesNameSpace)
 
     @property
     def name(self):
@@ -47,6 +50,40 @@ class Validator(QtCore.QObject):
     def namespace(self, namespace):
         # type: (str) -> None
         self._namespace = namespace
+        self.namespaceChanged.emit(namespace)
+
+    def updateSourceNodesNameSpace(self, nameSpace):
+        # type: (str) -> None
+        for eachSrcNode in self.iterSourceNodes():
+            eachSrcNode.nameSpace = nameSpace
+            for eachChild in eachSrcNode.iterDescendants():
+                eachChild.nameSpace = nameSpace
+
+    def setDisplayNameToLongName(self):
+        for eachSrcNode in self.iterSourceNodes():
+            eachSrcNode.setLongNameInDisplayName()
+            for eachChild in eachSrcNode.iterDescendants():
+                eachChild.setLongNameInDisplayName()
+
+        self.displayNameChanged.emit(True)
+
+    def setDisplayNameToIncludeNameSpace(self):
+        for eachSrcNode in self.iterSourceNodes():
+            eachSrcNode.setNameSpaceInDisplayName()
+            for eachChild in eachSrcNode.iterDescendants():
+                if eachChild.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
+                    eachChild.setNameSpaceInDisplayName()
+
+        self.displayNameChanged.emit(True)
+
+    def setDisplayNameToShortName(self):
+        for eachSrcNode in self.iterSourceNodes():
+            eachSrcNode.displayName = eachSrcNode.name
+            for eachChild in eachSrcNode.iterDescendants():
+                if eachChild.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
+                    eachChild.displayName = eachChild.name
+
+        self.displayNameChanged.emit(True)
 
     @property
     def status(self):

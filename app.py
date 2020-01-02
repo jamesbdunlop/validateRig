@@ -100,7 +100,7 @@ class ValidationUI(QtWidgets.QWidget):
         self.namespaceLayout = QtWidgets.QHBoxLayout()
         self.namespaceLabel = QtWidgets.QLabel("Use Custom Namespace:")
         self.namespaceInput = QtWidgets.QLineEdit()
-        self.namespaceInput.textChanged.connect(self.__updateTreeWidgetItemsNameSpace)
+        self.namespaceInput.textChanged.connect(self.__updateValidatorsNameSpace)
 
         self.namespaceFromDCC = QtWidgets.QPushButton("Assign from scene")
         self.namespaceFromDCC.clicked.connect(self.__getNameSpaceFromScene)
@@ -168,21 +168,6 @@ class ValidationUI(QtWidgets.QWidget):
             if eachValidator.failed:
                 self.fixAllButton.show()
 
-    def __updateTreeWidgetItemsNameSpace(self):
-        nameSpace = self.namespaceInput.text()
-        for eachValidationTreeWidget in self.__iterTreeWidgets():
-            topLevelItems = list(eachValidationTreeWidget.iterTopLevelTreeWidgetItems())
-            for treeWidgetItem in topLevelItems:
-                node = treeWidgetItem.node()
-                node.nameSpace = nameSpace
-                treeWidgetItem.updateDisplayName()
-
-                for x in range(treeWidgetItem.childCount()):
-                    child = treeWidgetItem.child(x)
-                    childNode = child.node()
-                    childNode.nameSpace = nameSpace
-                    child.updateDisplayName()
-
     def __updateValidationStatus(self):
         treeWidgets = list(self.__iterTreeWidgets())
 
@@ -204,6 +189,25 @@ class ValidationUI(QtWidgets.QWidget):
 
         self.__toggleFixAllButton()
 
+    def __updateValidatorsNameSpace(self):
+        nameSpace = self.namespaceInput.text()
+        for eachValidator in self.__iterValidators():
+            eachValidator.namespace = nameSpace
+
+    def __updateTreeWidgetDisplayNames(self):
+        # Connected to via the signals from the validator if nameSpace or displayName change on the validator
+        # in __addValidationPairFromData
+        for eachValidationTreeWidget in self.__iterTreeWidgets():
+            topLevelItems = list(eachValidationTreeWidget.iterTopLevelTreeWidgetItems())
+            for treeWidgetItem in topLevelItems:
+                treeWidgetItem.updateDisplayName()
+
+                for x in range(treeWidgetItem.childCount()):
+                    child = treeWidgetItem.child(x)
+                    child.updateDisplayName()
+
+            eachValidationTreeWidget.resizeColumnToContents(0)
+
     def __expandAllTreeWidgets(self):
         for _, treeWidget in self._validators:
             treeWidget.expandAll()
@@ -220,7 +224,7 @@ class ValidationUI(QtWidgets.QWidget):
             if ":" in firstSelected:
                 self.namespaceInput.setText(cmds.ls(sl=True)[0].split(":")[0])
 
-        self.__updateTreeWidgetItemsNameSpace()
+        self.__updateValidatorsNameSpace()
 
     # UI Search
     def __findValidatorByName(self, name):
@@ -361,13 +365,16 @@ class ValidationUI(QtWidgets.QWidget):
         self.runButton.clicked.connect(validator.validateValidatorSourceNodes)
         self.runButton.clicked.connect(self.__updateValidationStatus)
 
-        self.showLongName.toggled.connect(treeWidget.showLongName)
-        self.showNamespace.toggled.connect(treeWidget.showNameSpace)
-        self.showShortName.toggled.connect(treeWidget.showShortName)
+        self.showLongName.toggled.connect(validator.setDisplayNameToLongName)
+        self.showNamespace.toggled.connect(validator.setDisplayNameToIncludeNameSpace)
+        self.showShortName.toggled.connect(validator.setDisplayNameToShortName)
 
         self.fixAllButton.clicked.connect(validator.repairValidatorSourceNodes)
         self.fixAllButton.clicked.connect(validator.validateValidatorSourceNodes)
         self.fixAllButton.clicked.connect(self.__updateValidationStatus)
+
+        validator.displayNameChanged.connect(self.__updateTreeWidgetDisplayNames)
+        validator.namespaceChanged.connect(self.__updateTreeWidgetDisplayNames)
 
         groupBoxName = data.get(c_serialization.KEY_VALIDATOR_NAME, "None")
         self.__createValidationGroupBox(name=groupBoxName, treeWidget=treeWidget)

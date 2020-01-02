@@ -40,24 +40,6 @@ class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
             childTWI = self.child(x)
             childTWI.updateDisplayName()
 
-    def toggleLongName(self, show):
-        self.node().setLongNameInDisplayName(show)
-        self.updateDisplayName()
-
-    def toggleNameSpace(self, show):
-        self.node().setNameSpaceInDisplayName(show)
-        self.updateDisplayName()
-
-        for x in range(self.childCount()):
-            childTWI = self.child(x)
-            if childTWI.nodeType() == c_serialization.NT_CONNECTIONVALIDITY:
-                childTWI.node().setNameSpaceInDisplayName(show)
-                childTWI.updateDisplayName()
-
-    def toggleShortName(self):
-        self.node().displayName = self.node().name
-        self.updateDisplayName()
-
     def updateColumnData(self, columnId, qtRole, value):
         # type: (int, QtCore.Qt.DisplayRole, str) -> None
         self.setData(columnId, qtRole, value)
