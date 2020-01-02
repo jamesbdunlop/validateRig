@@ -67,5 +67,7 @@ MAYA_DEFAULTVALUEATTRIBUTE_IGNORES = [
     ]
 
 MAYA_CONNECTED_NODETYPES_IGNORES = [
-    "nodeGraphEditorInfo"
+    "nodeGraphEditorInfo",
+    "container",
+    "hyperLayout"
     ]

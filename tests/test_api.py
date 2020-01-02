@@ -29,7 +29,10 @@ class Test_Validator(unittest.TestCase):
         self.assertIsInstance(validator, c_validator.Validator)
 
     def test_createValidatorNameAsList(self):
-        self.assertRaises(TypeError, validationAPI.createValidator(name=[self.validatorName], data=None))
+        self.assertRaises(
+            TypeError,
+            validationAPI.createValidator(name=[self.validatorName], data=None),
+        )
 
     def test_createSourceNode(self):
         sourceNode = validationAPI.createSourceNode(
@@ -58,9 +61,13 @@ class Test_Validator(unittest.TestCase):
 
     def test_toFile(self):
         validator = validationAPI.createValidator(name=self.validatorName)
-        self.assertTrue(validationAPI.saveValidatorsToFile(validators=[validator], filepath="C:/temp/test.json"))
+        self.assertTrue(
+            validationAPI.saveValidatorsToFile(
+                validators=[validator], filepath="C:/temp/test.json"
+            )
+        )
 
 
-if __name__ == "__main__": # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     runner = unittest.TextTestRunner()
     runner.run(unittest.TestSuite())

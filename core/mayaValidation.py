@@ -79,11 +79,13 @@ def getPlugValue(mplug):
     elif apiType == om2.MFn.kEnumAttribute:
         return mplug.asInt()
 
+
 def exists(srcNodeName):
     if not cmds.objExists(srcNodeName):
         logger.error("Failed to find sourceNode %s in scene!" % srcNodeName)
         return False
     return True
+
 
 ##############################################
 # VALIDATE
@@ -104,6 +106,7 @@ def validateValidatorSourceNodes(validator):
             eachSourceNode.status = vrc_constants.NODE_VALIDATION_FAILED
             validator.status = vrc_constants.NODE_VALIDATION_FAILED
 
+
 def validateDefaultNodes(sourceNode):
     # type: (SourceNode) -> bool
     passed = True
@@ -111,9 +114,10 @@ def validateDefaultNodes(sourceNode):
         if eachValidationNode.nodeType != c_serialization.NT_DEFAULTVALUE:
             continue
 
-
         defaultNodeValue = eachValidationNode.defaultValue
-        attrName = "{}.{}".format(eachValidationNode.parent.longName, eachValidationNode.name)
+        attrName = "{}.{}".format(
+            eachValidationNode.parent.longName, eachValidationNode.name
+        )
         if isinstance(defaultNodeValue, list):
             attrValue = list(cmds.getAttr(attrName)[0])
         else:
@@ -125,6 +129,7 @@ def validateDefaultNodes(sourceNode):
 
     return passed
 
+
 def validateConnectionNodes(sourceNode):
     # type: (SourceNode) -> bool
     passed = True
@@ -132,13 +137,18 @@ def validateConnectionNodes(sourceNode):
         if eachValidationNode.nodeType != c_serialization.NT_CONNECTIONVALIDITY:
             continue
 
-        sourceAttrName = "{}.{}".format(eachValidationNode.parent.longName, eachValidationNode.srcAttrName)
-        destAttrName = "{}.{}".format(eachValidationNode.longName, eachValidationNode.destAttrName)
+        sourceAttrName = "{}.{}".format(
+            eachValidationNode.parent.longName, eachValidationNode.srcAttrName
+        )
+        destAttrName = "{}.{}".format(
+            eachValidationNode.longName, eachValidationNode.destAttrName
+        )
         result = cmds.isConnected(sourceAttrName, destAttrName)
         if not setValidationStatus(eachValidationNode, result):
             passed = False
 
     return passed
+
 
 ##############################################
 # REPAIR
@@ -158,6 +168,7 @@ def repairValidatorSourceNodes(validator):
         else:
             validator.status = vrc_constants.NODE_VALIDATION_PASSED
 
+
 def repairDefaultNodes(sourceNode):
     # type: (SourceNode) -> bool
     for eachValidationNode in sourceNode.iterDescendants():
@@ -169,13 +180,16 @@ def repairDefaultNodes(sourceNode):
         sourceAttrName = eachValidationNode.longName
         defaultValue = eachValidationNode.defaultValue
         if isinstance(defaultValue, list):
-            cmds.setAttr(sourceAttrName, defaultValue[0], defaultValue[1], defaultValue[2])
+            cmds.setAttr(
+                sourceAttrName, defaultValue[0], defaultValue[1], defaultValue[2]
+            )
         else:
             cmds.setAttr(sourceAttrName, eachValidationNode.defaultValue)
 
         setValidationStatus(eachValidationNode, True)
 
     return True
+
 
 def repairConnectionNodes(sourceNode):
     # type: (SourceNode) -> bool
@@ -185,13 +199,18 @@ def repairConnectionNodes(sourceNode):
         if eachValidationNode.status == vrc_constants.NODE_VALIDATION_PASSED:
             continue
 
-        sourceAttrName = "{}.{}".format(eachValidationNode.parent.longName, eachValidationNode.srcAttrName)
-        destAttrName = "{}.{}".format(eachValidationNode.longName, eachValidationNode.destAttrName)
+        sourceAttrName = "{}.{}".format(
+            eachValidationNode.parent.longName, eachValidationNode.srcAttrName
+        )
+        destAttrName = "{}.{}".format(
+            eachValidationNode.longName, eachValidationNode.destAttrName
+        )
 
         cmds.connectAttr(sourceAttrName, destAttrName, force=True)
         setValidationStatus(eachValidationNode, True)
 
     return True
+
 
 def setValidationStatus(validationNode, result):
     # type: (ValidationNode, bool) -> bool

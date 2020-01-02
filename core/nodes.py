@@ -93,10 +93,12 @@ class Node(QtCore.QObject):
         longName = self.longName
         if "|" in longName:
             splitPipe = longName.split("|")[1:]
-            splitNS = ["{}:{}".format(self.nameSpace, n.split(":")[-1]) for n in splitPipe]
+            splitNS = [
+                "{}:{}".format(self.nameSpace, n.split(":")[-1]) for n in splitPipe
+            ]
             newLongName = "|{}".format("|".join(splitNS))
         else:
-            newLongName = self.createNameSpacedShortName()
+            newLongName = self.longName
 
         self.longName = newLongName
 
@@ -163,12 +165,9 @@ class Node(QtCore.QObject):
         return inst
 
     def __repr__(self):
-        return "shortName: %s\nlongName: %s\ndisplayName: %s\nnodeType: %s\nstatus: %s" % (
-            self.name,
-            self.longName,
-            self.displayName,
-            self.nodeType,
-            self.status,
+        return (
+            "shortName: %s\nlongName: %s\ndisplayName: %s\nnodeType: %s\nstatus: %s"
+            % (self.name, self.longName, self.displayName, self.nodeType, self.status,)
         )
 
 
@@ -181,7 +180,10 @@ class SourceNode(Node):
             validityNodes: list of nodes [ValidityNode,ValidityNode]
         """
         super(SourceNode, self).__init__(
-            name=name, longName=longName, nodeType=c_serialization.NT_SOURCENODE, parent=parent,
+            name=name,
+            longName=longName,
+            nodeType=c_serialization.NT_SOURCENODE,
+            parent=parent,
         )
         self._children = validityNodes or list()
 

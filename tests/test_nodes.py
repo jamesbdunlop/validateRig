@@ -14,9 +14,9 @@ class Test_Nodes(unittest.TestCase):
     def setUp(self):
         self.nodeName = c_testData.NODENAME
         self.nodeNameSpace = "myNameSpace"
-        self.nodeLongName = "|{}:{}".format(self.nodeNameSpace,self.nodeName)
+        self.nodeLongName = "|{}:{}".format(self.nodeNameSpace, self.nodeName)
         self.newNamespace = "fart"
-        self.newNodeLongName = "|{}:{}".format(self.newNamespace,self.nodeName)
+        self.newNodeLongName = "|{}:{}".format(self.newNamespace, self.nodeName)
 
         self.baseNode = c_nodes.Node(name=self.nodeName, longName=self.nodeLongName)
         #######################################
@@ -147,25 +147,15 @@ class Test_Nodes(unittest.TestCase):
     def test_node_setNameSpaceInDisplayName(self):
         self.baseNode.nameSpace = self.nodeNameSpace
         namespacedname = "{}:{}".format(self.baseNode.nameSpace, self.baseNode.name)
-        self.baseNode.setNameSpaceInDisplayName(show=True)
+        self.baseNode.setNameSpaceInDisplayName()
         displayName = self.baseNode.displayName
         self.assertEqual(
             namespacedname, displayName, "{} != {}".format(namespacedname, displayName)
         )
 
-        self.baseNode.setNameSpaceInDisplayName(show=False)
-        nodeName = self.baseNode.name
-        displayName = self.baseNode.displayName
-        self.assertEqual(
-            nodeName, displayName, "{} != {}".format(nodeName, displayName)
-        )
-
     def test_node_setLongNameInDisplayName(self):
-        self.baseNode.setLongNameInDisplayName(show=True)
+        self.baseNode.setLongNameInDisplayName()
         self.assertEqual(self.baseNode.displayName, self.baseNode.longName)
-
-        self.baseNode.setLongNameInDisplayName(show=False)
-        self.assertEqual(self.baseNode.name, self.baseNode.displayName)
 
     ## SOURCE NODE SPECIFIC
     def test_sourceNode_name(self):
@@ -203,7 +193,9 @@ class Test_Nodes(unittest.TestCase):
 
         with self.assertRaises(KeyError) as context:
             c = c_nodes.SourceNode.fromData({})
-        self.assertTrue('NoneType is not a valid sourceNodeName!' in str(context.exception))
+        self.assertTrue(
+            "NoneType is not a valid sourceNodeName!" in str(context.exception)
+        )
 
     def test_sourceNode_toData(self):
         self.assertEqual(

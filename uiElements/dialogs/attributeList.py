@@ -108,7 +108,9 @@ class BaseSourceNodeValidityNodesSelector(QtWidgets.QWidget):
         mainGroupBoxLayout = QtWidgets.QHBoxLayout(mainGroupBox)
         mainGroupBoxLayoutSplitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal, None)
         mainGroupBoxLayoutSplitter.setStretchFactor(1, 1)
-        mainGroupBoxLayoutSplitter.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        mainGroupBoxLayoutSplitter.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+        )
 
         # Default Values
         defaultValuesGroupBox = QtWidgets.QGroupBox("Default Values")
@@ -122,7 +124,9 @@ class BaseSourceNodeValidityNodesSelector(QtWidgets.QWidget):
         defaultValuesGroupBoxlayout.addWidget(self.defaultValuesListWidget)
 
         # Connections
-        connectionsGroupBox = QtWidgets.QGroupBox("Connections") # we hide this when showing only the one in the list all
+        connectionsGroupBox = QtWidgets.QGroupBox(
+            "Connections"
+        )  # we hide this when showing only the one in the list all
         connectionsGroupBoxLayout = QtWidgets.QVBoxLayout(connectionsGroupBox)
         self.connsListWidget = ui_validityNodeListWidget.ValidityNodeListWidget()
         self.connsListWidget.setSelectionMode(
@@ -159,7 +163,9 @@ class BaseSourceNodeValidityNodesSelector(QtWidgets.QWidget):
     @classmethod
     def fromSourceNode(cls, sourceNode, parent=None):
         # type: (SourceNode, QtWidgets.QWidget) -> BaseSourceNodeValidityNodesSelector
-        return cls(longNodeName=sourceNode.longName, sourceNode=sourceNode, parent=parent)
+        return cls(
+            longNodeName=sourceNode.longName, sourceNode=sourceNode, parent=parent
+        )
 
 
 class MayaValidityNodesSelector(BaseSourceNodeValidityNodesSelector):
@@ -212,7 +218,9 @@ class MayaValidityNodesSelector(BaseSourceNodeValidityNodesSelector):
                 for n in self.sourceNode().iterChildren()
                 if isinstance(n, ConnectionValidityNode)
             ]:
-                items = self.connsListWidget.findItems(nodeDisplayName, QtCore.Qt.MatchExactly)
+                items = self.connsListWidget.findItems(
+                    nodeDisplayName, QtCore.Qt.MatchExactly
+                )
                 for eachItem in items:
                     if not self.connsListWidget.isItemSelected(eachItem):
                         self.connsListWidget.setItemSelected(eachItem, True)
@@ -228,7 +236,9 @@ class MayaValidityNodesSelector(BaseSourceNodeValidityNodesSelector):
         nodes = list()
         for eachAttr in defaultValuesListWidget.selectedItems():
             value = cmds.getAttr("{}.{}".format(longNodeName, eachAttr.text()))
-            dvNode = DefaultValueNode(name=eachAttr.text(), longName=longNodeName, defaultValue=value)
+            dvNode = DefaultValueNode(
+                name=eachAttr.text(), longName=longNodeName, defaultValue=value
+            )
 
             if self.sourceNode() is None:
                 nodes.append(dvNode)
@@ -304,7 +314,9 @@ class MayaValidityNodesSelector(BaseSourceNodeValidityNodesSelector):
 
         if self.sourceNode() is None:
             return SourceNode(
-                name=longNodeName.split("|")[-1].split(":")[-1], longName=longNodeName, validityNodes=validityNodes
+                name=longNodeName.split("|")[-1].split(":")[-1],
+                longName=longNodeName,
+                validityNodes=validityNodes,
             )
         else:
             self.sourceNode().addChildren(validityNodes)

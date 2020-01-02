@@ -10,6 +10,7 @@ def createValidator(name, data=None):
     validator = c_validator.createValidator(name=name, data=data)
     return validator
 
+
 def createSourceNode(name, longName, validityNodes=None):
     # type: (str, str, list[DefaultValueNode, ConnectionValidityNode]) -> None
     """
@@ -18,10 +19,12 @@ def createSourceNode(name, longName, validityNodes=None):
     node = SourceNode(name=name, longName=longName, validityNodes=validityNodes)
     return node
 
+
 def createDefaultValueNode(name, longName, defaultValue):
     # type: (str, str, any) -> None
     node = DefaultValueNode(name=name, longName=longName, defaultValue=defaultValue)
     return node
+
 
 def createConnectionValidityNode(
     name,
@@ -40,6 +43,7 @@ def createConnectionValidityNode(
     node.destAttrValue = destinationNodeAttributeValue
 
     return node
+
 
 def saveValidatorsToFile(validators, filepath):
     # type: (list, str) -> bool

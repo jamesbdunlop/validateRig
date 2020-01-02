@@ -22,6 +22,6 @@ class Test_Parser(unittest.TestCase):
         )
 
 
-if __name__ == "__main__":# pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     runner = unittest.TextTestRunner()
     runner.run(unittest.TestSuite())

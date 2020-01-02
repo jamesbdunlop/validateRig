@@ -22,7 +22,8 @@ def treeWidgetItemFromNode(node):
 
     if node.nodeType == c_serialization.NT_SOURCENODE:
         rowdataDict = appendRowData(
-            rowdataDict, ( (vrc_constants.SRC_NODENAME_COLUMN, QTDISPLAYROLE, node.displayName), )
+            rowdataDict,
+            ((vrc_constants.SRC_NODENAME_COLUMN, QTDISPLAYROLE, node.displayName),),
         )
 
     elif node.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
@@ -39,9 +40,17 @@ def treeWidgetItemFromNode(node):
         rowsData = (
             (vrc_constants.SRC_ATTR_COLUMN, QTDISPLAYROLE, node.displayName),
             (vrc_constants.SRC_ATTRVALUE_COLUMN, QTDISPLAYROLE, str(node.defaultValue)),
-            (vrc_constants.DEST_NODENAME_COLUMN, QTDISPLAYROLE, vrc_constants.SEPARATOR),
+            (
+                vrc_constants.DEST_NODENAME_COLUMN,
+                QTDISPLAYROLE,
+                vrc_constants.SEPARATOR,
+            ),
             (vrc_constants.DEST_ATTR_COLUMN, QTDISPLAYROLE, vrc_constants.SEPARATOR),
-            (vrc_constants.DEST_ATTRVALUE_COLUMN, QTDISPLAYROLE, vrc_constants.SEPARATOR),
+            (
+                vrc_constants.DEST_ATTRVALUE_COLUMN,
+                QTDISPLAYROLE,
+                vrc_constants.SEPARATOR,
+            ),
         )
         rowdataDict = appendRowData(rowdataDict, rowsData)
 
@@ -70,16 +79,10 @@ def setSourceNodeItemWidgetsFromNode(node, treewidget, twi):
 
     if node.nodeType == c_serialization.NT_SOURCENODE:
         label = QtWidgets.QLabel(node.name)
-        treewidget.setItemWidget(
-            twi, vrc_constants.SRC_NODENAME_COLUMN, label
-        )
+        treewidget.setItemWidget(twi, vrc_constants.SRC_NODENAME_COLUMN, label)
 
     elif node.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
-        treewidget.setItemWidget(
-            twi, vrc_constants.SRC_NODENAME_COLUMN, setButton
-            )
+        treewidget.setItemWidget(twi, vrc_constants.SRC_NODENAME_COLUMN, setButton)
 
     elif node.nodeType == c_serialization.NT_DEFAULTVALUE:
-        treewidget.setItemWidget(
-            twi, vrc_constants.SRC_NODENAME_COLUMN, setButton
-        )
+        treewidget.setItemWidget(twi, vrc_constants.SRC_NODENAME_COLUMN, setButton)

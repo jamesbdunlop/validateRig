@@ -73,9 +73,7 @@ class Test_Validator(unittest.TestCase):
         testName = "FART"
         self.validator.name = testName
         self.assertEqual(
-            self.validator.name,
-            testName,
-            "ValidatorName is not %s" % testName,
+            self.validator.name, testName, "ValidatorName is not %s" % testName,
         )
 
         testNameSpace = "FARTED"
@@ -89,9 +87,7 @@ class Test_Validator(unittest.TestCase):
         testStatus = "FAILUREWILLROBINSON"
         self.validator.status = testStatus
         self.assertEqual(
-            self.validator.status,
-            testStatus,
-            "ValidatorName is not %s" % testStatus,
+            self.validator.status, testStatus, "ValidatorName is not %s" % testStatus,
         )
 
     def test_validationFailed(self):
@@ -119,12 +115,16 @@ class Test_Validator(unittest.TestCase):
         )
 
         self.assertTrue(
-            self.validator.addSourceNode(srcNode, force=True), "validator.addSourceNode failed!",
+            self.validator.addSourceNode(srcNode, force=True),
+            "validator.addSourceNode failed!",
         )
 
         with self.assertRaises(IndexError) as context:
             self.validator.addSourceNode(srcNode, force=False)
-        self.assertTrue('Use force=True if you want to overwrite existing!' in str(context.exception))
+        self.assertTrue(
+            "Use force=True if you want to overwrite existing!"
+            in str(context.exception)
+        )
 
     def test_addSourceNodeFromData(self):
         nodeName = "3rdSourceNode"
@@ -195,6 +195,6 @@ class Test_Validator(unittest.TestCase):
         )
 
 
-if __name__ == "__main__":# pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     runner = unittest.TextTestRunner()
     runner.run(unittest.TestSuite())

@@ -110,7 +110,8 @@ class Validator(QtCore.QObject):
     def sourceNodeExists(self, sourceNode):
         # type: (SourceNode) -> bool
         sourceNodeNames = [sn.longName for sn in self._nodes]
-
+        print(sourceNodeNames)
+        print(sourceNode.longName)
         return sourceNode.longName in sourceNodeNames
 
     def sourceNodeLongNameExists(self, sourceNodeLongName):
@@ -174,10 +175,10 @@ class Validator(QtCore.QObject):
         for eachNode in self._nodes:
             yield eachNode
 
-    def validateValidatorSourceNodes(self): # pragma: no cover
+    def validateValidatorSourceNodes(self):  # pragma: no cover
         self.validate.emit(self)
 
-    def repairValidatorSourceNodes(self): # pragma: no cover
+    def repairValidatorSourceNodes(self):  # pragma: no cover
         self.repair.emit(self)
 
     def toData(self):
@@ -196,7 +197,7 @@ class Validator(QtCore.QObject):
 
     @classmethod
     def fromData(cls, name, data):
-        namespace = data.get(c_serialization.KEY_NODENAMESPACE,"")
+        namespace = data.get(c_serialization.KEY_NODENAMESPACE, "")
         inst = cls(name, namespace)
         for sourceNodeData in data.get(c_serialization.KEY_VALIDATOR_NODES, list()):
             inst.addSourceNodeFromData(sourceNodeData)
@@ -219,11 +220,11 @@ def createValidator(name, data=None):
     else:
         validator = Validator.fromData(name, data)
 
-    if inside.insideMaya(): # pragma: no cover
+    if inside.insideMaya():  # pragma: no cover
         validator.validate.connect(mayaValidation.validateValidatorSourceNodes)
         validator.repair.connect(mayaValidation.repairValidatorSourceNodes)
 
-    else: # pragma: no cover
+    else:  # pragma: no cover
         msg = lambda x: logger.info(x)
         validator.validate.connect(msg("No stand alone validation is possible!!"))
 

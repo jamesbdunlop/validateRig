@@ -52,14 +52,15 @@ def asSourceNode(nodeLongName, attributes=None, connections=False):
 
     # Now the sourceNodes
     shortName = cleanMayaLongName(nodeLongName)
-    sourceNode = createSourceNode(name=shortName,
-                                  longName=nodeLongName,
-                                  validityNodes=validityNodes)
+    sourceNode = createSourceNode(
+        name=shortName, longName=nodeLongName, validityNodes=validityNodes
+    )
 
     namespace = getNamespaceFromLongName(nodeLongName)
     sourceNode.nameSpace = namespace
 
     return sourceNode
+
 
 def getNamespaceFromLongName(nodeLongName):
     namespace = ""
@@ -68,11 +69,13 @@ def getNamespaceFromLongName(nodeLongName):
     logger.debug("nameSpace: {}".format(namespace))
     return namespace
 
+
 def cleanMayaLongName(nodeLongName):
     # type: (str) -> str
     newName = nodeLongName.split("|")[-1].split(":")[-1].split(".")[0]
 
     return newName
+
 
 def getAttrValue(nodeLongName, attributeName):
     # type: (str, str) -> any
@@ -83,6 +86,7 @@ def getAttrValue(nodeLongName, attributeName):
 
     return attrName, value
 
+
 def __createDefaultValueNodes(nodeLongName, defaultAttributes):
     # type: (str, list[str]) -> DefaultValueNode
     for eachAttr in defaultAttributes:
@@ -90,25 +94,27 @@ def __createDefaultValueNodes(nodeLongName, defaultAttributes):
             continue
 
         attrName, attrValue = getAttrValue(nodeLongName, eachAttr)
-        defaultValueNode = createDefaultValueNode(name=eachAttr,
-                                                  longName=attrName,
-                                                  defaultValue=attrValue
-                                                  )
+        defaultValueNode = createDefaultValueNode(
+            name=eachAttr, longName=attrName, defaultValue=attrValue
+        )
         namespace = getNamespaceFromLongName(nodeLongName)
         defaultValueNode.nameSpace = namespace
 
         yield defaultValueNode
 
+
 def __createConnectionNodes(nodeLongName):
     # type: (str) -> ConnectionValidityNode
 
     # We list only the destinations of these attributes.
-    conns = cmds.listConnections(nodeLongName,
-                                 connections=True,
-                                 source=False,
-                                 destination=True,
-                                 plugs=True,
-                                 skipConversionNodes=True)
+    conns = cmds.listConnections(
+        nodeLongName,
+        connections=True,
+        source=False,
+        destination=True,
+        plugs=True,
+        skipConversionNodes=True,
+    )
 
     if conns is not None:
         for x in range(0, len(conns), 2):
@@ -118,10 +124,9 @@ def __createConnectionNodes(nodeLongName):
             srcFullAttributeName = ".".join(src.split(".")[1:])
             srcShortAttributeName = src.split(".")[-1]
 
-
             if cmds.nodeType(dest) in c_const.MAYA_CONNECTED_NODETYPES_IGNORES:
                 continue
-                
+
             destFullAttributeName = ".".join(dest.split(".")[1:])
             destShortAttributeName = dest.split(".")[-1]
 
@@ -136,12 +141,14 @@ def __createConnectionNodes(nodeLongName):
                 destinationNodeAttributeValue = None
 
             destShortNodeName = cleanMayaLongName(dest)
-            connectionNode = createConnectionValidityNode(name=destShortNodeName,
-                                                          longName=destShortNodeName,
-                                                          sourceNodeAttributeName=srcFullAttributeName,
-                                                          sourceNodeAttributeValue=sourceNodeAttributeValue,
-                                                          desinationNodeAttributeName=destFullAttributeName,
-                                                          destinationNodeAttributeValue=destinationNodeAttributeValue)
+            connectionNode = createConnectionValidityNode(
+                name=destShortNodeName,
+                longName=destShortNodeName,
+                sourceNodeAttributeName=srcFullAttributeName,
+                sourceNodeAttributeValue=sourceNodeAttributeValue,
+                desinationNodeAttributeName=destFullAttributeName,
+                destinationNodeAttributeValue=destinationNodeAttributeValue,
+            )
             connectionNode.nameSpace = namespace
 
             yield connectionNode

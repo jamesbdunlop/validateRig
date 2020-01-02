@@ -69,9 +69,13 @@ class ValidationUI(QtWidgets.QWidget):
         self.treeButtons.addWidget(self.showNamespace)
         self.treeButtons.addStretch(1)
 
-        self.runButton = QtWidgets.QPushButton("Run") # connected in __addValidationPairFromData
+        self.runButton = QtWidgets.QPushButton(
+            "Run"
+        )  # connected in __addValidationPairFromData
 
-        self.fixAllButton = QtWidgets.QPushButton("Fix All") # connected in __addValidationPairFromData
+        self.fixAllButton = QtWidgets.QPushButton(
+            "Fix All"
+        )  # connected in __addValidationPairFromData
         self.fixAllButton.hide()
 
         self.isolateFailedButton = QtWidgets.QRadioButton("Isolate Failed")
@@ -146,7 +150,11 @@ class ValidationUI(QtWidgets.QWidget):
                     child = treeWidgetItem.child(x)
                     cNode = child.node()
                     if cNode.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
-                        if searchString not in cNode.name and searchString not in cNode.srcAttrName and searchString not in cNode.destAttrName:
+                        if (
+                            searchString not in cNode.name
+                            and searchString not in cNode.srcAttrName
+                            and searchString not in cNode.destAttrName
+                        ):
                             child.setHidden(True)
                         else:
                             child.setHidden(False)
@@ -180,7 +188,9 @@ class ValidationUI(QtWidgets.QWidget):
                 for child in treeWidgetItem.iterDescendants():
                     status = child.node().status
                     child.reportStatus = status
-                    sourceNodeStatus.append(status == vrc_constants.NODE_VALIDATION_PASSED)
+                    sourceNodeStatus.append(
+                        status == vrc_constants.NODE_VALIDATION_PASSED
+                    )
 
                 topLevelStatus = all(sourceNodeStatus)
                 treeWidgetItem.reportStatus = vrc_constants.NODE_VALIDATION_FAILED
@@ -255,7 +265,10 @@ class ValidationUI(QtWidgets.QWidget):
                     treeWidgetItem.setHidden(False)
                     continue
 
-                if treeWidgetItem.node().status == vrc_constants.NODE_VALIDATION_PASSED and sender:
+                if (
+                    treeWidgetItem.node().status == vrc_constants.NODE_VALIDATION_PASSED
+                    and sender
+                ):
                     treeWidgetItem.setHidden(True)
 
     # UI Dialogs

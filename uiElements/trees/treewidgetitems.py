@@ -3,6 +3,7 @@ from PySide2 import QtWidgets, QtCore, QtGui
 from const import constants as vrc_constants
 from const import serialization as c_serialization
 from core.nodes import Node
+
 QTDISPLAYROLE = QtCore.Qt.DisplayRole
 
 
@@ -79,7 +80,9 @@ class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
     @reportStatus.setter
     def reportStatus(self, status):
         self._reportStatus = status
-        self.updateColumnData(vrc_constants.REPORTSTATUS_COLUMN, QtCore.Qt.DisplayRole, self._reportStatus)
+        self.updateColumnData(
+            vrc_constants.REPORTSTATUS_COLUMN, QtCore.Qt.DisplayRole, self._reportStatus
+        )
 
         font2 = QtGui.QFont("EA Font", weight=1)
         font2.setBold(True)

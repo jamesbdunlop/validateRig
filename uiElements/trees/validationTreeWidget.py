@@ -185,7 +185,9 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
 
             else:
                 logger.info("SourceNode: {} exists!".format(longNodeName))
-                existingSourceNode = self.validator().findSourceNodeByLongName(longNodeName)
+                existingSourceNode = self.validator().findSourceNodeByLongName(
+                    longNodeName
+                )
                 self.srcNodesWidget = uid_attributeList.MayaValidityNodesSelector.fromSourceNode(
                     sourceNode=existingSourceNode, parent=self
                 )
@@ -213,6 +215,7 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
             return
 
         from maya import cmds
+
         for eachItem in self.selectedItems():
             node = eachItem.node()
             nodeType = node.nodeType
@@ -263,6 +266,7 @@ def getValidationTreeWidget(validator, parent):
     treeWidget.resizeColumnToContents(0)
 
     return treeWidget
+
 
 def addValidityNodesToTreeWidgetItem(sourceNode, sourceNodeTreeWItm):
     # type: (Node, QtWidgets.QTreeWidgetItem) -> None
