@@ -57,28 +57,17 @@ def asSourceNode(nodeLongName, attributes=None, connections=False):
 
     # Now the sourceNodes
     shortName = cleanMayaLongName(nodeLongName)
+    nameSpace = getNamespaceFromLongName(nodeLongName)
+    nsShortName = shortName
+    if nameSpace:
+        nsShortName = "{}:{}".format(nameSpace, shortName)
+
     sourceNode = createSourceNode(
         name=shortName, longName=nodeLongName, validityNodes=validityNodes
     )
+    sourceNode.displayName = nsShortName
 
     return sourceNode
-
-
-def cleanMayaLongName(nodeLongName):
-    # type: (str) -> str
-    newName = nodeLongName.split("|")[-1].split(":")[-1].split(".")[0]
-
-    return newName
-
-
-def getAttrValue(nodeLongName, attributeName):
-    # type: (str, str) -> any
-    attrName = "{}.{}".format(nodeLongName, attributeName)
-    value = cmds.getAttr(attrName)
-    if isinstance(value, list):
-        value = value[0]
-
-    return attrName, value
 
 
 def __createDefaultValueNodes(nodeLongName, defaultAttributes):
@@ -91,18 +80,8 @@ def __createDefaultValueNodes(nodeLongName, defaultAttributes):
         defaultValueNode = createDefaultValueNode(
             name=eachAttr, longName=attrName, defaultValue=attrValue
         )
-        nameSpace = getNamespaceFromLongName(nodeLongName)
-        defaultValueNode.nameSpace = nameSpace
 
         yield defaultValueNode
-
-
-def getNamespaceFromLongName(nodeLongName):
-    nameSpace = ""
-    if ":" in nodeLongName:
-        nameSpace = nodeLongName.split("|")[-1].split(":")[0]
-    logger.debug("nameSpace: {}".format(nameSpace))
-    return nameSpace
 
 
 def __createConnectionNodes(nodeLongName):
@@ -122,7 +101,7 @@ def __createConnectionNodes(nodeLongName):
         for x in range(0, len(conns), 2):
             src = conns[x]
             dest = conns[x + 1]
-            nameSpace = getNamespaceFromLongName(nodeLongName)
+
             srcFullAttributeName = ".".join(src.split(".")[1:])
             srcShortAttributeName = src.split(".")[-1]
 
@@ -143,14 +122,48 @@ def __createConnectionNodes(nodeLongName):
                 destinationNodeAttributeValue = None
 
             destShortNodeName = cleanMayaLongName(dest)
+            destLongName = cmds.ls(dest, l=True)[0]
             connectionNode = createConnectionValidityNode(
                 name=destShortNodeName,
-                longName=destShortNodeName,
+                longName=destLongName,
                 sourceNodeAttributeName=srcFullAttributeName,
                 sourceNodeAttributeValue=sourceNodeAttributeValue,
                 desinationNodeAttributeName=destFullAttributeName,
                 destinationNodeAttributeValue=destinationNodeAttributeValue,
             )
-            connectionNode.nameSpace = nameSpace
+
+            nameSpace = getNamespaceFromLongName(destLongName)
+            nsShortName = destShortNodeName
+            if nameSpace:
+                nsShortName = "{}:{}".format(nameSpace, destShortNodeName)
+
+            connectionNode.displayName = nsShortName
 
             yield connectionNode
+
+
+####################################################################################################
+# UTILS
+def cleanMayaLongName(nodeLongName):
+    # type: (str) -> str
+    newName = nodeLongName.split("|")[-1].split(":")[-1].split(".")[0]
+
+    return newName
+
+
+def getAttrValue(nodeLongName, attributeName):
+    # type: (str, str) -> any
+    attrName = "{}.{}".format(nodeLongName, attributeName)
+    value = cmds.getAttr(attrName)
+    if isinstance(value, list):
+        value = value[0]
+
+    return attrName, value
+
+
+def getNamespaceFromLongName(nodeLongName):
+    nameSpace = ""
+    if ":" in nodeLongName:
+        nameSpace = nodeLongName.split("|")[-1].split(":")[0]
+
+    return nameSpace

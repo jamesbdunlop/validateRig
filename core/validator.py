@@ -119,7 +119,6 @@ class Validator(QtCore.QObject):
     def addSourceNodeFromData(self, data):
         # type: (dict) -> SourceNode
         sourceNode = SourceNode.fromData(data)
-        sourceNode.displayName = self.__createNameSpacedShortName(sourceNode)
         self.addSourceNode(sourceNode)
 
         return sourceNode
@@ -156,23 +155,37 @@ class Validator(QtCore.QObject):
     def _setAllNodeDisplayNamesAsLongName(self):
         for eachSrcNode in self.iterSourceNodes():
             eachSrcNode.displayName = eachSrcNode.longName
+            for eachChild in eachSrcNode.iterDescendants():
+                if eachChild.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
+                    if ":" in eachChild.longName:
+                        eachChild.displayName = eachChild.longName
 
         self.displayNameChanged.emit(True)
 
     def _setAllNodeDisplayNamesToNamespaceShortName(self):
         for eachSrcNode in self.iterSourceNodes():
             eachSrcNode.displayName = self.__createNameSpacedShortName(eachSrcNode)
+            for eachChild in eachSrcNode.iterDescendants():
+                if eachChild.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
+                    if ":" in eachChild.longName:
+                        eachChild.displayName = self.__createNameSpacedShortName(eachChild)
 
     def __createNameSpacedShortName(self, node):
         # type: (Node) -> str
-
         shortName = "{}:{}".format(self.nameSpace, node.name) if self.nameSpace else node.name
 
         return shortName
 
     def updateNameSpaceInLongName(self):
-        # TODO again need a decent way to handle the str replacement here
-        return
+        for eachSrcNode in self.iterSourceNodes():
+            # eachSrcNode.longName = "blah"
+
+            for eachChild in eachSrcNode.iterDescendants():
+                if eachChild.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
+                    if ":" in eachChild.longName:
+                        # eachChild.longName  = "blah"
+                        pass
+
 
     def toData(self):
         data = dict()

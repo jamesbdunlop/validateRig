@@ -214,7 +214,8 @@ class ValidationUI(QtWidgets.QMainWindow):
                     child = treeWidgetItem.child(x)
                     child.updateDisplayName()
 
-            eachValidationTreeWidget.resizeColumnToContents(0)
+            eachValidationTreeWidget.resizeColumnToContents(vrc_constants.SRC_NODENAME_COLUMN)
+            eachValidationTreeWidget.resizeColumnToContents(vrc_constants.DEST_NODENAME_COLUMN)
 
     def __expandAllTreeWidgets(self):
         for _, treeWidget in self._validators:
@@ -458,7 +459,7 @@ if __name__ == "__main__":
     #     filepath="T:/software/validateRig/tests/testValidator.json", expanded=True
     # )
     myWin = ValidationUI.from_fileJSON(
-        filepath="C:/temp/testValidator.json", expanded=True
+        filepath="C:/temp/testMayaValidator.json", expanded=True
     )
     myWin.show()
     sys.exit(app.exec_())

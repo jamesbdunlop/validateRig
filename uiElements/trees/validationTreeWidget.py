@@ -263,7 +263,8 @@ def getValidationTreeWidget(validator, parent):
         #     node=sourceNode, treewidget=treeWidget, twi=sourceNodeTreeWItm
         # )
 
-    treeWidget.resizeColumnToContents(0)
+    treeWidget.resizeColumnToContents(vrc_constants.SRC_NODENAME_COLUMN)
+    treeWidget.resizeColumnToContents(vrc_constants.DEST_NODENAME_COLUMN)
 
     return treeWidget
 
