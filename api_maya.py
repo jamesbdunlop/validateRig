@@ -10,7 +10,7 @@ if inside.insideMaya():
     from maya import cmds
 
 """
-Example Usage:
+# Example Usage:
 # What we're doing in this example...
 # Creating a sourceNode for each nurbsCurve's parent transform that ends with "_ctrl"
     # Create a DefaultValueNode for each attribute in ["translate", "rotate", "scale", "rotateOrder"]
@@ -20,11 +20,14 @@ Example Usage:
     # Find connections from this ctrlCrv to any other node for validation. 
 
 import api_maya as vr_mayaApi
+import const.constants as c_const
+import core.validator as cval
+
 sourceNodes = list()
 crvs = [cmds.listRelatives(crv, p=True, f=True)[0] for crv in cmds.ls(type="nurbsCurve")]
 for eachCurve in crvs:
     attributes= ["translate", "rotate", "scale", "rotateOrder"]
-    ud = [ud for ud in cmds.listAttr(eachCurve, ud=True) if "_dba" not in ud] # can do an extra filter of UDefined attrs here.
+    ud = cmds.listAttr(eachCurve, ud=True)
     if ud is not None:
         attributes += ud
     
@@ -32,10 +35,12 @@ for eachCurve in crvs:
                                       attributes=attributes, 
                                       connections=True)
     sourceNodes.append(srcNode)
-    
+
 validator = vr_mayaApi.createValidator("myTestChar")
+validator.nameSpace = "testRigNamespace"
 validator.addSourceNodes(sourceNodes, True)
 validator.to_fileJSON(filePath="C:/temp/testValidator.json")
+
 """
 
 
@@ -56,18 +61,7 @@ def asSourceNode(nodeLongName, attributes=None, connections=False):
         name=shortName, longName=nodeLongName, validityNodes=validityNodes
     )
 
-    namespace = getNamespaceFromLongName(nodeLongName)
-    sourceNode.nameSpace = namespace
-
     return sourceNode
-
-
-def getNamespaceFromLongName(nodeLongName):
-    namespace = ""
-    if ":" in nodeLongName:
-        namespace = nodeLongName.split("|")[-1].split(":")[0]
-    logger.debug("nameSpace: {}".format(namespace))
-    return namespace
 
 
 def cleanMayaLongName(nodeLongName):
@@ -97,10 +91,18 @@ def __createDefaultValueNodes(nodeLongName, defaultAttributes):
         defaultValueNode = createDefaultValueNode(
             name=eachAttr, longName=attrName, defaultValue=attrValue
         )
-        namespace = getNamespaceFromLongName(nodeLongName)
-        defaultValueNode.nameSpace = namespace
+        nameSpace = getNamespaceFromLongName(nodeLongName)
+        defaultValueNode.nameSpace = nameSpace
 
         yield defaultValueNode
+
+
+def getNamespaceFromLongName(nodeLongName):
+    nameSpace = ""
+    if ":" in nodeLongName:
+        nameSpace = nodeLongName.split("|")[-1].split(":")[0]
+    logger.debug("nameSpace: {}".format(nameSpace))
+    return nameSpace
 
 
 def __createConnectionNodes(nodeLongName):
@@ -120,7 +122,7 @@ def __createConnectionNodes(nodeLongName):
         for x in range(0, len(conns), 2):
             src = conns[x]
             dest = conns[x + 1]
-            namespace = getNamespaceFromLongName(nodeLongName)
+            nameSpace = getNamespaceFromLongName(nodeLongName)
             srcFullAttributeName = ".".join(src.split(".")[1:])
             srcShortAttributeName = src.split(".")[-1]
 
@@ -149,6 +151,6 @@ def __createConnectionNodes(nodeLongName):
                 desinationNodeAttributeName=destFullAttributeName,
                 destinationNodeAttributeValue=destinationNodeAttributeValue,
             )
-            connectionNode.nameSpace = namespace
+            connectionNode.nameSpace = nameSpace
 
             yield connectionNode

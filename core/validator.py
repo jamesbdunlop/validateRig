@@ -15,19 +15,17 @@ logger = logging.getLogger(__name__)
 class Validator(QtCore.QObject):
     validate = Signal(QtCore.QObject)
     repair = Signal(QtCore.QObject)
-    namespaceChanged = Signal(str)
     displayNameChanged = Signal(bool)
 
-    def __init__(self, name, namespace="", nodes=None):
+    def __init__(self, name, nameSpace="", nodes=None):
         # type: (str, str, list) -> None
         QtCore.QObject.__init__(self, None)
         self._name = name  # name of the validator.
-        self._namespace = namespace
+        self._nameSpace = nameSpace
         self._nodes = (
             nodes or list()
         )  # list of SourceNodes with ConnectionValidityNodes
-        self._status = vrc_constants.NODE_VALIDATION_PASSED
-        self.namespaceChanged.connect(self.updateSourceNodesNameSpace)
+        self._status = vrc_constants.NODE_VALIDATION_FAILED
 
     @property
     def name(self):
@@ -43,47 +41,13 @@ class Validator(QtCore.QObject):
         self._name = name
 
     @property
-    def namespace(self):
-        return self._namespace
+    def nameSpace(self):
+        return self._nameSpace
 
-    @namespace.setter
-    def namespace(self, namespace):
-        # type: (str) -> None
-        self._namespace = namespace
-        self.namespaceChanged.emit(namespace)
-
-    def updateSourceNodesNameSpace(self, nameSpace):
-        # type: (str) -> None
-        for eachSrcNode in self.iterSourceNodes():
-            eachSrcNode.nameSpace = nameSpace
-            for eachChild in eachSrcNode.iterDescendants():
-                eachChild.nameSpace = nameSpace
-
-    def setDisplayNameToLongName(self):
-        for eachSrcNode in self.iterSourceNodes():
-            eachSrcNode.setLongNameInDisplayName()
-            for eachChild in eachSrcNode.iterDescendants():
-                eachChild.setLongNameInDisplayName()
-
-        self.displayNameChanged.emit(True)
-
-    def setDisplayNameToIncludeNameSpace(self):
-        for eachSrcNode in self.iterSourceNodes():
-            eachSrcNode.setNameSpaceInDisplayName()
-            for eachChild in eachSrcNode.iterDescendants():
-                if eachChild.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
-                    eachChild.setNameSpaceInDisplayName()
-
-        self.displayNameChanged.emit(True)
-
-    def setDisplayNameToShortName(self):
-        for eachSrcNode in self.iterSourceNodes():
-            eachSrcNode.displayName = eachSrcNode.name
-            for eachChild in eachSrcNode.iterDescendants():
-                if eachChild.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
-                    eachChild.displayName = eachChild.name
-
-        self.displayNameChanged.emit(True)
+    @nameSpace.setter
+    def nameSpace(self, nameSpace):
+        # type: (str, int) -> None
+        self._nameSpace = nameSpace
 
     @property
     def status(self):
@@ -101,26 +65,24 @@ class Validator(QtCore.QObject):
     def passed(self):
         return self.status == vrc_constants.NODE_VALIDATION_PASSED
 
-    def findSourceNodeByLongName(self, name):
+    def findSourceNodeByLongName(self, longName):
         # type: (str) -> SourceNode
         for eachNode in self.iterSourceNodes():
-            if eachNode.longName == name:
+            if eachNode.longName == longName:
                 return eachNode
 
     def sourceNodeExists(self, sourceNode):
         # type: (SourceNode) -> bool
-        sourceNodeNames = [sn.longName for sn in self._nodes]
-        print(sourceNodeNames)
-        print(sourceNode.longName)
-        return sourceNode.longName in sourceNodeNames
+        exists = self.sourceNodeLongNameExists(sourceNode.longName)
+
+        return exists
 
     def sourceNodeLongNameExists(self, sourceNodeLongName):
         # type: (str) -> bool
-        sourceNodeNames = [n.longName for n in self._nodes]
-        logger.info(
-            "{} sourceNodeNames: {}".format(sourceNodeLongName, sourceNodeNames)
-        )
-        return sourceNodeLongName in sourceNodeNames
+        sourceNodeNames = [n.longName for n in self.iterSourceNodes()]
+        exists = sourceNodeLongName in sourceNodeNames
+
+        return exists
 
     def replaceExistingSourceNode(self, sourceNode):
         # type: (SourceNode) -> bool
@@ -157,6 +119,7 @@ class Validator(QtCore.QObject):
     def addSourceNodeFromData(self, data):
         # type: (dict) -> SourceNode
         sourceNode = SourceNode.fromData(data)
+        sourceNode.displayName = self.__createNameSpacedShortName(sourceNode)
         self.addSourceNode(sourceNode)
 
         return sourceNode
@@ -181,9 +144,40 @@ class Validator(QtCore.QObject):
     def repairValidatorSourceNodes(self):  # pragma: no cover
         self.repair.emit(self)
 
+    def toggleLongNodeNames(self, toggle):
+        # type (bool) -> None
+        if not toggle:
+            self._setAllNodeDisplayNamesToNamespaceShortName()
+        else:
+            self._setAllNodeDisplayNamesAsLongName()
+
+        self.displayNameChanged.emit(True)
+
+    def _setAllNodeDisplayNamesAsLongName(self):
+        for eachSrcNode in self.iterSourceNodes():
+            eachSrcNode.displayName = eachSrcNode.longName
+
+        self.displayNameChanged.emit(True)
+
+    def _setAllNodeDisplayNamesToNamespaceShortName(self):
+        for eachSrcNode in self.iterSourceNodes():
+            eachSrcNode.displayName = self.__createNameSpacedShortName(eachSrcNode)
+
+    def __createNameSpacedShortName(self, node):
+        # type: (Node) -> str
+
+        shortName = "{}:{}".format(self.nameSpace, node.name) if self.nameSpace else node.name
+
+        return shortName
+
+    def updateNameSpaceInLongName(self):
+        # TODO again need a decent way to handle the str replacement here
+        return
+
     def toData(self):
         data = dict()
         data[c_serialization.KEY_VALIDATOR_NAME] = self.name
+        data[c_serialization.KEY_VALIDATORNAMESPACE] = self.nameSpace
         data[c_serialization.KEY_VALIDATOR_NODES] = list()
         for eachNode in self.iterSourceNodes():
             data[c_serialization.KEY_VALIDATOR_NODES].append(eachNode.toData())
@@ -197,8 +191,11 @@ class Validator(QtCore.QObject):
 
     @classmethod
     def fromData(cls, name, data):
-        namespace = data.get(c_serialization.KEY_NODENAMESPACE, "")
-        inst = cls(name, namespace)
+        nameSpace = data.get(c_serialization.KEY_NODENAMESPACE, "")
+        if name is None:
+            name = data.get(c_serialization.KEY_NODENAME, None)
+
+        inst = cls(name, nameSpace)
         for sourceNodeData in data.get(c_serialization.KEY_VALIDATOR_NODES, list()):
             inst.addSourceNodeFromData(sourceNodeData)
 
@@ -206,26 +203,3 @@ class Validator(QtCore.QObject):
 
     def __repr__(self):
         return "%s" % self.name
-
-
-def createValidator(name, data=None):
-    # type: (str, dict) -> Validator
-    """
-    Args:
-        name: The name for the validator. Eg: MyCat
-    """
-    if data is None:
-        # todo check we don't have to pass namespace here and leave it up to user to do
-        validator = Validator(name=name)
-    else:
-        validator = Validator.fromData(name, data)
-
-    if inside.insideMaya():  # pragma: no cover
-        validator.validate.connect(mayaValidation.validateValidatorSourceNodes)
-        validator.repair.connect(mayaValidation.repairValidatorSourceNodes)
-
-    else:  # pragma: no cover
-        msg = lambda x: logger.info(x)
-        validator.validate.connect(msg("No stand alone validation is possible!!"))
-
-    return validator

@@ -3,6 +3,7 @@
   "fontFamily": "Madan",
   "fontBaseSize": "12px",
   "fontHoverSize": "14px",
+  "fontHoverWeight": "bold",
   "fontTabSize": "11px",
   "fontColor": "#DCDCDC",
 

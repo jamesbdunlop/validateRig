@@ -1,13 +1,14 @@
 #  Copyright (c) 2019.  James Dunlop
 from core import validator as c_validator
 from core import parser as c_parser
+from core import factory as c_factory
 from core.nodes import SourceNode, DefaultValueNode, ConnectionValidityNode
 
 
 def createValidator(name, data=None):
     # type: (str, dict) -> c_validator.Validator
 
-    validator = c_validator.createValidator(name=name, data=data)
+    validator = c_factory.createValidator(name=name, data=data)
     return validator
 
 

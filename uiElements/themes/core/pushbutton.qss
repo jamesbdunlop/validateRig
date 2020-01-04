@@ -1,5 +1,4 @@
 QPushButton {
- height: 20px;
  padding: 6px;
 
  border: 1px;
@@ -23,7 +22,7 @@ QPushButton:hover {
  background: $hiLight;
  color: $level01;
  font-size: $fontHoverSize;
-
+ font-weight: $fontHoverWeight;
  border: 2px;
  border-radius: 6px;
  border-color: $level00;

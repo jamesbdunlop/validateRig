@@ -6,6 +6,7 @@ from PySide2 import QtWidgets, QtCore
 from const import constants as vrc_constants
 from const import serialization as c_serialization
 from core import inside
+from core import factory as c_factory
 from core import validator as c_validator
 from core import parser as c_parser
 from uiElements.themes import factory as uit_factory
@@ -20,7 +21,7 @@ if inside.insideMaya():
 logger = logging.getLogger(__name__)
 
 
-class ValidationUI(QtWidgets.QWidget):
+class ValidationUI(QtWidgets.QMainWindow):
     def __init__(
         self, title=vrc_constants.UINAME, theme="core", themecolor="", parent=None
     ):
@@ -39,98 +40,88 @@ class ValidationUI(QtWidgets.QWidget):
             []
         )  # list of tuples of validators and widgets (Validator, QTreeWidget)
 
-        self.mainLayout = QtWidgets.QVBoxLayout(self)
-        self.mainLayout.setObjectName("mainLayout")
+        # MAIN MENU
+        self.appMenu = QtWidgets.QMenuBar()
+        self.newButton = self.appMenu.addAction("New")
+        self.newButton.triggered.connect(self.__createValidatorNameInputDialog)
 
-        self.subLayout01 = QtWidgets.QHBoxLayout()
+        self.loadButton = self.appMenu.addAction("Load")
+        self.loadButton.triggered.connect(self.__loadDialog)
+
+        self.saveButton = self.appMenu.addAction("Save")
+        self.saveButton.triggered.connect(self.__saveDialog)
+        self.setMenuBar(self.appMenu)
+
+        mainWidget = QtWidgets.QWidget()
+        mainLayout = QtWidgets.QVBoxLayout(mainWidget)
+        mainLayout.setObjectName("mainLayout")
+
+        # CENTRAL WIDGET
+        subLayout01 = QtWidgets.QVBoxLayout()
         self.groupBoxesLayout = QtWidgets.QVBoxLayout()
         self.groupBoxesLayout.setObjectName("groupBoxLayout")
 
         # Buttons
-        self.treeButtons = QtWidgets.QVBoxLayout()
+        self.treeButtons = QtWidgets.QHBoxLayout()
         self.expandAll = QtWidgets.QPushButton("expand All")
         self.expandAll.clicked.connect(self.__expandAllTreeWidgets)
         self.collapseAll = QtWidgets.QPushButton("collapse All")
         self.collapseAll.clicked.connect(self.__collapseAllTreeWidgets)
 
-        self.showShortName = QtWidgets.QRadioButton("Show shortName")
-        self.showShortName.setChecked(True)
-
         self.showLongName = QtWidgets.QRadioButton("Show LongName")
         self.showLongName.setChecked(False)
 
-        self.showNamespace = QtWidgets.QRadioButton("Show nameSpace")
-        self.showNamespace.setChecked(False)
-
-        self.treeButtons.addWidget(self.expandAll)
-        self.treeButtons.addWidget(self.collapseAll)
-        self.treeButtons.addWidget(self.showShortName)
-        self.treeButtons.addWidget(self.showLongName)
-        self.treeButtons.addWidget(self.showNamespace)
-        self.treeButtons.addStretch(1)
-
-        self.runButton = QtWidgets.QPushButton(
-            "Run"
-        )  # connected in __addValidationPairFromData
-
-        self.fixAllButton = QtWidgets.QPushButton(
-            "Fix All"
-        )  # connected in __addValidationPairFromData
+        self.runButton = QtWidgets.QPushButton("Run")
+        self.fixAllButton = QtWidgets.QPushButton("Fix All")
         self.fixAllButton.hide()
 
         self.isolateFailedButton = QtWidgets.QRadioButton("Isolate Failed")
         self.isolateFailedButton.setChecked(False)
         self.isolateFailedButton.toggled.connect(self.__toggleIsolateFailed)
         self.isolateFailedButton.setAutoExclusive(False)
+        self.isolateFailedButton.hide()
 
+        self.treeButtons.addWidget(self.expandAll)
+        self.treeButtons.addWidget(self.collapseAll)
+        self.treeButtons.addWidget(self.showLongName)
+        self.treeButtons.addStretch(1)
         self.treeButtons.addWidget(self.runButton)
         self.treeButtons.addWidget(self.fixAllButton)
         self.treeButtons.addWidget(self.isolateFailedButton)
 
-        self.applicationButtonLayout = QtWidgets.QHBoxLayout()
-        self.newButton = QtWidgets.QPushButton("New")
-        self.newButton.clicked.connect(self.__createValidatorNameInputDialog)
+        self.inputsLayout = QtWidgets.QGridLayout()
+        self.nameSpaceLabel = QtWidgets.QLabel("Namespace:")
+        self.nameSpaceInput = QtWidgets.QLineEdit()
+        self.nameSpaceInput.setPlaceholderText(
+            "Will force a namespace across ALL valdiators."
+        )
+        self.nameSpaceInput.textChanged.connect(self.__updateValidatorsNameSpace)
+        self.assignNamespaceButton = QtWidgets.QPushButton("From Selected")
+        self.assignNamespaceButton.clicked.connect(self.__getNameSpaceFromScene)
 
-        self.loadButton = QtWidgets.QPushButton("Load")
-        self.loadButton.clicked.connect(self.__loadDialog)
-
-        self.saveButton = QtWidgets.QPushButton("Save")
-        self.saveButton.clicked.connect(self.__saveDialog)
-
-        self.applicationButtonLayout.addWidget(self.newButton)
-        self.applicationButtonLayout.addWidget(self.loadButton)
-        self.applicationButtonLayout.addWidget(self.saveButton)
-
-        self.namespaceLayout = QtWidgets.QHBoxLayout()
-        self.namespaceLabel = QtWidgets.QLabel("Use Custom Namespace:")
-        self.namespaceInput = QtWidgets.QLineEdit()
-        self.namespaceInput.textChanged.connect(self.__updateValidatorsNameSpace)
-
-        self.namespaceFromDCC = QtWidgets.QPushButton("Assign from scene")
-        self.namespaceFromDCC.clicked.connect(self.__getNameSpaceFromScene)
-
-        self.namespaceLayout.addWidget(self.namespaceLabel)
-        self.namespaceLayout.addWidget(self.namespaceInput)
-        self.namespaceLayout.addWidget(self.namespaceFromDCC)
-
-        self.searchLayout = QtWidgets.QHBoxLayout()
         self.searchLabel = QtWidgets.QLabel("Search:")
+        self.searchLabel.setFixedWidth(80)
         self.searchInput = QtWidgets.QLineEdit()
+        self.searchInput.setPlaceholderText("Filter validationNodes by...")
         self.searchInput.textChanged.connect(self.__filterTreeWidgetItems)
         self.clearSearch = QtWidgets.QPushButton("Clear")
         self.clearSearch.clicked.connect(self.__clearSearch)
+        self.clearSearch.setFixedWidth(150)
 
-        self.searchLayout.addWidget(self.searchLabel)
-        self.searchLayout.addWidget(self.searchInput)
-        self.searchLayout.addWidget(self.clearSearch)
+        self.inputsLayout.addWidget(self.nameSpaceLabel, 0, 0)
+        self.inputsLayout.addWidget(self.nameSpaceInput, 0, 1)
+        self.inputsLayout.addWidget(self.assignNamespaceButton, 0, 2)
+        self.inputsLayout.addWidget(self.searchLabel, 1, 0)
+        self.inputsLayout.addWidget(self.searchInput, 1, 1)
+        self.inputsLayout.addWidget(self.clearSearch, 1, 2)
 
         # Layout
-        self.subLayout01.addLayout(self.groupBoxesLayout)
-        self.subLayout01.addLayout(self.treeButtons)
-        self.mainLayout.addLayout(self.applicationButtonLayout)
-        self.mainLayout.addLayout(self.namespaceLayout)
-        self.mainLayout.addLayout(self.searchLayout)
-        self.mainLayout.addLayout(self.subLayout01)
+        subLayout01.addLayout(self.groupBoxesLayout)
+        subLayout01.addLayout(self.treeButtons)
+        mainLayout.addLayout(self.inputsLayout)
+        mainLayout.addLayout(subLayout01)
+
+        self.setCentralWidget(mainWidget)
 
         self.resize(1200, 800)
 
@@ -171,10 +162,11 @@ class ValidationUI(QtWidgets.QWidget):
 
     def __toggleFixAllButton(self):
         self.fixAllButton.hide()
-
+        self.isolateFailedButton.hide()
         for eachValidator in self.__iterValidators():
             if eachValidator.failed:
                 self.fixAllButton.show()
+                self.isolateFailedButton.show()
 
     def __updateValidationStatus(self):
         treeWidgets = list(self.__iterTreeWidgets())
@@ -200,9 +192,15 @@ class ValidationUI(QtWidgets.QWidget):
         self.__toggleFixAllButton()
 
     def __updateValidatorsNameSpace(self):
-        nameSpace = self.namespaceInput.text()
+        nameSpace = self.nameSpaceInput.text()
         for eachValidator in self.__iterValidators():
-            eachValidator.namespace = nameSpace
+            eachValidator.nameSpace = nameSpace
+            # eachValidator.updateNameSpaceInLongName()
+
+            if not self.showLongName.isChecked():
+                eachValidator._setAllNodeDisplayNamesToNamespaceShortName()
+
+        self.__updateTreeWidgetDisplayNames()
 
     def __updateTreeWidgetDisplayNames(self):
         # Connected to via the signals from the validator if nameSpace or displayName change on the validator
@@ -232,7 +230,7 @@ class ValidationUI(QtWidgets.QWidget):
             # Smelly find of NS from : in name.
             firstSelected = cmds.ls(sl=True)[0]
             if ":" in firstSelected:
-                self.namespaceInput.setText(cmds.ls(sl=True)[0].split(":")[0])
+                self.nameSpaceInput.setText(cmds.ls(sl=True)[0].split(":")[0])
 
         self.__updateValidatorsNameSpace()
 
@@ -337,7 +335,7 @@ class ValidationUI(QtWidgets.QWidget):
             logger.warning(msg)
             raise Exception(msg)
 
-        validator = c_validator.createValidator(
+        validator = c_factory.createValidator(
             name=data.get(c_serialization.KEY_VALIDATOR_NAME, ""), data=data
         )
 
@@ -378,16 +376,13 @@ class ValidationUI(QtWidgets.QWidget):
         self.runButton.clicked.connect(validator.validateValidatorSourceNodes)
         self.runButton.clicked.connect(self.__updateValidationStatus)
 
-        self.showLongName.toggled.connect(validator.setDisplayNameToLongName)
-        self.showNamespace.toggled.connect(validator.setDisplayNameToIncludeNameSpace)
-        self.showShortName.toggled.connect(validator.setDisplayNameToShortName)
+        self.showLongName.toggled.connect(validator.toggleLongNodeNames)
 
         self.fixAllButton.clicked.connect(validator.repairValidatorSourceNodes)
         self.fixAllButton.clicked.connect(validator.validateValidatorSourceNodes)
         self.fixAllButton.clicked.connect(self.__updateValidationStatus)
 
         validator.displayNameChanged.connect(self.__updateTreeWidgetDisplayNames)
-        validator.namespaceChanged.connect(self.__updateTreeWidgetDisplayNames)
 
         groupBoxName = data.get(c_serialization.KEY_VALIDATOR_NAME, "None")
         self.__createValidationGroupBox(name=groupBoxName, treeWidget=treeWidget)
@@ -459,8 +454,11 @@ class ValidationUI(QtWidgets.QWidget):
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv).instance()
+    # myWin = ValidationUI.from_fileJSON(
+    #     filepath="T:/software/validateRig/tests/testValidator.json", expanded=True
+    # )
     myWin = ValidationUI.from_fileJSON(
-        filepath="T:/software/validateRig/tests/testValidator.json", expanded=True
+        filepath="C:/temp/testValidator.json", expanded=True
     )
     myWin.show()
     sys.exit(app.exec_())

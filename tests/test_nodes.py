@@ -7,7 +7,6 @@ from const import testData as c_testData
 import core.nodes as c_nodes
 
 logger = logging.getLogger(__name__)
-# TODO set status tests and anything else missing from base node
 
 
 class Test_Nodes(unittest.TestCase):
@@ -57,14 +56,12 @@ class Test_Nodes(unittest.TestCase):
             c_serialization.KEY_NODELONGNAME: self.sourceNodeName,
             c_serialization.KEY_NODETYPE: c_testData.SRC_NODETYPE,
             c_serialization.KEY_NODEDISPLAYNAME: self.sourceNodeName,
-            c_serialization.KEY_NODENAMESPACE: "",
             c_serialization.KEY_VAILIDITYNODES: [
                 {
                     c_serialization.KEY_NODENAME: self.connectionValidityNodeName,
                     c_serialization.KEY_NODELONGNAME: self.connectionValidityNodeName,
                     c_serialization.KEY_NODETYPE: self.connectionValidityNodeType,
                     c_serialization.KEY_NODEDISPLAYNAME: self.connectionValidityNodeName,
-                    c_serialization.KEY_NODENAMESPACE: "",
                     c_serialization.KEY_DEST_ATTRIBUTENAME: self.connectionValidityNodeAttrName,
                     c_serialization.KEY_DEST_ATTRIBUTEVALUE: self.connectionValidityNodeAttrValue,
                     c_serialization.KEY_SRC_ATTRIBUTENAME: self.srcNodeAttrName,
@@ -75,7 +72,6 @@ class Test_Nodes(unittest.TestCase):
                     c_serialization.KEY_NODELONGNAME: self.defaultValueNodeName,
                     c_serialization.KEY_NODETYPE: self.defaultValueNodeType,
                     c_serialization.KEY_NODEDISPLAYNAME: self.defaultValueNodeName,
-                    c_serialization.KEY_NODENAMESPACE: "",
                     c_serialization.KEY_DEFAULTVALUE: self.defaultValueNodeValue,
                 },
             ],
@@ -143,19 +139,6 @@ class Test_Nodes(unittest.TestCase):
             self.sourceNode,
             "defaultValueNode's parent is not sourceNode!",
         )
-
-    def test_node_setNameSpaceInDisplayName(self):
-        self.baseNode.nameSpace = self.nodeNameSpace
-        namespacedname = "{}:{}".format(self.baseNode.nameSpace, self.baseNode.name)
-        self.baseNode.setNameSpaceInDisplayName()
-        displayName = self.baseNode.displayName
-        self.assertEqual(
-            namespacedname, displayName, "{} != {}".format(namespacedname, displayName)
-        )
-
-    def test_node_setLongNameInDisplayName(self):
-        self.baseNode.setLongNameInDisplayName()
-        self.assertEqual(self.baseNode.displayName, self.baseNode.longName)
 
     ## SOURCE NODE SPECIFIC
     def test_sourceNode_name(self):
@@ -241,13 +224,6 @@ class Test_Nodes(unittest.TestCase):
             self.connectionValidityNode.srcAttrValue,
             "srcAttrValue is not %s" % self.srcNodeAttrValue,
         )
-
-    def test_connectionValidityNode_namespaceChanges(self):
-        ns = "FuckingNameSpaces"
-        self.connectionValidityNode.nameSpace = ns
-        self.connectionValidityNode.setNameSpaceInDisplayName(True)
-        nsName = "{}:{}".format(ns, self.connectionValidityNode.name)
-        self.assertEqual(nsName, self.connectionValidityNode.displayName)
 
     ## DEFAULTVALUE NODE SPECIFIC
     def test_defaultValueNode_name(self):

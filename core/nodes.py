@@ -34,16 +34,6 @@ class Node(QtCore.QObject):
         self._name = name
 
     @property
-    def nameSpace(self):
-        return self._nameSpace
-
-    @nameSpace.setter
-    def nameSpace(self, nameSpace):
-        # type: (str) -> None
-        self._nameSpace = nameSpace
-        self.updateNameSpaceInLongName()
-
-    @property
     def displayName(self):
         return self._displayName
 
@@ -83,33 +73,6 @@ class Node(QtCore.QObject):
         # type: (str) -> None
         self._validationStatus = status
 
-    def createNameSpacedShortName(self):
-        # type: () -> str
-        ns = "{}:{}".format(self.nameSpace, self.name)
-        return ns
-
-    def updateNameSpaceInLongName(self):
-        # type: (str) -> None
-        longName = self.longName
-        if "|" in longName:
-            splitPipe = longName.split("|")[1:]
-            splitNS = [
-                "{}:{}".format(self.nameSpace, n.split(":")[-1]) for n in splitPipe
-            ]
-            newLongName = "|{}".format("|".join(splitNS))
-        else:
-            newLongName = self.longName
-
-        self.longName = newLongName
-
-    def setNameSpaceInDisplayName(self):
-        # type: (bool) -> None
-        self.displayName = self.createNameSpacedShortName()
-
-    def setLongNameInDisplayName(self):
-        # type: (bool) -> None
-        self.displayName = self.longName
-
     def addChild(self, node):
         # type: (Node) -> None
         if node not in self._children:
@@ -144,7 +107,6 @@ class Node(QtCore.QObject):
         self.data[c_serialization.KEY_NODENAME] = self.name
         self.data[c_serialization.KEY_NODELONGNAME] = self.longName
         self.data[c_serialization.KEY_NODEDISPLAYNAME] = self.displayName
-        self.data[c_serialization.KEY_NODENAMESPACE] = self.nameSpace
         self.data[c_serialization.KEY_NODETYPE] = self.nodeType
 
         return self.data
@@ -155,12 +117,10 @@ class Node(QtCore.QObject):
         name = data.get(c_serialization.KEY_NODENAME, "")
         longName = data.get(c_serialization.KEY_NODELONGNAME, "")
         displayName = data.get(c_serialization.KEY_NODEDISPLAYNAME, "")
-        nameSpace = data.get(c_serialization.KEY_NODENAMESPACE, "")
         nodeType = data.get(c_serialization.KEY_NODETYPE, "")
 
         inst = cls(name=name, longName=longName, nodeType=nodeType)
         inst.displayName = displayName
-        inst.nameSpace = nameSpace
 
         return inst
 

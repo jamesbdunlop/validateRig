@@ -6,14 +6,15 @@ from const import serialization as c_serialization
 from const import testData as c_testdata
 import core.nodes as c_nodes
 import core.validator as c_validator
+import core.factory as c_factory
 
 logger = logging.getLogger(__name__)
 
 
 class Test_Validator(unittest.TestCase):
     def setUp(self):
-        self.validator = c_validator.createValidator(name=c_testdata.VALIDATOR_NAME)
-
+        self.validator = c_factory.createValidator(name=c_testdata.VALIDATOR_NAME, data=None)
+        self.validator.nameSpace = c_testdata.VALIDATOR_NAMESPACE
         self.sourceNodeName = c_testdata.SRC_NODENAME
         self.srcNodeAttrName = c_testdata.SRC_ATTRNAME
         self.srcNodeAttrValue = c_testdata.SRC_ATTRVALUE
@@ -42,19 +43,18 @@ class Test_Validator(unittest.TestCase):
 
         self.expectedToData = {
             c_serialization.KEY_VALIDATOR_NAME: c_testdata.VALIDATOR_NAME,
+            c_serialization.KEY_VALIDATORNAMESPACE: c_testdata.VALIDATOR_NAMESPACE,
             c_serialization.KEY_VALIDATOR_NODES: [
                 {
                     c_serialization.KEY_NODENAME: self.sourceNodeName,
                     c_serialization.KEY_NODELONGNAME: self.sourceNodeName,
                     c_serialization.KEY_NODEDISPLAYNAME: self.sourceNodeName,
-                    c_serialization.KEY_NODENAMESPACE: "",
                     c_serialization.KEY_NODETYPE: c_testdata.SRC_NODETYPE,
                     c_serialization.KEY_VAILIDITYNODES: [
                         {
                             c_serialization.KEY_NODENAME: self.connectionValidityNodeName,
                             c_serialization.KEY_NODELONGNAME: self.connectionValidityNodeName,
                             c_serialization.KEY_NODEDISPLAYNAME: self.connectionValidityNodeName,
-                            c_serialization.KEY_NODENAMESPACE: "",
                             c_serialization.KEY_NODETYPE: c_testdata.VALIDITY_NODETYPE,
                             c_serialization.KEY_DEST_ATTRIBUTENAME: self.connectionValidityNodeAttrName,
                             c_serialization.KEY_DEST_ATTRIBUTEVALUE: self.connectionValidityNodeAttrValue,
@@ -77,9 +77,9 @@ class Test_Validator(unittest.TestCase):
         )
 
         testNameSpace = "FARTED"
-        self.validator.namespace = testNameSpace
+        self.validator.nameSpace = testNameSpace
         self.assertEqual(
-            self.validator.namespace,
+            self.validator.nameSpace,
             testNameSpace,
             "ValidatorName is not %s" % testNameSpace,
         )
@@ -91,10 +91,10 @@ class Test_Validator(unittest.TestCase):
         )
 
     def test_validationFailed(self):
-        self.assertFalse(self.validator.failed)
+        self.assertTrue(self.validator.failed)
 
     def test_validationPassed(self):
-        self.assertTrue(self.validator.passed)
+        self.assertFalse(self.validator.passed)
 
     def test_sourceNodeLongNameExists(self):
         self.assertTrue(self.validator.sourceNodeLongNameExists(self.sourceNodeName))
@@ -156,7 +156,7 @@ class Test_Validator(unittest.TestCase):
         )
 
     def test_findSourceNodeByLongName(self):
-        sourceNode = self.validator.findSourceNodeByLongName(name=self.sourceNodeName)
+        sourceNode = self.validator.findSourceNodeByLongName(longName=self.sourceNodeName)
         self.assertEqual(
             sourceNode,
             self.sourceNode,

@@ -219,7 +219,7 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
         for eachItem in self.selectedItems():
             node = eachItem.node()
             nodeType = node.nodeType
-            namespace = node.nameSpace
+            nameSpace = node.nameSpace
             if nodeType == c_serialization.NT_SOURCENODE:
                 itemName = eachItem.data(0, QtCore.Qt.DisplayRole)
             elif nodeType == c_serialization.NT_CONNECTIONVALIDITY:
@@ -231,8 +231,8 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
                 itemName = ""
 
             modifier = event.modifiers()
-            if namespace not in itemName:
-                itemName = "{}:{}".format(namespace, itemName)
+            if nameSpace not in itemName:
+                itemName = "{}:{}".format(nameSpace, itemName)
 
             if modifier == QtCore.Qt.ControlModifier:
                 cmds.select(itemName, add=True)
