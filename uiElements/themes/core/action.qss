@@ -35,3 +35,4 @@ QAction:!pressed {
  border-radius: 16px;
  border-color:  $level00;
 }
+

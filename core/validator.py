@@ -176,16 +176,27 @@ class Validator(QtCore.QObject):
 
         return shortName
 
-    def updateNameSpaceInLongName(self):
+    def updateNameSpaceInLongName(self, nameSpace):
+        # type: (str) -> None
         for eachSrcNode in self.iterSourceNodes():
-            # eachSrcNode.longName = "blah"
+            newLongName = self.replaceNameSpace(eachSrcNode.longName, nameSpace)
+            eachSrcNode.longName = newLongName
 
             for eachChild in eachSrcNode.iterDescendants():
                 if eachChild.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
-                    if ":" in eachChild.longName:
-                        # eachChild.longName  = "blah"
-                        pass
+                    newLongName = self.replaceNameSpace(eachChild.longName, nameSpace)
+                    eachChild.longName = newLongName
 
+    def replaceNameSpace(self, nodeLongName, nameSpace):
+        tokens = nodeLongName.split("{}:".format(nameSpace))
+        if self.nameSpace:
+            newNameSpace = "{}:".format(self.nameSpace)
+        else:
+            newNameSpace = ""
+
+        newName = newNameSpace.join(tokens)
+
+        return newName
 
     def toData(self):
         data = dict()
@@ -204,7 +215,7 @@ class Validator(QtCore.QObject):
 
     @classmethod
     def fromData(cls, name, data):
-        nameSpace = data.get(c_serialization.KEY_NODENAMESPACE, "")
+        nameSpace = data.get(c_serialization.KEY_VALIDATORNAMESPACE, "")
         if name is None:
             name = data.get(c_serialization.KEY_NODENAME, None)
 

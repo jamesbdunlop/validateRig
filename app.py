@@ -50,6 +50,7 @@ class ValidationUI(QtWidgets.QMainWindow):
 
         self.saveButton = self.appMenu.addAction("Save")
         self.saveButton.triggered.connect(self.__saveDialog)
+
         self.setMenuBar(self.appMenu)
 
         mainWidget = QtWidgets.QWidget()
@@ -58,6 +59,7 @@ class ValidationUI(QtWidgets.QMainWindow):
 
         # CENTRAL WIDGET
         subLayout01 = QtWidgets.QVBoxLayout()
+
         self.groupBoxesLayout = QtWidgets.QVBoxLayout()
         self.groupBoxesLayout.setObjectName("groupBoxLayout")
 
@@ -69,6 +71,7 @@ class ValidationUI(QtWidgets.QMainWindow):
         self.collapseAll.clicked.connect(self.__collapseAllTreeWidgets)
 
         self.showLongName = QtWidgets.QRadioButton("Show LongName")
+        self.showLongName.setAutoExclusive(False)
         self.showLongName.setChecked(False)
 
         self.runButton = QtWidgets.QPushButton("Run")
@@ -78,7 +81,6 @@ class ValidationUI(QtWidgets.QMainWindow):
         self.isolateFailedButton = QtWidgets.QRadioButton("Isolate Failed")
         self.isolateFailedButton.setChecked(False)
         self.isolateFailedButton.toggled.connect(self.__toggleIsolateFailed)
-        self.isolateFailedButton.setAutoExclusive(False)
         self.isolateFailedButton.hide()
 
         self.treeButtons.addWidget(self.expandAll)
@@ -193,11 +195,14 @@ class ValidationUI(QtWidgets.QMainWindow):
 
     def __updateValidatorsNameSpace(self):
         nameSpace = self.nameSpaceInput.text()
-        for eachValidator in self.__iterValidators():
-            eachValidator.nameSpace = nameSpace
-            # eachValidator.updateNameSpaceInLongName()
 
-            if not self.showLongName.isChecked():
+        for eachValidator in self.__iterValidators():
+            currentNamespace = eachValidator.nameSpace
+            eachValidator.nameSpace = nameSpace
+            eachValidator.updateNameSpaceInLongName(currentNamespace)
+
+            showLongName = self.showLongName.isChecked()
+            if not showLongName:
                 eachValidator._setAllNodeDisplayNamesToNamespaceShortName()
 
         self.__updateTreeWidgetDisplayNames()
@@ -337,7 +342,8 @@ class ValidationUI(QtWidgets.QMainWindow):
             raise Exception(msg)
 
         validator = c_factory.createValidator(
-            name=data.get(c_serialization.KEY_VALIDATOR_NAME, ""), data=data
+            name=data.get(c_serialization.KEY_VALIDATOR_NAME, ""),
+            data=data
         )
 
         return validator

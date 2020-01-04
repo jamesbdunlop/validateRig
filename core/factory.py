@@ -17,7 +17,7 @@ def createValidator(name, data=None):
     if data is None:
         validator = c_validator.Validator(name=name)
     else:
-        validator = c_validator.Validator.fromData(None, data)
+        validator = c_validator.Validator.fromData(name, data)
 
     if c_inside.insideMaya():  # pragma: no cover
         validator.validate.connect(c_mayaValidation.validateValidatorSourceNodes)

@@ -10,11 +10,11 @@ QMenuBar {
  border-color: $level00;
 }
 
-QMenuBar::item {
+QMenuBar:item {
  background: $level01;
 }
 
-QMenuBar::item:selected {
+QMenuBar:item:selected {
  background: $hiLight;
 
  border: 1px;
@@ -25,3 +25,11 @@ QMenuBar::item:selected {
 QMenuBar:item:selected:pressed {
  background: $level02;
 }
+
+QMenuBar:item:checked{
+ background: blue;
+ }
+
+QMenuBar:item:unchecked {
+ background: green;
+ }

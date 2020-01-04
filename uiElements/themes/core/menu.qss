@@ -23,3 +23,11 @@ QMenu:item:selected {
 QMenu:item:selected:pressed {
  background: $level03;
 }
+
+QMenu:item:checked{
+ background: blue;
+ }
+
+QMenu:item:unchecked {
+ background: green;
+ }
