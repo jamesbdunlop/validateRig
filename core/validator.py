@@ -21,11 +21,16 @@ class Validator(QtCore.QObject):
         # type: (str, str, list) -> None
         QtCore.QObject.__init__(self, None)
         self._name = name  # name of the validator.
-        self._nameSpace = nameSpace
+        self._nameSpace = nameSpace # This can be mutated by UI
+        self._nameSpaceOnCreate = nameSpace # this doesn't change after creation
         self._nodes = (
             nodes or list()
         )  # list of SourceNodes with ConnectionValidityNodes
         self._status = vrc_constants.NODE_VALIDATION_FAILED
+
+    @property
+    def nameSpaceOnCreate(self):
+        return self._nameSpaceOnCreate
 
     @property
     def name(self):
