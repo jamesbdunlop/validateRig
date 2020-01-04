@@ -202,7 +202,9 @@ class ValidationUI(QtWidgets.QMainWindow):
             eachValidator.updateNameSpaceInLongName(currentNamespace)
 
             showLongName = self.showLongName.isChecked()
-            if not showLongName:
+            if showLongName:
+                eachValidator._setAllNodeDisplayNamesAsLongName()
+            else:
                 eachValidator._setAllNodeDisplayNamesToNamespaceShortName()
 
         self.__updateTreeWidgetDisplayNames()
