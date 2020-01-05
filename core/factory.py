@@ -7,7 +7,7 @@ from core import mayaValidation as c_mayaValidation
 logger = logging.getLogger(__name__)
 
 
-def createValidator(name, data=None):
+def createValidator(name, nameSpace="", data=None):
     # type: (str, dict) -> Validator
     """
     Args:
@@ -15,9 +15,9 @@ def createValidator(name, data=None):
         data: if supplied will create from data instead
     """
     if data is None:
-        validator = c_validator.Validator(name=name)
+        validator = c_validator.Validator(name=name, nameSpace=nameSpace)
     else:
-        validator = c_validator.Validator.fromData(name, data)
+        validator = c_validator.Validator.fromData(name=name, data=data)
 
     if c_inside.insideMaya():  # pragma: no cover
         validator.validate.connect(c_mayaValidation.validateValidatorSourceNodes)

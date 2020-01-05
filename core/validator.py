@@ -121,6 +121,8 @@ class Validator(QtCore.QObject):
         for eachSourcenode in sourceNodes:
             self.addSourceNode(eachSourcenode, force)
 
+        return True
+
     def addSourceNodeFromData(self, data):
         # type: (dict) -> SourceNode
         sourceNode = SourceNode.fromData(data)
@@ -193,6 +195,8 @@ class Validator(QtCore.QObject):
                     eachChild.longName = newLongName
 
     def replaceNameSpace(self, nodeLongName, nameSpace):
+        # type: (str, str) -> str
+        """This is slightly arse about face. the namespace is the old namespace to replace by the newly set self.nameSpace"""
         tokens = nodeLongName.split("{}:".format(nameSpace))
         if self.nameSpace:
             newNameSpace = "{}:".format(self.nameSpace)

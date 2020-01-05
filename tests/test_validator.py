@@ -13,23 +13,31 @@ logger = logging.getLogger(__name__)
 
 class Test_Validator(unittest.TestCase):
     def setUp(self):
-        self.validator = c_factory.createValidator(name=c_testdata.VALIDATOR_NAME, data=None)
-        self.validator.nameSpace = c_testdata.VALIDATOR_NAMESPACE
+        self.validator = c_factory.createValidator(
+            name=c_testdata.VALIDATOR_NAME, nameSpace=c_testdata.VALIDATOR_NAMESPACE, data=None
+        )
+
         self.sourceNodeName = c_testdata.SRC_NODENAME
+        self.sourceNodeLongName = "|{}:{}".format(
+            c_testdata.VALIDATOR_NAMESPACE, self.sourceNodeName
+        )
         self.srcNodeAttrName = c_testdata.SRC_ATTRNAME
         self.srcNodeAttrValue = c_testdata.SRC_ATTRVALUE
 
         self.connectionValidityNodeName = c_testdata.VALIDITY_NODENAME
+        self.connectionValidityNodeLongName = "|{}:{}".format(
+            c_testdata.VALIDATOR_NAMESPACE, c_testdata.VALIDITY_NODENAME
+        )
         self.connectionValidityNodeAttrName = c_testdata.VALIDITY_DEST_ATTRNAME
         self.connectionValidityNodeAttrValue = c_testdata.VALIDITY_DEST_ATTRVALUE
 
         self.sourceNode = c_nodes.SourceNode(
-            name=self.sourceNodeName, longName=self.sourceNodeName
+            name=self.sourceNodeName, longName=self.sourceNodeLongName
         )
 
         self.connectionValidityNode = c_nodes.ConnectionValidityNode(
             name=self.connectionValidityNodeName,
-            longName=self.connectionValidityNodeName,
+            longName=self.connectionValidityNodeLongName,
         )
         self.connectionValidityNode.destAttrName = self.connectionValidityNodeAttrName
         self.connectionValidityNode.destAttrValue = self.connectionValidityNodeAttrValue
@@ -47,13 +55,13 @@ class Test_Validator(unittest.TestCase):
             c_serialization.KEY_VALIDATOR_NODES: [
                 {
                     c_serialization.KEY_NODENAME: self.sourceNodeName,
-                    c_serialization.KEY_NODELONGNAME: self.sourceNodeName,
+                    c_serialization.KEY_NODELONGNAME: self.sourceNodeLongName,
                     c_serialization.KEY_NODEDISPLAYNAME: self.sourceNodeName,
                     c_serialization.KEY_NODETYPE: c_testdata.SRC_NODETYPE,
                     c_serialization.KEY_VAILIDITYNODES: [
                         {
                             c_serialization.KEY_NODENAME: self.connectionValidityNodeName,
-                            c_serialization.KEY_NODELONGNAME: self.connectionValidityNodeName,
+                            c_serialization.KEY_NODELONGNAME: self.connectionValidityNodeLongName,
                             c_serialization.KEY_NODEDISPLAYNAME: self.connectionValidityNodeName,
                             c_serialization.KEY_NODETYPE: c_testdata.VALIDITY_NODETYPE,
                             c_serialization.KEY_DEST_ATTRIBUTENAME: self.connectionValidityNodeAttrName,
@@ -97,14 +105,48 @@ class Test_Validator(unittest.TestCase):
         self.assertFalse(self.validator.passed)
 
     def test_sourceNodeLongNameExists(self):
-        self.assertTrue(self.validator.sourceNodeLongNameExists(self.sourceNodeName))
+        self.assertTrue(
+            self.validator.sourceNodeLongNameExists(self.sourceNodeLongName)
+        )
 
     def test_Name(self):
         self.assertEqual(
             self.validator.name,
             c_testdata.VALIDATOR_NAME,
-            "ValidatorName is not %s" % c_testdata.VALIDATOR_NAME,
+            "ValidatorName: %s is not %s"
+            % (self.validator.name, c_testdata.VALIDATOR_NAME),
         )
+
+    def test_namespaceOnCreate(self):
+        self.assertEqual(
+            c_testdata.VALIDATOR_NAMESPACE,
+            self.validator.nameSpaceOnCreate,
+            "_nameSpaceOnCreate: {} is not what it should be: {}".format(
+                self.validator.nameSpaceOnCreate, c_testdata.VALIDATOR_NAMESPACE
+            ),
+        )
+
+    def test_toggleLongNodeNames(self):
+        self.validator.toggleLongNodeNames(True)
+        srcNode = list(self.validator.iterSourceNodes())[0]
+        self.assertEqual(srcNode.displayName, srcNode.longName)
+
+        self.validator.toggleLongNodeNames(False)
+        srcNode = list(self.validator.iterSourceNodes())[0]
+
+        self.assertEqual(
+            srcNode.displayName,
+            "{}:{}".format(c_testdata.VALIDATOR_NAMESPACE, srcNode.name),
+        )
+
+    def test_updateNameSpaceInLongName(self):
+        currentNamspace = self.validator.nameSpace
+        newNamespace = "fartyblartfast"
+        self.validator.nameSpace = newNamespace
+        self.validator.updateNameSpaceInLongName(nameSpace=currentNamspace)
+        srcNode = list(self.validator.iterSourceNodes())[0]
+        result = newNamespace in srcNode.longName
+        self.assertTrue(result)
 
     def test_addSourceNode(self):
         nodeName = "2ndSourceNode"
@@ -155,8 +197,29 @@ class Test_Validator(unittest.TestCase):
             "Failed to replaceExistingSourceNode!",
         )
 
+        srcN = c_nodes.SourceNode("Idontexist", "|fart:Idontexist")
+        self.assertFalse(
+            self.validator.sourceNodeExists(srcN),
+            "Apparent Idontexist sourceNode exists?! It should not!",
+        )
+
+    def test_addSourceNodes(self):
+        tmp01 = c_nodes.SourceNode(
+            "Src1", "|{}:Src1".format(c_serialization.KEY_VALIDATORNAMESPACE)
+        )
+        tmp02 = c_nodes.SourceNode(
+            "Src2", "|{}:Src2".format(c_serialization.KEY_VALIDATORNAMESPACE)
+        )
+        srcNodes = [tmp01, tmp02]
+        self.assertTrue(
+            self.validator.addSourceNodes(srcNodes),
+            "addSourceNodes didn't return True? It failed :(",
+        )
+
     def test_findSourceNodeByLongName(self):
-        sourceNode = self.validator.findSourceNodeByLongName(longName=self.sourceNodeName)
+        sourceNode = self.validator.findSourceNodeByLongName(
+            longName=self.sourceNodeLongName
+        )
         self.assertEqual(
             sourceNode,
             self.sourceNode,
