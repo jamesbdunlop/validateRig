@@ -198,8 +198,11 @@ class ValidationUI(QtWidgets.QMainWindow):
         useFromDisk.setStyleSheet(self.sheet)
         useFromDisk.setText("Use ns from disk?")
         useFromDisk.setDetailedText(
-            "This will use the original nameSpace instead of an empty namespace for each validator.")
-        useFromDisk.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+            "This will use the original nameSpace instead of an empty namespace for each validator."
+        )
+        useFromDisk.setStandardButtons(
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
+        )
         useFromDisk.setIcon(QtWidgets.QMessageBox.Question)
 
         return useFromDisk.exec()
@@ -209,13 +212,16 @@ class ValidationUI(QtWidgets.QMainWindow):
         useFromDisk = False
         if not nameSpace:
             useFromDisk = self.__promptUseOriginalNamespace()
+
         for eachValidator in self.__iterValidators():
-            if useFromDisk == 16384:
+            if (
+                useFromDisk == 16384
+            ):  # Todo this check sucks who the fk is gunna know what 16384 means!
                 currentNamespace = eachValidator.nameSpaceOnCreate
-                print(eachValidator.nameSpaceOnCreate)
             else:
-                currentNamespace = eachValidator.nameSpace
-            eachValidator.nameSpace = nameSpace
+                currentNamespace = nameSpace
+
+            eachValidator.nameSpace = currentNamespace
             eachValidator.updateNameSpaceInLongName(currentNamespace)
 
             showLongName = self.showLongName.isChecked()
@@ -238,8 +244,12 @@ class ValidationUI(QtWidgets.QMainWindow):
                     child = treeWidgetItem.child(x)
                     child.updateDisplayName()
 
-            eachValidationTreeWidget.resizeColumnToContents(vrc_constants.SRC_NODENAME_COLUMN)
-            eachValidationTreeWidget.resizeColumnToContents(vrc_constants.DEST_NODENAME_COLUMN)
+            eachValidationTreeWidget.resizeColumnToContents(
+                vrc_constants.SRC_NODENAME_COLUMN
+            )
+            eachValidationTreeWidget.resizeColumnToContents(
+                vrc_constants.DEST_NODENAME_COLUMN
+            )
 
     def __expandAllTreeWidgets(self):
         for _, treeWidget in self._validators:
@@ -361,8 +371,7 @@ class ValidationUI(QtWidgets.QMainWindow):
             raise Exception(msg)
 
         validator = c_factory.createValidator(
-            name=data.get(c_serialization.KEY_VALIDATOR_NAME, ""),
-            data=data
+            name=data.get(c_serialization.KEY_VALIDATOR_NAME, ""), data=data
         )
 
         return validator
