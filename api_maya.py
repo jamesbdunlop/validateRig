@@ -2,12 +2,14 @@
 from api import *
 from core import inside
 from const import constants as c_const
+import maya.api.OpenMaya as om2
 import logging
 
 logger = logging.getLogger(__name__)
 
 if inside.insideMaya():
     from maya import cmds
+    from maya.api import OpenMaya as om2
 
 """
 # Example Usage:
@@ -105,24 +107,34 @@ def __createConnectionNodes(nodeLongName):
             srcFullAttributeName = ".".join(src.split(".")[1:])
             srcShortAttributeName = src.split(".")[-1]
 
-            if cmds.nodeType(dest) in c_const.MAYA_CONNECTED_NODETYPES_IGNORES:
+            destWithoutAttrName = dest.split(".")[0]
+            if cmds.nodeType(destWithoutAttrName) in c_const.MAYA_CONNECTED_NODETYPES_IGNORES:
                 continue
 
             destFullAttributeName = ".".join(dest.split(".")[1:])
             destShortAttributeName = dest.split(".")[-1]
 
-            if not srcShortAttributeName in c_const.MAYA_DEFAULTVALUEATTRIBUTE_IGNORES:
-                sourceNodeAttributeValue = cmds.getAttr(src)
-            else:
-                sourceNodeAttributeValue = None
+            # Check if this is a valid attribute time to query
+            skipValueQuery = False
+            sourceNodeAttributeValue = None
+            destinationNodeAttributeValue = None
+            for eachAttr in c_const.MAYA_DEFAULTVALUEATTRIBUTE_IGNORES:
+                if eachAttr not in srcShortAttributeName or eachAttr not in destShortAttributeName:
+                    skipValueQuery = True
 
-            if not destShortAttributeName in c_const.MAYA_DEFAULTVALUEATTRIBUTE_IGNORES:
+            if not skipValueQuery:
+                sourceNodeAttributeValue = cmds.getAttr(src)
                 destinationNodeAttributeValue = cmds.getAttr(dest)
-            else:
-                destinationNodeAttributeValue = None
 
             destShortNodeName = cleanMayaLongName(dest)
-            destLongName = cmds.ls(dest, l=True)[0]
+            mSel = om2.MSelectionList()
+            mSel.add(destWithoutAttrName)
+            if mSel.getDependNode(0).hasFn(om2.MFn.kDagNode):
+                destFullPathName = om2.MDagPath.getAPathTo(mSel.getDependNode(0)).partialPathName()
+                destLongName = destFullPathName
+            else:
+                destLongName = destWithoutAttrName
+
             connectionNode = createConnectionValidityNode(
                 name=destShortNodeName,
                 longName=destLongName,

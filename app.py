@@ -165,6 +165,7 @@ class ValidationUI(QtWidgets.QMainWindow):
     def __toggleFixAllButton(self):
         self.fixAllButton.hide()
         self.isolateFailedButton.hide()
+        self.isolateFailedButton.setChecked(False)
         for eachValidator in self.__iterValidators():
             if eachValidator.failed:
                 self.fixAllButton.show()
@@ -196,16 +197,11 @@ class ValidationUI(QtWidgets.QMainWindow):
     def __promptUseOriginalNamespace(self):
         useFromDisk = QtWidgets.QMessageBox()
         useFromDisk.setStyleSheet(self.sheet)
-        useFromDisk.setText("Use ns from disk?")
         useFromDisk.setDetailedText(
             "This will use the original nameSpace instead of an empty namespace for each validator."
         )
-        useFromDisk.setStandardButtons(
-            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
-        )
-        useFromDisk.setIcon(QtWidgets.QMessageBox.Question)
-
-        return useFromDisk.exec()
+        question = useFromDisk.question(None, "Confirm", "Use ns from disk?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+        return question
 
     def __updateValidatorsNameSpace(self):
         nameSpace = self.nameSpaceInput.text()
@@ -215,13 +211,12 @@ class ValidationUI(QtWidgets.QMainWindow):
 
         for eachValidator in self.__iterValidators():
             if (
-                useFromDisk == 16384
+                useFromDisk == QtWidgets.QMessageBox.Yes
             ):  # Todo this check sucks who the fk is gunna know what 16384 means!
-                currentNamespace = eachValidator.nameSpaceOnCreate
-            else:
-                currentNamespace = nameSpace
+                nameSpace = eachValidator.nameSpaceOnCreate
 
-            eachValidator.nameSpace = currentNamespace
+            currentNamespace = eachValidator.nameSpace
+            eachValidator.nameSpace = nameSpace
             eachValidator.updateNameSpaceInLongName(currentNamespace)
 
             showLongName = self.showLongName.isChecked()
