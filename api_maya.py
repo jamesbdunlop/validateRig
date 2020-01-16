@@ -1,15 +1,13 @@
 #  Copyright (c) 2019.  James Dunlop
-from api import *
-from core import inside
-from const import constants as c_const
-import maya.api.OpenMaya as om2
 import logging
-
+from api import *
+from const import constants as c_const
+from core.maya import types as cm_types
+from core.maya import plugs as cm_plugs
+reload(cm_plugs)
 logger = logging.getLogger(__name__)
 
-if inside.insideMaya():
-    from maya import cmds
-    from maya.api import OpenMaya as om2
+from maya.api import OpenMaya as om2
 
 """
 # Example Usage:
@@ -90,43 +88,38 @@ def __createConnectionNodes(nodeLongName):
     # type: (str) -> ConnectionValidityNode
 
     # We list only the destinations of these attributes.
-    conns = cmds.listConnections(
-        nodeLongName,
-        connections=True,
-        source=False,
-        destination=True,
-        plugs=True,
-        skipConversionNodes=True,
-    )
+    mSel = om2.MSelectionList()
+    mSel.add(nodeLongName)
+    mObj = mSel.getDependNode(0)
+    mFn = om2.MFnDependencyNode(mObj)
+    conns = mFn.getConnections()
+    if not conns:
+        yield []
 
-    if conns is not None:
-        for x in range(0, len(conns), 2):
-            src = conns[x]
-            dest = conns[x + 1]
+    for eachPlug in conns:
+        if not eachPlug.isSource:
+            continue
+        srcPlugName = eachPlug.name()
+        srcFullAttributeName = ".".join(srcPlugName.split(".")[1:])
+        srcPlugType = cm_plugs.getPlugType(eachPlug)
+        print(srcPlugType)
+        sourceNodeAttributeValue = None
+        if srcPlugType not in (cm_types.MESSAGE, cm_types.MATRIXF44):
+            sourceNodeAttributeValue = cm_plugs.getPlugValue(eachPlug)
 
-            srcFullAttributeName = ".".join(src.split(".")[1:])
-            srcShortAttributeName = src.split(".")[-1]
+        destinations = eachPlug.destinations()
+        for eachDestPlug in destinations:
+            destPlugName = eachDestPlug.name()
+            destPlugType = cm_plugs.getPlugType(eachDestPlug)
+            destWithoutAttrName = destPlugName.split(".")[0]
+            destFullAttributeName = ".".join(destPlugName.split(".")[1:])
 
-            destWithoutAttrName = dest.split(".")[0]
-            if cmds.nodeType(destWithoutAttrName) in c_const.MAYA_CONNECTED_NODETYPES_IGNORES:
-                continue
-
-            destFullAttributeName = ".".join(dest.split(".")[1:])
-            destShortAttributeName = dest.split(".")[-1]
-
-            # Check if this is a valid attribute time to query
-            skipValueQuery = False
-            sourceNodeAttributeValue = None
             destinationNodeAttributeValue = None
-            for eachAttr in c_const.MAYA_DEFAULTVALUEATTRIBUTE_IGNORES:
-                if eachAttr not in srcShortAttributeName or eachAttr not in destShortAttributeName:
-                    skipValueQuery = True
+            if destPlugType not in (cm_types.MESSAGE, cm_types.MATRIXF44):
+                destinationNodeAttributeValue = cm_plugs.getPlugValue(eachDestPlug)
 
-            if not skipValueQuery:
-                sourceNodeAttributeValue = cmds.getAttr(src)
-                destinationNodeAttributeValue = cmds.getAttr(dest)
-
-            destShortNodeName = cleanMayaLongName(dest)
+            # proper fullPathName
+            destShortNodeName = cleanMayaLongName(destPlugName)
             mSel = om2.MSelectionList()
             mSel.add(destWithoutAttrName)
             if mSel.getDependNode(0).hasFn(om2.MFn.kDagNode):
@@ -165,12 +158,23 @@ def cleanMayaLongName(nodeLongName):
 
 def getAttrValue(nodeLongName, attributeName):
     # type: (str, str) -> any
-    attrName = "{}.{}".format(nodeLongName, attributeName)
-    value = cmds.getAttr(attrName)
-    if isinstance(value, list):
-        value = value[0]
 
-    return attrName, value
+    fullAttrName = "{}.{}".format(nodeLongName, attributeName)
+    mSel = om2.MSelectionList()
+    mSel.add(nodeLongName)
+    mObj = mSel.getDependNode(0)
+    mFn = om2.MFnDependencyNode(mObj)
+    plg = mFn.findPlug(attributeName, False)
+
+    ignoreTypes = (cm_types.MESSAGE, )
+    plugType = cm_plugs.getPlugType(plg)
+
+    if plugType in ignoreTypes:
+        return None
+
+    value = cm_plugs.getPlugValue(plg)
+
+    return fullAttrName, value
 
 
 def getNamespaceFromLongName(nodeLongName):
