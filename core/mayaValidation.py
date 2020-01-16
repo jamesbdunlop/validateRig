@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 # MAYA UTILS
 
 
-
 def exists(srcNodeName):
     exists = cmds.objExists(srcNodeName)
     if not exists:

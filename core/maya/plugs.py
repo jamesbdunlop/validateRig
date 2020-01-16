@@ -1,4 +1,3 @@
-#  Copyright (c) 2020.  James Dunlop
 #  Copyright (c) 2019.  James Dunlop
 # pragma: no cover
 import logging
