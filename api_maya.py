@@ -1,13 +1,17 @@
 #  Copyright (c) 2019.  James Dunlop
 import logging
-from api import *
-from const import constants as c_const
-from core.maya import types as cm_types
-from core.maya import plugs as cm_plugs
-reload(cm_plugs)
-logger = logging.getLogger(__name__)
 
 from maya.api import OpenMaya as om2
+
+from api import *
+
+from const import constants as c_const
+
+from core.maya import types as cm_types
+from core.maya import plugs as cm_plugs
+from core.maya import utils as cm_utils
+
+logger = logging.getLogger(__name__)
 
 """
 # Example Usage:
@@ -56,15 +60,15 @@ def asSourceNode(nodeLongName, attributes=None, connections=False):
         validityNodes += list(__createConnectionNodes(nodeLongName))
 
     # Now the sourceNodes
-    shortName = cleanMayaLongName(nodeLongName)
-    nameSpace = getNamespaceFromLongName(nodeLongName)
+    shortName = cm_utils.cleanMayaLongName(nodeLongName)
+    nameSpace = cm_utils.getNamespaceFromLongName(nodeLongName)
     nsShortName = shortName
     if nameSpace:
         nsShortName = "{}:{}".format(nameSpace, shortName)
 
-    sourceNode = createSourceNode(
-        name=shortName, longName=nodeLongName, validityNodes=validityNodes
-    )
+    sourceNode = createSourceNode(name=shortName,
+                                  longName=nodeLongName,
+                                  validityNodes=validityNodes)
     sourceNode.displayName = nsShortName
 
     return sourceNode
@@ -76,10 +80,11 @@ def __createDefaultValueNodes(nodeLongName, defaultAttributes):
         if eachAttr in c_const.MAYA_DEFAULTVALUEATTRIBUTE_IGNORES:
             continue
 
-        attrName, attrValue = getAttrValue(nodeLongName, eachAttr)
-        defaultValueNode = createDefaultValueNode(
-            name=eachAttr, longName=attrName, defaultValue=attrValue
-        )
+        longAttrName = "{}.{}".format(nodeLongName, eachAttr)
+        attrValue = cm_utils.getAttrValue(nodeLongName, eachAttr)
+        defaultValueNode = createDefaultValueNode(name=eachAttr,
+                                                  longName=longAttrName,
+                                                  defaultValue=attrValue)
 
         yield defaultValueNode
 
@@ -102,31 +107,13 @@ def __createConnectionNodes(nodeLongName):
         srcPlugName = eachPlug.name()
         srcFullAttributeName = ".".join(srcPlugName.split(".")[1:])
         srcPlugType = cm_plugs.getPlugType(eachPlug)
-        print(srcPlugType)
         sourceNodeAttributeValue = None
         if srcPlugType not in (cm_types.MESSAGE, cm_types.MATRIXF44):
             sourceNodeAttributeValue = cm_plugs.getPlugValue(eachPlug)
 
         destinations = eachPlug.destinations()
         for eachDestPlug in destinations:
-            destPlugName = eachDestPlug.name()
-            destPlugType = cm_plugs.getPlugType(eachDestPlug)
-            destWithoutAttrName = destPlugName.split(".")[0]
-            destFullAttributeName = ".".join(destPlugName.split(".")[1:])
-
-            destinationNodeAttributeValue = None
-            if destPlugType not in (cm_types.MESSAGE, cm_types.MATRIXF44):
-                destinationNodeAttributeValue = cm_plugs.getPlugValue(eachDestPlug)
-
-            # proper fullPathName
-            destShortNodeName = cleanMayaLongName(destPlugName)
-            mSel = om2.MSelectionList()
-            mSel.add(destWithoutAttrName)
-            if mSel.getDependNode(0).hasFn(om2.MFn.kDagNode):
-                destFullPathName = om2.MDagPath.getAPathTo(mSel.getDependNode(0)).partialPathName()
-                destLongName = destFullPathName
-            else:
-                destLongName = destWithoutAttrName
+            destShortNodeName, destLongName, destFullAttributeName, destinationAttributeValue = processDestinationPlug(eachDestPlug)
 
             connectionNode = createConnectionValidityNode(
                 name=destShortNodeName,
@@ -134,10 +121,10 @@ def __createConnectionNodes(nodeLongName):
                 sourceNodeAttributeName=srcFullAttributeName,
                 sourceNodeAttributeValue=sourceNodeAttributeValue,
                 desinationNodeAttributeName=destFullAttributeName,
-                destinationNodeAttributeValue=destinationNodeAttributeValue,
+                destinationNodeAttributeValue=destinationAttributeValue,
             )
 
-            nameSpace = getNamespaceFromLongName(destLongName)
+            nameSpace = cm_utils.getNamespaceFromLongName(destLongName)
             nsShortName = destShortNodeName
             if nameSpace:
                 nsShortName = "{}:{}".format(nameSpace, destShortNodeName)
@@ -147,39 +134,26 @@ def __createConnectionNodes(nodeLongName):
             yield connectionNode
 
 
-####################################################################################################
-# UTILS
-def cleanMayaLongName(nodeLongName):
-    # type: (str) -> str
-    newName = nodeLongName.split("|")[-1].split(":")[-1].split(".")[0]
+def processDestinationPlug(mPlug):
+    # type: (om2.MPlug) -> list[str, str, str, str]
 
-    return newName
+    destPlugName = mPlug.name()
+    destPlugType = cm_plugs.getPlugType(mPlug)
+    destWithoutAttrName = destPlugName.split(".")[0]
+    destFullAttributeName = ".".join(destPlugName.split(".")[1:])
 
+    destinationAttributeValue = None
+    if destPlugType not in (cm_types.MESSAGE, cm_types.MATRIXF44):
+        destinationAttributeValue = cm_plugs.getPlugValue(mPlug)
 
-def getAttrValue(nodeLongName, attributeName):
-    # type: (str, str) -> any
-
-    fullAttrName = "{}.{}".format(nodeLongName, attributeName)
+    # proper fullPathName
+    destShortNodeName = cm_utils.cleanMayaLongName(destPlugName)
     mSel = om2.MSelectionList()
-    mSel.add(nodeLongName)
-    mObj = mSel.getDependNode(0)
-    mFn = om2.MFnDependencyNode(mObj)
-    plg = mFn.findPlug(attributeName, False)
+    mSel.add(destWithoutAttrName)
+    if mSel.getDependNode(0).hasFn(om2.MFn.kDagNode):
+        destFullPathName = om2.MDagPath.getAPathTo(mSel.getDependNode(0)).partialPathName()
+        destLongName = destFullPathName
+    else:
+        destLongName = destWithoutAttrName
 
-    ignoreTypes = (cm_types.MESSAGE, )
-    plugType = cm_plugs.getPlugType(plg)
-
-    if plugType in ignoreTypes:
-        return None
-
-    value = cm_plugs.getPlugValue(plg)
-
-    return fullAttrName, value
-
-
-def getNamespaceFromLongName(nodeLongName):
-    nameSpace = ""
-    if ":" in nodeLongName:
-        nameSpace = nodeLongName.split("|")[-1].split(":")[0]
-
-    return nameSpace
+    return destShortNodeName, destLongName, destFullAttributeName, destinationAttributeValue

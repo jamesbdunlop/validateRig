@@ -1,25 +1,13 @@
 #  Copyright (c) 2019.  James Dunlop
 # pragma: no cover
 import logging
-from core import inside
 from const import serialization as c_serialization
 from const import constants as vrc_constants
-
-if inside.insideMaya():
-    from maya import cmds
+from core.maya import utils as cm_utils
 
 logger = logging.getLogger(__name__)
 
-##############################################
-# MAYA UTILS
 
-
-def exists(srcNodeName):
-    exists = cmds.objExists(srcNodeName)
-    if not exists:
-        logger.error("Failed to find sourceNode %s in scene!" % srcNodeName)
-
-    return exists
 
 
 ##############################################
@@ -30,7 +18,7 @@ def validateValidatorSourceNodes(validator):
     for eachSourceNode in validator.iterSourceNodes():
         eachSourceNode.status = vrc_constants.NODE_VALIDATION_PASSED
         srcNodeName = eachSourceNode.longName
-        if not exists(srcNodeName):
+        if not cm_utils.exists(srcNodeName):
             continue
 
         defaultStatus = validateDefaultNodes(eachSourceNode)
@@ -49,14 +37,11 @@ def validateDefaultNodes(sourceNode):
         if eachValidationNode.nodeType != c_serialization.NT_DEFAULTVALUE:
             continue
 
+        defaultNodeLongName = eachValidationNode.longName
+        defaultAttrName = eachValidationNode.name
         defaultNodeValue = eachValidationNode.defaultValue
-        attrName = "{}.{}".format(
-            eachValidationNode.parent.longName, eachValidationNode.name
-        )
-        if isinstance(defaultNodeValue, list):
-            attrValue = list(cmds.getAttr(attrName)[0])
-        else:
-            attrValue = cmds.getAttr(attrName)
+
+        attrValue = cm_utils.getAttrValue(defaultNodeLongName, defaultAttrName)
 
         result = defaultNodeValue == attrValue
         if not setValidationStatus(eachValidationNode, result):
@@ -72,13 +57,9 @@ def validateConnectionNodes(sourceNode):
         if eachValidationNode.nodeType != c_serialization.NT_CONNECTIONVALIDITY:
             continue
 
-        sourceAttrName = "{}.{}".format(
-            eachValidationNode.parent.longName, eachValidationNode.srcAttrName
-        )
-        destAttrName = "{}.{}".format(
-            eachValidationNode.longName, eachValidationNode.destAttrName
-        )
-        result = cmds.isConnected(sourceAttrName, destAttrName)
+        result = None
+        # TODO om2
+
         if not setValidationStatus(eachValidationNode, result):
             passed = False
 
@@ -91,7 +72,7 @@ def repairValidatorSourceNodes(validator):
     # type: (Validator) -> None
     for eachSourceNode in validator.iterSourceNodes():
         srcNodeName = eachSourceNode.longName
-        if not exists(srcNodeName):
+        if not cm_utils.exists(srcNodeName):
             continue
 
         defaultStatus = repairDefaultNodes(eachSourceNode)
@@ -112,14 +93,15 @@ def repairDefaultNodes(sourceNode):
         if eachValidationNode.nodeType != c_serialization.NT_DEFAULTVALUE:
             continue
 
-        sourceAttrName = eachValidationNode.longName
-        defaultValue = eachValidationNode.defaultValue
-        if isinstance(defaultValue, list):
-            cmds.setAttr(
-                sourceAttrName, defaultValue[0], defaultValue[1], defaultValue[2]
-            )
-        else:
-            cmds.setAttr(sourceAttrName, eachValidationNode.defaultValue)
+        # sourceAttrName = eachValidationNode.longName
+        # defaultValue = eachValidationNode.defaultValue
+        # if isinstance(defaultValue, list):
+        #     cmds.setAttr(
+        #         sourceAttrName, defaultValue[0], defaultValue[1], defaultValue[2]
+        #     )
+        # else:
+        #     cmds.setAttr(sourceAttrName, eachValidationNode.defaultValue)
+        # TODO om2
 
         setValidationStatus(eachValidationNode, True)
 
@@ -134,14 +116,15 @@ def repairConnectionNodes(sourceNode):
         if eachValidationNode.status == vrc_constants.NODE_VALIDATION_PASSED:
             continue
 
-        sourceAttrName = "{}.{}".format(
-            eachValidationNode.parent.longName, eachValidationNode.srcAttrName
-        )
-        destAttrName = "{}.{}".format(
-            eachValidationNode.longName, eachValidationNode.destAttrName
-        )
-
-        cmds.connectAttr(sourceAttrName, destAttrName, force=True)
+        # sourceAttrName = "{}.{}".format(
+        #     eachValidationNode.parent.longName, eachValidationNode.srcAttrName
+        # )
+        # destAttrName = "{}.{}".format(
+        #     eachValidationNode.longName, eachValidationNode.destAttrName
+        # )
+        #
+        # cmds.connectAttr(sourceAttrName, destAttrName, force=True)
+        # TODO om2
         setValidationStatus(eachValidationNode, True)
 
     return True

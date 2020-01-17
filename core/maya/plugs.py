@@ -7,7 +7,6 @@ from core.maya import types as cm_types
 logger = logging.getLogger(__name__)
 
 
-
 def getPlugValue(mplug):
     # type: (MPlug) -> any
 
@@ -139,3 +138,32 @@ def getPlugType(mplug):
 
     elif apiType == om2.MFn.kMessageAttribute:
         return None
+
+
+def getPlugFromLongName(nodeLongName, attrName):
+    # type: (str, str) -> om2.MPlug
+
+    mSel = om2.MSelectionList()
+    mSel.add(nodeLongName)
+    mObj = mSel.getDependNode(0)
+    mFn = om2.MFnDependencyNode(mObj)
+
+    plug = mFn.findPlug(attrName, False)
+
+    return plug
+
+
+def mPlugAsData(mplug):
+    plugType = getPlugType(mplug)
+    plugValue = getPlugValue(mplug)
+    isArray = mplug.isArray()
+    isCompound = mplug.isCompound()
+    isElement = mplug.isElement()
+    idx = None
+    if isElement:
+        idx = mplug.logicalIndex()
+
+    data = {
+        "plugType": plugType,
+        "plugValue": plugValue
+        }
