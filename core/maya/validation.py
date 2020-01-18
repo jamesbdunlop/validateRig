@@ -4,8 +4,7 @@ from const import serialization as c_serialization
 from const import constants as vrc_constants
 from core.maya import utils as cm_utils
 from core.maya import plugs as cm_plugs
-reload(cm_plugs)
-reload(cm_utils)
+import maya.api.OpenMaya as om2
 logger = logging.getLogger(__name__)
 
 ##############################################
@@ -129,22 +128,34 @@ def __repairDefaultNodes(sourceNode):
 
 def __repairConnectionNodes(sourceNode):
     # type: (SourceNode) -> bool
+    mDagMod = om2.MDagModifier()
+
     for eachValidationNode in sourceNode.iterDescendants():
         if eachValidationNode.nodeType != c_serialization.NT_CONNECTIONVALIDITY:
             continue
         if eachValidationNode.status == vrc_constants.NODE_VALIDATION_PASSED:
             continue
 
-        # sourceAttrName = "{}.{}".format(
-        #     eachValidationNode.parent.longName, eachValidationNode.srcAttrName
-        # )
-        # destAttrName = "{}.{}".format(
-        #     eachValidationNode.longName, eachValidationNode.destAttrName
-        # )
-        #
-        # cmds.connectAttr(sourceAttrName, destAttrName, force=True)
-        # TODO om2
+        srcMPlug = cm_plugs.getMPlugFromLongName(sourceNode.longName, eachValidationNode.srcAttrName)
+        destMPlug = cm_plugs.getMPlugFromLongName(eachValidationNode.longName, eachValidationNode.destAttrName)
+        if eachValidationNode.srcAttrIsIndexed:
+            idx = eachValidationNode.srcAttrIndex
+            if srcMPlug.isArray:
+                srcMPlug = srcMPlug.elementByLogicalIndex(idx)
+            else:
+                srcMPlug = srcMPlug.child(idx)
+
+        if eachValidationNode.destAttrIsIndexed:
+            idx = eachValidationNode.destAttrIndex
+            if destMPlug.isArray:
+                destMPlug = destMPlug.elementByLogicalIndex(idx)
+            else:
+                destMPlug = destMPlug.child(idx)
+
+        mDagMod.connect(srcMPlug, destMPlug)
         setValidationStatus(eachValidationNode, True)
+
+    mDagMod.doIt()
 
     return True
 

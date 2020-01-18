@@ -293,14 +293,14 @@ class ValidationUI(QtWidgets.QMainWindow):
             for treeWidgetItem in topLevelItems:
                 if not sender:
                     treeWidgetItem.setHidden(False)
-                    for eachChildTWI in treeWidgetItem.children():
+                    for eachChildTWI in treeWidgetItem.children:
                         eachChildTWI.setHidden(False)
                     continue
 
                 if (treeWidgetItem.node().status == vrc_constants.NODE_VALIDATION_PASSED and sender):
                     treeWidgetItem.setHidden(True)
 
-                for eachChildTWI in treeWidgetItem.children():
+                for eachChildTWI in treeWidgetItem.children:
                     if (eachChildTWI.node().status == vrc_constants.NODE_VALIDATION_PASSED and sender):
                         eachChildTWI.setHidden(True)
 
