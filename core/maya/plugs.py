@@ -7,7 +7,7 @@ from core.maya import types as cm_types
 logger = logging.getLogger(__name__)
 
 
-def getPlugValue(mplug):
+def getMPlugValue(mplug):
     # type: (MPlug) -> any
 
     pAttribute = mplug.attribute()
@@ -22,7 +22,7 @@ def getPlugValue(mplug):
         result = []
         if mplug.isCompound:
             for c in range(mplug.numChildren()):
-                result.append(getPlugValue(mplug.child(c)))
+                result.append(getMPlugValue(mplug.child(c)))
             return result
 
     # Distance
@@ -71,7 +71,7 @@ def getPlugValue(mplug):
         return mplug.asInt()
 
 
-def getPlugType(mplug):
+def getMPlugType(mplug):
     # type: (MPlug) -> int
     pAttribute = mplug.attribute()
     apiType = pAttribute.apiType()
@@ -85,7 +85,7 @@ def getPlugType(mplug):
         result = []
         if mplug.isCompound:
             for c in range(mplug.numChildren()):
-                result.append(getPlugType(mplug.child(c)))
+                result.append(getMPlugType(mplug.child(c)))
             return result
 
     # Distance
@@ -135,35 +135,57 @@ def getPlugType(mplug):
     elif apiType == om2.MFn.kEnumAttribute:
         return cm_types.INT
 
-
     elif apiType == om2.MFn.kMessageAttribute:
-        return None
+        return cm_types.MESSAGE
 
 
-def getPlugFromLongName(nodeLongName, attrName):
+def getMPlugFromLongName(nodeLongName, plugName):
     # type: (str, str) -> om2.MPlug
-
+    if isinstance(plugName, list):
+        print("plugName: {}".format(plugName))
+        plugName = plugName[0]
     mSel = om2.MSelectionList()
-    mSel.add(nodeLongName)
+    mSel.add(str(nodeLongName))
     mObj = mSel.getDependNode(0)
     mFn = om2.MFnDependencyNode(mObj)
 
-    plug = mFn.findPlug(attrName, False)
+    mplug = mFn.findPlug(plugName, False)
 
-    return plug
+    return mplug
 
 
-def mPlugAsData(mplug):
-    plugType = getPlugType(mplug)
-    plugValue = getPlugValue(mplug)
-    isArray = mplug.isArray()
-    isCompound = mplug.isCompound()
-    isElement = mplug.isElement()
-    idx = None
-    if isElement:
-        idx = mplug.logicalIndex()
+def getMPlugElementFromLongName(nodeLongName, plugName, index, useLogicalIndex=True):
+    # type: (str, str, int, bool) -> om2.MPlug
+    parentPlug = getMPlugFromLongName(nodeLongName, plugName)
+    if parentPlug.isArray():
+        mplug = getMPlugArrayElement(parentPlug, index, useLogicalIndex=useLogicalIndex)
 
-    data = {
-        "plugType": plugType,
-        "plugValue": plugValue
-        }
+        return mplug
+
+
+def getMPlugArrayElement(mplug, index, useLogicalIndex=True):
+    # type: (om2.MPlug, int, bool) -> om2.MPlug
+    if useLogicalIndex:
+        mplug = mplug.elementyByLogicalIndex(index)
+    else:
+        mplug = mplug.elementByPhysicalIndex(index)
+
+    return mplug
+
+
+def getMPlugChildFromLongName(nodeLongName, plugName, index):
+    # type: (str, str, int) -> om2.MPlug
+    parentPlug = getMPlugFromLongName(nodeLongName, plugName)
+    if parentPlug.isCompound:
+        mplug = parentPlug.child(index)
+
+        return mplug
+
+
+def isMPlugIndexed(mPlug):
+    isElement = mPlug.isElement
+    isChild = mPlug.isChild
+    isIndexed = any((isElement, isChild))
+
+    return isIndexed
+

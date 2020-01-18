@@ -30,18 +30,10 @@ def createDefaultValueNode(name, longName, defaultValue):
 def createConnectionValidityNode(
     name,
     longName,
-    sourceNodeAttributeName,
-    sourceNodeAttributeValue,
-    desinationNodeAttributeName,
-    destinationNodeAttributeValue,
 ):
-    # type: (str, str, str, any, str, any) -> ConnectionValidityNode
+    # type: (str, str) -> ConnectionValidityNode
 
     node = ConnectionValidityNode(name=name, longName=longName)
-    node.srcAttrName = sourceNodeAttributeName
-    node.srcAttrValue = sourceNodeAttributeValue
-    node.destAttrName = desinationNodeAttributeName
-    node.destAttrValue = destinationNodeAttributeValue
 
     return node
 

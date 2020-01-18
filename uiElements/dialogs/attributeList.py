@@ -1,10 +1,10 @@
 #  Copyright (c) 2019.  James Dunlop
 from PySide2 import QtWidgets, QtCore
-from core import inside
+import inside as c_inside
 from core.nodes import SourceNode, DefaultValueNode, ConnectionValidityNode
 from uiElements import validityNodeListWidget as ui_validityNodeListWidget
 
-if inside.insideMaya():
+if c_inside.insideMaya():
     from maya import cmds
 
 

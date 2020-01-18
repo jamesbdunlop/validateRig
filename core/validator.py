@@ -2,12 +2,10 @@
 import logging
 from PySide2 import QtCore
 from PySide2.QtCore import Signal
-from core import inside
-from core import mayaValidation
-from core import parser as c_parser
-from core.nodes import SourceNode
 from const import serialization as c_serialization
 from const import constants as vrc_constants
+from core import parser as c_parser
+from core.nodes import SourceNode
 
 logger = logging.getLogger(__name__)
 

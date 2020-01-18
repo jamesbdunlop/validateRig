@@ -1,16 +1,17 @@
-#  Copyright (c) 2019.  James Dunlop
+#  Copyright (c) 2020.  James Dunlop
 import sys
-
 
 def insideMaya():
     # type: () -> Bool
+
     inside = True
     if not "maya.api.maya" in sys.modules:
         inside = False
 
     try:
-        from maya import cmds
-    except:
+        import maya.cmds as cmds
+    except ImportError:
         inside = False
 
     return inside
+

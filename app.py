@@ -3,19 +3,21 @@ import sys
 import os
 import logging
 from PySide2 import QtWidgets, QtCore
+
+import inside as c_inside
 from const import constants as vrc_constants
 from const import serialization as c_serialization
-from core import inside
 from core import factory as c_factory
 from core import validator as c_validator
 from core import parser as c_parser
+
 from uiElements.themes import factory as uit_factory
+from uiElements.trees import validationTreeWidget as uit_validationTreeWidget
 from uiElements.dialogs import saveToJSONFile as uid_saveToJSON
 from uiElements.dialogs import loadFromJSONFile as uid_loadFromJSON
-from uiElements.trees import validationTreeWidget as uit_validationTreeWidget
 from uiElements.dialogs import createValidator as uid_createValidator
 
-if inside.insideMaya():
+if c_inside.insideMaya():
     from maya import cmds
 
 logger = logging.getLogger(__name__)
@@ -256,7 +258,7 @@ class ValidationUI(QtWidgets.QMainWindow):
 
     # UI Getters
     def __getNameSpaceFromScene(self):
-        if inside.insideMaya():
+        if c_inside.insideMaya():
             # Smelly find of NS from : in name.
             firstSelected = cmds.ls(sl=True)[0]
             if ":" in firstSelected:
@@ -291,13 +293,16 @@ class ValidationUI(QtWidgets.QMainWindow):
             for treeWidgetItem in topLevelItems:
                 if not sender:
                     treeWidgetItem.setHidden(False)
+                    for eachChildTWI in treeWidgetItem.children():
+                        eachChildTWI.setHidden(False)
                     continue
 
-                if (
-                    treeWidgetItem.node().status == vrc_constants.NODE_VALIDATION_PASSED
-                    and sender
-                ):
+                if (treeWidgetItem.node().status == vrc_constants.NODE_VALIDATION_PASSED and sender):
                     treeWidgetItem.setHidden(True)
+
+                for eachChildTWI in treeWidgetItem.children():
+                    if (eachChildTWI.node().status == vrc_constants.NODE_VALIDATION_PASSED and sender):
+                        eachChildTWI.setHidden(True)
 
     # UI Dialogs
     def __saveDialog(self):
@@ -329,7 +334,7 @@ class ValidationUI(QtWidgets.QMainWindow):
 
     def dropEvent(self, QDropEvent):
         super(ValidationUI, self).dropEvent(QDropEvent)
-        if not inside.insideMaya() and QDropEvent.mimeData().text().endswith(".json"):
+        if not c_inside.insideMaya() and QDropEvent.mimeData().text().endswith(".json"):
             self.processJSONDrop(QDropEvent)
         return QDropEvent.accept()
 

@@ -1,7 +1,7 @@
 #  Copyright (c) 2019.  James Dunlop
 import logging
 from PySide2 import QtWidgets, QtCore, QtGui
-from core import inside
+import inside as c_inside
 from core.validator import Validator
 from core.nodes import Node, SourceNode
 from const import constants as vrc_constants
@@ -205,13 +205,13 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
 
     def dropEvent(self, QDropEvent):
         super(MayaValidationTreeWidget, self).dropEvent(QDropEvent)
-        if not inside.insideMaya():
+        if not c_inside.insideMaya():
             return None
 
         self.processMayaDrop(QDropEvent)
 
     def mouseDoubleClickEvent(self, event=QtGui.QMouseEvent):
-        if not inside.insideMaya():
+        if not c_inside.insideMaya():
             return
 
         from maya import cmds
@@ -248,7 +248,7 @@ def getValidationTreeWidget(validator, parent):
         parent: QTWidget for the treeWidget
     """
 
-    if inside.insideMaya():
+    if c_inside.insideMaya():
         treeWidget = MayaValidationTreeWidget(validator, parent)
 
     else:

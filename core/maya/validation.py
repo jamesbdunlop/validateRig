@@ -1,14 +1,12 @@
-#  Copyright (c) 2019.  James Dunlop
-# pragma: no cover
+#  Copyright (c) 2020.  James Dunlop
 import logging
 from const import serialization as c_serialization
 from const import constants as vrc_constants
 from core.maya import utils as cm_utils
-
+from core.maya import plugs as cm_plugs
+reload(cm_plugs)
+reload(cm_utils)
 logger = logging.getLogger(__name__)
-
-
-
 
 ##############################################
 # VALIDATE
@@ -21,8 +19,8 @@ def validateValidatorSourceNodes(validator):
         if not cm_utils.exists(srcNodeName):
             continue
 
-        defaultStatus = validateDefaultNodes(eachSourceNode)
-        connectionStatus = validateConnectionNodes(eachSourceNode)
+        defaultStatus = __validateDefaultNodes(eachSourceNode)
+        connectionStatus = __validateConnectionNodes(eachSourceNode)
 
         passed = all((defaultStatus, connectionStatus))
         if not passed:
@@ -30,35 +28,56 @@ def validateValidatorSourceNodes(validator):
             validator.status = vrc_constants.NODE_VALIDATION_FAILED
 
 
-def validateDefaultNodes(sourceNode):
+def __validateDefaultNodes(sourceNode):
     # type: (SourceNode) -> bool
     passed = True
     for eachValidationNode in sourceNode.iterDescendants():
         if eachValidationNode.nodeType != c_serialization.NT_DEFAULTVALUE:
             continue
 
+        logger.info("Checking defaultValue for: {}".format(eachValidationNode.displayName))
         defaultNodeLongName = eachValidationNode.longName
         defaultAttrName = eachValidationNode.name
         defaultNodeValue = eachValidationNode.defaultValue
 
         attrValue = cm_utils.getAttrValue(defaultNodeLongName, defaultAttrName)
-
         result = defaultNodeValue == attrValue
         if not setValidationStatus(eachValidationNode, result):
             passed = False
+        logger.info("\tresult: {}".format(result))
 
     return passed
 
 
-def validateConnectionNodes(sourceNode):
+def __validateConnectionNodes(sourceNode):
     # type: (SourceNode) -> bool
     passed = True
     for eachValidationNode in sourceNode.iterDescendants():
         if eachValidationNode.nodeType != c_serialization.NT_CONNECTIONVALIDITY:
             continue
 
-        result = None
-        # TODO om2
+        logger.info("Checking connections for: {}".format(eachValidationNode.displayName))
+        srcMPlug = cm_plugs.getMPlugFromLongName(sourceNode.longName, eachValidationNode.srcAttrName)
+        destMPlug = cm_plugs.getMPlugFromLongName(eachValidationNode.longName, eachValidationNode.destAttrName)
+        if eachValidationNode.srcAttrIsIndexed:
+            idx = eachValidationNode.srcAttrIndex
+            if srcMPlug.isArray:
+                srcMPlug = srcMPlug.elementByLogicalIndex(idx)
+            else:
+                srcMPlug = srcMPlug.child(idx)
+
+        if eachValidationNode.destAttrIsIndexed:
+            idx = eachValidationNode.destAttrIndex
+            if destMPlug.isArray:
+                destMPlug = destMPlug.elementByLogicalIndex(idx)
+            else:
+                destMPlug = destMPlug.child(idx)
+
+        conns = destMPlug.connectedTo(True, False)
+        if not conns:
+            result = False
+        else:
+            result = conns[0] == srcMPlug
 
         if not setValidationStatus(eachValidationNode, result):
             passed = False
@@ -75,8 +94,8 @@ def repairValidatorSourceNodes(validator):
         if not cm_utils.exists(srcNodeName):
             continue
 
-        defaultStatus = repairDefaultNodes(eachSourceNode)
-        connectionStatus = repairConnectionNodes(eachSourceNode)
+        defaultStatus = __repairDefaultNodes(eachSourceNode)
+        connectionStatus = __repairConnectionNodes(eachSourceNode)
 
         passed = all((defaultStatus, connectionStatus))
         if passed:
@@ -85,7 +104,7 @@ def repairValidatorSourceNodes(validator):
             validator.status = vrc_constants.NODE_VALIDATION_PASSED
 
 
-def repairDefaultNodes(sourceNode):
+def __repairDefaultNodes(sourceNode):
     # type: (SourceNode) -> bool
     for eachValidationNode in sourceNode.iterDescendants():
         if eachValidationNode.status == vrc_constants.NODE_VALIDATION_PASSED:
@@ -108,7 +127,7 @@ def repairDefaultNodes(sourceNode):
     return True
 
 
-def repairConnectionNodes(sourceNode):
+def __repairConnectionNodes(sourceNode):
     # type: (SourceNode) -> bool
     for eachValidationNode in sourceNode.iterDescendants():
         if eachValidationNode.nodeType != c_serialization.NT_CONNECTIONVALIDITY:

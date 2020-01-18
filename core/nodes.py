@@ -199,23 +199,6 @@ class SourceNode(Node):
 class ConnectionValidityNode(Node):
     def __init__(self, name, longName, parent=None):
         # type: (str, str, Node) -> None
-        """
-        ConnectionValidityNode holds sourceNode.srcAttrName data as it makes sense to me to couple the data here
-        rather than try to store data in the sourceData and pair it up with data in here.
-
-        Each ConnectionValidityNode is considered a single validation check eg:
-            `SourceNode.attribute` ----->  `ConnectionValidityNode.attribute`
-
-        This way we can do something like the following boolean checks:
-        SourceNode.attribute.exists()
-        DestNode.attribute.exists()
-        SourceNode.attribute.connectedTo(DestNode.attribute)
-        SourceNode.attribute.value() == srcAttributeValue
-        SourceNode.destAttribute.value() == destAttrValue
-
-        :param name: `str` nodeName of the node that the sourceNode.attribute is connected to.
-        :param nodeType: `int`
-        """
         super(ConnectionValidityNode, self).__init__(
             name=name,
             longName=longName,
@@ -224,9 +207,14 @@ class ConnectionValidityNode(Node):
         )
 
         self._destAttrName = ""
-        self._destAttrValue = ""
+        self._destAttrIsIndexed = False # Array or Compound eg: .isChild() or .isElement() would mean isIndexed = True
+        self._destAttrIndex = 0
+        self._destAttrValue = None
+
         self._srcAttrName = ""
-        self._srcAttrValue = ""
+        self._srcAttrIsIndexed = False  # Array or Compound eg: .isChild() or .isElement() would mean isIndexed = True
+        self._srcAttrIndex = 0
+        self._srcAttrValue = None
 
     @property
     def destAttrName(self):
@@ -274,12 +262,53 @@ class ConnectionValidityNode(Node):
         """
         self._srcAttrValue = value
 
+    @property
+    def srcAttrIndex(self):
+        return self._srcAttrIndex
+
+    @srcAttrIndex.setter
+    def srcAttrIndex(self, idx):
+        # type: (int) -> None
+        self._srcAttrIndex = idx
+
+    @property
+    def srcAttrIsIndexed(self):
+        return self._srcAttrIsIndexed
+
+    @srcAttrIsIndexed.setter
+    def srcAttrIsIndexed(self, isIndexed):
+        # type: (bool) -> None
+        self._srcAttrIsIndexed = isIndexed
+
+    @property
+    def destAttrIndex(self):
+        return self._destAttrIndex
+
+    @destAttrIndex.setter
+    def destAttrIndex(self, idx):
+        # type: (int) -> None
+        self._destAttrIndex = idx
+
+    @property
+    def destAttrIsIndexed(self):
+        return self._destAttrIsIndexed
+
+    @destAttrIsIndexed.setter
+    def destAttrIsIndexed(self, isIndexed):
+        # type: (bool) -> None
+        self._destAttrIsIndexed = isIndexed
+
     def toData(self):
         super(ConnectionValidityNode, self).toData()
         self.data[c_serialization.KEY_SRC_ATTRIBUTENAME] = self._srcAttrName
         self.data[c_serialization.KEY_SRC_ATTRIBUTEVALUE] = self._srcAttrValue
+        self.data[c_serialization.KEY_SRC_ATTRIBUTEINDEX] = self._srcAttrIndex
+        self.data[c_serialization.KEY_SRC_ATTRIBUTEINDEXED] = self._srcAttrIsIndexed
+
         self.data[c_serialization.KEY_DEST_ATTRIBUTENAME] = self._destAttrName
         self.data[c_serialization.KEY_DEST_ATTRIBUTEVALUE] = self._destAttrValue
+        self.data[c_serialization.KEY_DEST_ATTRIBUTEINDEX] = self._destAttrIndex
+        self.data[c_serialization.KEY_DEST_ATTRIBUTEINDEXED] = self._destAttrIsIndexed
 
         return self.data
 
@@ -291,10 +320,15 @@ class ConnectionValidityNode(Node):
         nameSpace = data.get(c_serialization.KEY_NODENAMESPACE, "")
 
         inst = cls(name=name, longName=longName)
-        inst.srcAttrName = data.get(c_serialization.KEY_SRC_ATTRIBUTENAME, "na")
+        inst.srcAttrName = data.get(c_serialization.KEY_SRC_ATTRIBUTENAME, "--")
         inst.srcAttrValue = data.get(c_serialization.KEY_SRC_ATTRIBUTEVALUE, 0)
-        inst.destAttrName = data.get(c_serialization.KEY_DEST_ATTRIBUTENAME, "na")
+        inst.srcAttrIsIndexed = data.get(c_serialization.KEY_SRC_ATTRIBUTEINDEXED, False)
+        inst.srcAttrIndex = data.get(c_serialization.KEY_SRC_ATTRIBUTEINDEX, 0)
+
+        inst.destAttrName = data.get(c_serialization.KEY_DEST_ATTRIBUTENAME, "--")
         inst.destAttrValue = data.get(c_serialization.KEY_DEST_ATTRIBUTEVALUE, 0)
+        inst.destAttrIsIndexed = data.get(c_serialization.KEY_DEST_ATTRIBUTEINDEXED, False)
+        inst.destAttrIndex = data.get(c_serialization.KEY_DEST_ATTRIBUTEINDEX, 0)
 
         inst.displayName = displayName
         inst.nameSpace = nameSpace

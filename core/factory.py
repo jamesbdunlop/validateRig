@@ -1,8 +1,9 @@
 #  Copyright (c) 2020.  James Dunlop
 import logging
 from core import validator as c_validator
-from core import inside as c_inside
-from core import mayaValidation as c_mayaValidation
+import inside as c_inside
+if c_inside.insideMaya():
+    from core.maya import validation as cm_mayaValidation
 
 logger = logging.getLogger(__name__)
 
@@ -20,11 +21,14 @@ def createValidator(name, nameSpace="", data=None):
         validator = c_validator.Validator.fromData(name=name, data=data)
 
     if c_inside.insideMaya():  # pragma: no cover
-        validator.validate.connect(c_mayaValidation.validateValidatorSourceNodes)
-        validator.repair.connect(c_mayaValidation.repairValidatorSourceNodes)
+        validator.validate.connect(cm_mayaValidation.validateValidatorSourceNodes)
+        validator.repair.connect(cm_mayaValidation.repairValidatorSourceNodes)
 
     else:  # pragma: no cover
-        msg = lambda x: logger.info(x)
-        validator.validate.connect(msg("No stand alone validation is possible!!"))
+        try:
+            msg = lambda x: logger.info(x)
+            validator.validate.connect(msg("No stand alone validation is possible!!"))
+        except RuntimeError:
+            pass
 
     return validator
