@@ -4,13 +4,17 @@ from const import serialization as c_serialization
 from const import constants as vrc_constants
 from core.maya import utils as cm_utils
 from core.maya import plugs as cm_plugs
+from core.maya import types as cm_types
+reload(cm_plugs)
 import maya.api.OpenMaya as om2
+
 logger = logging.getLogger(__name__)
 
 ##############################################
 # VALIDATE
 def validateValidatorSourceNodes(validator):
     # type: (Validator) -> None
+
     validator.status = vrc_constants.NODE_VALIDATION_PASSED
     for eachSourceNode in validator.iterSourceNodes():
         eachSourceNode.status = vrc_constants.NODE_VALIDATION_PASSED
@@ -29,12 +33,15 @@ def validateValidatorSourceNodes(validator):
 
 def __validateDefaultNodes(sourceNode):
     # type: (SourceNode) -> bool
+
     passed = True
     for eachValidationNode in sourceNode.iterDescendants():
         if eachValidationNode.nodeType != c_serialization.NT_DEFAULTVALUE:
             continue
 
-        logger.info("Checking defaultValue for: {}".format(eachValidationNode.displayName))
+        logger.info(
+            "Checking defaultValue for: {}".format(eachValidationNode.displayName)
+        )
         defaultNodeLongName = eachValidationNode.longName
         defaultAttrName = eachValidationNode.name
         defaultNodeValue = eachValidationNode.defaultValue
@@ -50,14 +57,21 @@ def __validateDefaultNodes(sourceNode):
 
 def __validateConnectionNodes(sourceNode):
     # type: (SourceNode) -> bool
+    GETATTR_IGNORESTYPES = (cm_types.MESSAGE, cm_types.MATRIXF44)
     passed = True
     for eachValidationNode in sourceNode.iterDescendants():
         if eachValidationNode.nodeType != c_serialization.NT_CONNECTIONVALIDITY:
             continue
 
-        logger.info("Checking connections for: {}".format(eachValidationNode.displayName))
-        srcMPlug = cm_plugs.getMPlugFromLongName(sourceNode.longName, eachValidationNode.srcAttrName)
-        destMPlug = cm_plugs.getMPlugFromLongName(eachValidationNode.longName, eachValidationNode.destAttrName)
+        logger.info(
+            "Checking connections for: {}".format(eachValidationNode.displayName)
+        )
+        srcMPlug = cm_plugs.getMPlugFromLongName(
+            sourceNode.longName, eachValidationNode.srcAttrName
+        )
+        destMPlug = cm_plugs.getMPlugFromLongName(
+            eachValidationNode.longName, eachValidationNode.destAttrName
+        )
         if eachValidationNode.srcAttrIsIndexed:
             idx = eachValidationNode.srcAttrIndex
             if srcMPlug.isArray:
@@ -73,11 +87,21 @@ def __validateConnectionNodes(sourceNode):
                 destMPlug = destMPlug.child(idx)
 
         conns = destMPlug.connectedTo(True, False)
-        if not conns:
-            result = False
-        else:
+
+        result = False
+        if conns:
             result = conns[0] == srcMPlug
 
+        if not setValidationStatus(eachValidationNode, result):
+            passed = False
+
+        resultSrcValue = True
+        srcPlugType = cm_plugs.getMPlugType(srcMPlug)
+        if srcPlugType not in GETATTR_IGNORESTYPES:
+            srcAttrValue = cm_plugs.getMPlugValue(srcMPlug)
+            resultSrcValue = eachValidationNode.srcAttrValue == srcAttrValue
+
+        result = all((result, resultSrcValue))
         if not setValidationStatus(eachValidationNode, result):
             passed = False
 
@@ -88,6 +112,7 @@ def __validateConnectionNodes(sourceNode):
 # REPAIR
 def repairValidatorSourceNodes(validator):
     # type: (Validator) -> None
+
     for eachSourceNode in validator.iterSourceNodes():
         srcNodeName = eachSourceNode.longName
         if not cm_utils.exists(srcNodeName):
@@ -105,21 +130,20 @@ def repairValidatorSourceNodes(validator):
 
 def __repairDefaultNodes(sourceNode):
     # type: (SourceNode) -> bool
+
     for eachValidationNode in sourceNode.iterDescendants():
         if eachValidationNode.status == vrc_constants.NODE_VALIDATION_PASSED:
             continue
         if eachValidationNode.nodeType != c_serialization.NT_DEFAULTVALUE:
             continue
 
-        # sourceAttrName = eachValidationNode.longName
-        # defaultValue = eachValidationNode.defaultValue
-        # if isinstance(defaultValue, list):
-        #     cmds.setAttr(
-        #         sourceAttrName, defaultValue[0], defaultValue[1], defaultValue[2]
-        #     )
-        # else:
-        #     cmds.setAttr(sourceAttrName, eachValidationNode.defaultValue)
-        # TODO om2
+        mSel = om2.MSelectionList()
+        mSel.add(eachValidationNode.longName)
+        mFn = om2.MFnDependencyNode(mSel.getDependNode(0))
+        srcMPlug = mFn.findPlug(eachValidationNode.name, False)
+
+        defaultValue = eachValidationNode.defaultValue
+        cm_plugs.setMPlugValue(srcMPlug, defaultValue)
 
         setValidationStatus(eachValidationNode, True)
 
@@ -128,6 +152,7 @@ def __repairDefaultNodes(sourceNode):
 
 def __repairConnectionNodes(sourceNode):
     # type: (SourceNode) -> bool
+
     mDagMod = om2.MDagModifier()
 
     for eachValidationNode in sourceNode.iterDescendants():
@@ -136,8 +161,12 @@ def __repairConnectionNodes(sourceNode):
         if eachValidationNode.status == vrc_constants.NODE_VALIDATION_PASSED:
             continue
 
-        srcMPlug = cm_plugs.getMPlugFromLongName(sourceNode.longName, eachValidationNode.srcAttrName)
-        destMPlug = cm_plugs.getMPlugFromLongName(eachValidationNode.longName, eachValidationNode.destAttrName)
+        srcMPlug = cm_plugs.getMPlugFromLongName(
+            sourceNode.longName, eachValidationNode.srcAttrName
+        )
+        destMPlug = cm_plugs.getMPlugFromLongName(
+            eachValidationNode.longName, eachValidationNode.destAttrName
+        )
         if eachValidationNode.srcAttrIsIndexed:
             idx = eachValidationNode.srcAttrIndex
             if srcMPlug.isArray:
@@ -153,6 +182,10 @@ def __repairConnectionNodes(sourceNode):
                 destMPlug = destMPlug.child(idx)
 
         mDagMod.connect(srcMPlug, destMPlug)
+
+        srcValue = eachValidationNode.srcAttrValue
+        cm_plugs.setMPlugValue(srcMPlug, srcValue)
+
         setValidationStatus(eachValidationNode, True)
 
     mDagMod.doIt()
@@ -162,6 +195,7 @@ def __repairConnectionNodes(sourceNode):
 
 def setValidationStatus(validationNode, result):
     # type: (ValidationNode, bool) -> bool
+
     if result:
         validationNode.status = vrc_constants.NODE_VALIDATION_PASSED
         return result

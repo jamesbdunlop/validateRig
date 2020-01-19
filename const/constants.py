@@ -39,35 +39,27 @@ for x, label in labels.items():
 
 
 MAYA_DEFAULTATTRS = [
-                        "translate",
-                        "translateX",
-                        "translateY",
-                        "translateZ",
-                        "rotate",
-                        "rotateX",
-                        "rotateY",
-                        "rotateZ",
-                        "scale",
-                        "scaleX",
-                        "scaleY",
-                        "scaleZ",
-                        "parentInverseMatrix",
-                        "parentMatrix",
-                        "matrix",
-                        "inverseMatrix",
-                        "worldMatrix",
-                        "worldInverseMatrix",
-                        "visibility",
-                        ]
+    "translate",
+    "translateX",
+    "translateY",
+    "translateZ",
+    "rotate",
+    "rotateX",
+    "rotateY",
+    "rotateZ",
+    "scale",
+    "scaleX",
+    "scaleY",
+    "scaleZ",
+    "parentInverseMatrix",
+    "parentMatrix",
+    "matrix",
+    "inverseMatrix",
+    "worldMatrix",
+    "worldInverseMatrix",
+    "visibility",
+]
 
-MAYA_DEFAULTVALUEATTRIBUTE_IGNORES = [
-    "message",
-    "controllerObject",
-    "dependNode"
-    ]
+MAYA_DEFAULTVALUEATTRIBUTE_IGNORES = ["message", "controllerObject", "dependNode"]
 
-MAYA_CONNECTED_NODETYPES_IGNORES = [
-    "nodeGraphEditorInfo",
-    "container",
-    "hyperLayout"
-    ]
+MAYA_CONNECTED_NODETYPES_IGNORES = ["nodeGraphEditorInfo", "container", "hyperLayout"]

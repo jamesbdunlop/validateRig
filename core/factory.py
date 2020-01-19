@@ -4,7 +4,7 @@ from core import validator as c_validator
 import inside as c_inside
 if c_inside.insideMaya():
     from core.maya import validation as cm_mayaValidation
-
+    reload(cm_mayaValidation)
 logger = logging.getLogger(__name__)
 
 

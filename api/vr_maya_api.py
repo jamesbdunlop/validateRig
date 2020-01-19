@@ -10,7 +10,7 @@ from const import constants as c_const
 from core.maya import types as cm_types
 from core.maya import plugs as cm_plugs
 from core.maya import utils as cm_utils
-reload(cm_utils)
+
 logger = logging.getLogger(__name__)
 
 """
@@ -50,17 +50,24 @@ def asSourceNode(nodeLongName, attributes=None, connections=False):
     # type: (str, list[str], bool, bool) -> SourceNode
 
     validityNodes = list()
+    connAttrNames = list()
     if connections:
-        validityNodes += list(__createConnectionNodes(nodeLongName))
+        connNodes = list(__createConnectionNodes(nodeLongName))
+        validityNodes += connNodes
+        connAttrNames = [n.srcAttrName for n in connNodes]
 
     if attributes is not None:
-        validityNodes += list(__createDefaultValueNodes(nodeLongName, attributes))
+        defaultNodes = list(__createDefaultValueNodes(nodeLongName, attributes))
+        for eachDefaultNode in defaultNodes:
+            if eachDefaultNode.name in connAttrNames:
+                defaultNodes.remove(eachDefaultNode)
+        validityNodes += defaultNodes
 
     # Now the sourceNodes
     shortName = cm_utils.cleanMayaLongName(nodeLongName)
-    sourceNode = createSourceNode(name=shortName,
-                                  longName=nodeLongName,
-                                  validityNodes=validityNodes)
+    sourceNode = createSourceNode(
+        name=shortName, longName=nodeLongName, validityNodes=validityNodes
+    )
 
     nameSpace = cm_utils.getNamespaceFromLongName(nodeLongName)
     if nameSpace:
@@ -76,11 +83,10 @@ def __createDefaultValueNodes(nodeLongName, defaultAttributes):
         if eachAttr in c_const.MAYA_DEFAULTVALUEATTRIBUTE_IGNORES:
             continue
 
-        longAttrName = "{}.{}".format(nodeLongName, eachAttr)
         attrValue = cm_utils.getAttrValue(nodeLongName, eachAttr)
-        defaultValueNode = createDefaultValueNode(name=eachAttr,
-                                                  longName=longAttrName,
-                                                  defaultValue=attrValue)
+        defaultValueNode = createDefaultValueNode(
+            name=eachAttr, longName=nodeLongName, defaultValue=attrValue
+        )
 
         yield defaultValueNode
 
@@ -102,39 +108,56 @@ def __createConnectionNodes(nodeLongName):
             if not eachConnMPlug.isSource:
                 continue
 
-            srcMPlugAttrName = eachConnMPlug.partialName(False, False, False, True, True, True)
+            srcMPlugAttrName = eachConnMPlug.partialName(
+                False, False, False, True, True, True
+            )
             srcMPlugType = cm_plugs.getMPlugType(eachConnMPlug)
 
             srcMPlugAttrValue = None
             if srcMPlugType not in GETATTR_IGNORESTYPES:
                 srcMPlugAttrValue = cm_plugs.getMPlugValue(eachConnMPlug)
 
-            srcIsElement, srcIsChild, srcAttrIndex, srcAttrName = _fetchIndexedPlugData(eachConnMPlug)
+            (
+                srcIsElement,
+                srcIsChild,
+                srcAttrIndex,
+                srcAttrName,
+            ) = cm_plugs.fetchIndexedPlugData(eachConnMPlug)
             if srcIsChild:
                 srcMPlugAttrName = srcAttrName
 
             # Dest plugs connected to this plug
-            destinations = eachConnMPlug.destinations() # method skips over any unit conversion nodes
+            destinations = (
+                eachConnMPlug.destinations()
+            )  # method skips over any unit conversion nodes
             for eachDestMPlug in destinations:
                 destPlugNodeMFn = om2.MFnDependencyNode(eachDestMPlug.node())
 
                 # Skip entirely shitty maya nodes we don't care about
-                if eachDestMPlug.node().apiType() in (om2.MFn.kMessageAttribute,
-                                                      om2.MFn.kNodeGraphEditorBookmarks,
-                                                      om2.MFn.kNodeGraphEditorBookmarkInfo,
-                                                      om2.MFn.kNodeGraphEditorInfo,
-                                                      om2.MFn.kContainer,
-                                                      ):
+                if eachDestMPlug.node().apiType() in (
+                    om2.MFn.kMessageAttribute,
+                    om2.MFn.kNodeGraphEditorBookmarks,
+                    om2.MFn.kNodeGraphEditorBookmarkInfo,
+                    om2.MFn.kNodeGraphEditorInfo,
+                    om2.MFn.kContainer,
+                ):
                     continue
 
-                destMPlugAttrName = str(eachDestMPlug.partialName(False, False, False, True, True, True))
+                destMPlugAttrName = str(
+                    eachDestMPlug.partialName(False, False, False, True, True, True)
+                )
                 destPlugType = cm_plugs.getMPlugType(eachDestMPlug)
 
                 destinationAttributeValue = None
                 if destPlugType not in GETATTR_IGNORESTYPES:
                     destinationAttributeValue = cm_plugs.getMPlugValue(eachDestMPlug)
 
-                destIsElement, destIsChild, destAttrIndex, destAttrName = _fetchIndexedPlugData(eachDestMPlug)
+                (
+                    destIsElement,
+                    destIsChild,
+                    destAttrIndex,
+                    destAttrName,
+                ) = cm_plugs.fetchIndexedPlugData(eachDestMPlug)
                 if destIsChild:
                     destMPlugAttrName = destAttrName
 
@@ -155,22 +178,3 @@ def __createConnectionNodes(nodeLongName):
                 connectionNode.destAttrIndex = destAttrIndex
 
                 yield connectionNode
-
-
-def _fetchIndexedPlugData(mplug):
-    isIndexedMPlug = cm_plugs.isMPlugIndexed(mplug)
-    attrIndex = None
-    attrName = None
-    if isIndexedMPlug and mplug.isElement:
-        attrIndex = mplug.logicalIndex()
-        print(mplug.name())
-        print(attrIndex)
-
-    elif mplug.isChild:
-        parent = mplug.parent()
-        attrName = parent.partialName(False, False, False, True, True, True)
-        for x in range(parent.numChildren()):
-            if parent.child(x) == mplug:
-                attrIndex = x
-
-    return [mplug.isElement, mplug.isChild, attrIndex, attrName]

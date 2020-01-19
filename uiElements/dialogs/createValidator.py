@@ -14,5 +14,6 @@ class CreateValidatorDialog(QtWidgets.QInputDialog):
 
     def done(self, result):
         # type: (int) -> None
-        self.name.emit(self.textValue())
+        if result and self.textValue():
+            self.name.emit(self.textValue())
         super(CreateValidatorDialog, self).done(result)

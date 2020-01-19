@@ -28,8 +28,7 @@ def createDefaultValueNode(name, longName, defaultValue):
 
 
 def createConnectionValidityNode(
-    name,
-    longName,
+    name, longName,
 ):
     # type: (str, str) -> ConnectionValidityNode
 

@@ -139,6 +139,45 @@ def getMPlugType(mplug):
         return cm_types.MESSAGE
 
 
+def setMPlugValue(mplug, value):
+    plugType = getMPlugType(mplug)
+    status = False
+    if plugType == "message":
+        return
+
+    pAttribute = mplug.attribute()
+    apiType = pAttribute.apiType()
+    if apiType in [om2.MFn.kAttribute3Double, om2.MFn.kAttribute3Float, om2.MFn.kCompoundAttribute]:
+        if mplug.isCompound:
+            for x in range(mplug.numChildren()):
+                if not mplug.child(x).isConnected:
+                    mplug.child(x).setFloat(value[x])
+
+    elif plugType == cm_types.FLOAT:
+        mplug.setFloat(value)
+        status = True
+
+    elif plugType == cm_types.MATRIXF44:
+        mplug.setMatrix(value)
+        status = True
+
+    elif plugType == cm_types.INT:
+        mplug.setInt(value)
+        status = True
+
+    elif plugType == cm_types.BOOL:
+        mplug.setBool(value)
+        status = True
+
+    elif plugType == cm_types.DOUBLE:
+        mplug.setDouble(value)
+        status = True
+
+    return status
+
+
+
+
 def getMPlugFromLongName(nodeLongName, plugName):
     # type: (str, str) -> om2.MPlug
     if isinstance(plugName, list):
@@ -189,3 +228,18 @@ def isMPlugIndexed(mPlug):
 
     return isIndexed
 
+def fetchIndexedPlugData(mplug):
+    isIndexedMPlug = isMPlugIndexed(mplug)
+    attrIndex = None
+    attrName = None
+    if isIndexedMPlug and mplug.isElement:
+        attrIndex = mplug.logicalIndex()
+
+    elif mplug.isChild:
+        parent = mplug.parent()
+        attrName = parent.partialName(False, False, False, True, True, True)
+        for x in range(parent.numChildren()):
+            if parent.child(x) == mplug:
+                attrIndex = x
+
+    return [mplug.isElement, mplug.isChild, attrIndex, attrName]

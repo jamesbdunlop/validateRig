@@ -35,7 +35,7 @@ def getAttrValue(nodeLongName, attributeName):
     mFn = om2.MFnDependencyNode(mObj)
     plg = mFn.findPlug(attributeName, False)
 
-    ignoreTypes = (cm_types.MESSAGE, ) # can't query for and I don't care to.
+    ignoreTypes = (cm_types.MESSAGE,)  # can't query for and I don't care to.
     plugType = cm_plugs.getMPlugType(plg)
 
     if plugType in ignoreTypes:
