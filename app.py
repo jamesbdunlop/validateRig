@@ -25,9 +25,7 @@ logger = logging.getLogger(__name__)
 # TO DO
 # Update selected from scene
 # Missing node report
-# Add new validator handles empty name check
-# Iter plug parents? for reconnecting / parent.compound.array.compound.idx (hermite)
-#
+
 
 class ValidationUI(QtWidgets.QMainWindow):
     def __init__(
@@ -503,3 +501,17 @@ if __name__ == "__main__":
     )
     myWin.show()
     sys.exit(app.exec_())
+
+"""
+from shiboken2 import wrapInstance
+from PySide2 import QtWidgets
+def getMainWindowPtr(): 
+    mayaMainWindowPtr = maya.OpenMayaUI.MQtUtil.mainWindow() 
+    mayaMainWindow = wrapInstance(long(mayaMainWindowPtr), QtWidgets.QMainWindow) 
+    return mayaMainWindow
+
+import validateRig.app as vr_app
+fp = "C:/Temp/testMayaValidator.json"
+myWin = vr_app.ValidationUI.from_fileJSON(filepath=fp, parent=getMainWindowPtr())
+myWin.show()
+"""
