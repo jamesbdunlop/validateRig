@@ -158,8 +158,9 @@ def setMPlugValue(mplug, value):
         status = True
 
     elif plugType == cm_types.MATRIXF44:
-        mplug.setMatrix(value)
-        status = True
+        pass
+        # mplug.setMatrix(value)
+        # status = True
 
     elif plugType == cm_types.INT:
         mplug.setInt(value)
@@ -179,7 +180,6 @@ def setMPlugValue(mplug, value):
 def getMPlugFromLongName(nodeLongName, plugName):
     # type: (str, str) -> om2.MPlug
     if isinstance(plugName, list):
-        print("plugName: {}".format(plugName))
         plugName = plugName[0]
     mSel = om2.MSelectionList()
     mSel.add(str(nodeLongName))
@@ -271,5 +271,4 @@ def fetchIndexedPlugData(mplug, plgData=None):
     if currentPlug[1] and isMPlugIndexed(parentPlug):
         fetchIndexedPlugData(parentPlug, plgData)
 
-    print(mplug.name(), plgData)
     return plgData

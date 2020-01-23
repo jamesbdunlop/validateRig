@@ -91,7 +91,6 @@ def __validateConnectionNodes(sourceNode):
         if srcIsElement or srcIsChild:
             isSrcIndexed = True
         if not isSrcIndexed:
-            print(eachValidationNode.longName, srcAttrName)
             srcMPlug = cm_plugs.getMPlugFromLongName(eachValidationNode.longName, srcAttrName)
         else:
             srcMPlug = fetchMPlugFromConnectionData(eachValidationNode.longName, srcPlugData)
@@ -120,7 +119,14 @@ def __validateConnectionNodes(sourceNode):
             currentSrcAttrValue = cm_plugs.getMPlugValue(srcMPlug)
             resultSrcValue = srcAttrValue == currentSrcAttrValue
 
-        result = all((result, resultSrcValue))
+        resultDestValue = True
+        destPlugType = cm_plugs.getMPlugType(destMPlug)
+        GETATTR_IGNORESTYPES = (cm_types.MESSAGE, cm_types.MATRIXF44)
+        if destPlugType not in GETATTR_IGNORESTYPES:
+            currentSrcAttrValue = cm_plugs.getMPlugValue(destMPlug)
+            resultDestValue = srcAttrValue == currentSrcAttrValue
+
+        result = all((result, resultSrcValue, resultDestValue))
         if not setValidationStatus(eachValidationNode, result):
             passed = False
 
@@ -180,30 +186,37 @@ def __repairConnectionNodes(sourceNode):
         if eachValidationNode.status == vrc_constants.NODE_VALIDATION_PASSED:
             continue
 
-        srcMPlug = cm_plugs.getMPlugFromLongName(
-            sourceNode.longName, eachValidationNode.srcAttrName
-        )
-        destMPlug = cm_plugs.getMPlugFromLongName(
-            eachValidationNode.longName, eachValidationNode.destAttrName
-        )
-        if eachValidationNode.srcAttrIsIndexed:
-            idx = eachValidationNode.srcAttrIndex
-            if srcMPlug.isArray:
-                srcMPlug = srcMPlug.elementByLogicalIndex(idx)
-            else:
-                srcMPlug = srcMPlug.child(idx)
+        data = eachValidationNode.connectionData
+        srcData = data.get("srcData", None)
+        destData = data.get("destData", None)
+        srcAttrValue = srcData.get("attrName", None)
+        srcAttrName = srcData.get("attrValue", None)
+        srcPlugData = srcData.get("plugData", None)
 
-        if eachValidationNode.destAttrIsIndexed:
-            idx = eachValidationNode.destAttrIndex
-            if destMPlug.isArray:
-                destMPlug = destMPlug.elementByLogicalIndex(idx)
-            else:
-                destMPlug = destMPlug.child(idx)
+        destNodeName = destData.get("nodeName", None)
+        destPlugData = destData.get("plugData", None)
+
+        srcIsElement, srcIsChild, srcPlugName, _ = srcPlugData[0]
+        isSrcIndexed = False
+        if srcIsElement or srcIsChild:
+            isSrcIndexed = True
+        if not isSrcIndexed:
+            srcMPlug = cm_plugs.getMPlugFromLongName(eachValidationNode.longName, srcAttrName)
+        else:
+            srcMPlug = fetchMPlugFromConnectionData(eachValidationNode.longName, srcPlugData)
+
+        destIsElement, destIsChild, destPlugName, _ = destPlugData[0]
+        isDestIndexed = False
+        if destIsElement or destIsChild:
+            isDestIndexed = True
+        if not isDestIndexed:
+            destMPlug = cm_plugs.getMPlugFromLongName(destNodeName, destPlugName)
+        else:
+            destMPlug = fetchMPlugFromConnectionData(destNodeName, destPlugData)
 
         mDagMod.connect(srcMPlug, destMPlug)
 
-        srcValue = eachValidationNode.srcAttrValue
-        cm_plugs.setMPlugValue(srcMPlug, srcValue)
+        cm_plugs.setMPlugValue(srcMPlug, srcAttrValue)
 
         setValidationStatus(eachValidationNode, True)
 
