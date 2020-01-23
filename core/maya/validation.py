@@ -123,8 +123,8 @@ def __validateConnectionNodes(sourceNode):
         destPlugType = cm_plugs.getMPlugType(destMPlug)
         GETATTR_IGNORESTYPES = (cm_types.MESSAGE, cm_types.MATRIXF44)
         if destPlugType not in GETATTR_IGNORESTYPES:
-            currentSrcAttrValue = cm_plugs.getMPlugValue(destMPlug)
-            resultDestValue = srcAttrValue == currentSrcAttrValue
+            currentDestAttrValue = cm_plugs.getMPlugValue(destMPlug)
+            resultDestValue = destAttrValue == currentDestAttrValue
 
         result = all((result, resultSrcValue, resultDestValue))
         if not setValidationStatus(eachValidationNode, result):
