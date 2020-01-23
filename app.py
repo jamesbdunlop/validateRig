@@ -16,12 +16,19 @@ from uiElements.trees import validationTreeWidget as uit_validationTreeWidget
 from uiElements.dialogs import saveToJSONFile as uid_saveToJSON
 from uiElements.dialogs import loadFromJSONFile as uid_loadFromJSON
 from uiElements.dialogs import createValidator as uid_createValidator
-
+reload(uit_validationTreeWidget)
 if c_inside.insideMaya():
     from maya import cmds
 
 logger = logging.getLogger(__name__)
 
+############################
+# TO DO
+# Update selected from scene
+# Missing node report
+# Add new validator handles empty name check
+# Iter plug parents? for reconnecting / parent.compound.array.compound.idx (hermite)
+#
 
 class ValidationUI(QtWidgets.QMainWindow):
     def __init__(

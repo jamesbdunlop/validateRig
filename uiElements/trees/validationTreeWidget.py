@@ -8,7 +8,7 @@ from const import constants as vrc_constants
 from const import serialization as c_serialization
 from uiElements.trees import factory as cuit_factory
 from uiElements.dialogs import attributeList as uid_attributeList
-
+reload(cuit_factory)
 logger = logging.getLogger(__name__)
 
 
@@ -219,7 +219,6 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
         for eachItem in self.selectedItems():
             node = eachItem.node()
             nodeType = node.nodeType
-            nameSpace = node.nameSpace
             if nodeType == c_serialization.NT_SOURCENODE:
                 itemName = eachItem.data(0, QtCore.Qt.DisplayRole)
             elif nodeType == c_serialization.NT_CONNECTIONVALIDITY:
@@ -231,9 +230,6 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
                 itemName = ""
 
             modifier = event.modifiers()
-            if nameSpace not in itemName:
-                itemName = "{}:{}".format(nameSpace, itemName)
-
             if modifier == QtCore.Qt.ControlModifier:
                 cmds.select(itemName, add=True)
             else:
@@ -273,17 +269,24 @@ def addValidityNodesToTreeWidgetItem(sourceNode, sourceNodeTreeWItm):
     # type: (Node, QtWidgets.QTreeWidgetItem) -> None
     connectionAttrSrcNames = list()
     parentNode = None
+
     for eachValidityNode in sourceNode.iterChildren():
         treewidgetItem = cuit_factory.treeWidgetItemFromNode(node=eachValidityNode)
+
         if eachValidityNode.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
-            if eachValidityNode.srcAttrName not in connectionAttrSrcNames:
-                connectionAttrSrcNames.append(eachValidityNode.srcAttrName)
+            data = eachValidityNode.connectionData
+            srcData = data.get("srcData", None)
+            srcAttrName = srcData.get("attrName", None)
+
+            if srcAttrName not in connectionAttrSrcNames:
+                connectionAttrSrcNames.append(srcAttrName)
                 sourceNodeTreeWItm.addChild(treewidgetItem)
-                # First found becomes the parentNode
+                # First found becomes the parentNode!
                 parentNode = treewidgetItem
             else:
                 # parent this to the parentNode
                 parentNode.addChild(treewidgetItem)
+
         else:
             sourceNodeTreeWItm.addChild(treewidgetItem)
         # Crashes maya

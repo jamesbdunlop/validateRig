@@ -20,9 +20,7 @@ class Node(QtCore.QObject):
         self._parent = parent
         self._children = list()
         self._nameSpace = self._longName.split("|")[-1].split(":")[0]
-        self._showNameSpace = False
         self._displayName = self._name
-        self._nameSpace = ""
 
     @property
     def name(self):
@@ -179,7 +177,6 @@ class SourceNode(Node):
         sourceNodeName = data.get(c_serialization.KEY_NODENAME, None)
         sourceNodeLongName = data.get(c_serialization.KEY_NODELONGNAME, None)
         displayName = data.get(c_serialization.KEY_NODEDISPLAYNAME, "")
-        nameSpace = data.get(c_serialization.KEY_NODENAMESPACE, "")
         if sourceNodeName is None:
             raise KeyError("NoneType is not a valid sourceNodeName!")
 
@@ -192,7 +189,6 @@ class SourceNode(Node):
         ]
         inst.addChildren(validityNodes)
         inst.displayName = displayName
-        inst.nameSpace = nameSpace
         return inst
 
 
@@ -206,110 +202,19 @@ class ConnectionValidityNode(Node):
             nodeType=c_serialization.NT_CONNECTIONVALIDITY,
         )
 
-        self._destAttrName = ""
-        self._destAttrIsIndexed = False # Array or Compound eg: .isChild() or .isElement() would mean isIndexed = True
-        self._destAttrIndex = 0
-        self._destAttrValue = None
-
-        self._srcAttrName = ""
-        self._srcAttrIsIndexed = False  # Array or Compound eg: .isChild() or .isElement() would mean isIndexed = True
-        self._srcAttrIndex = 0
-        self._srcAttrValue = None
+        self._connectionData = dict()
 
     @property
-    def destAttrName(self):
-        """is name of the attribute on the node eg: showCloth"""
-        return self._destAttrName
+    def connectionData(self):
+        return self._connectionData
 
-    @destAttrName.setter
-    def destAttrName(self, name):
-        # type: (str) -> None
-        self._destAttrName = name
-
-    @property
-    def destAttrValue(self):
-        """`int`, `float`, `bool`, etc the expected value for this attribute when the sourceAttribute's value match"""
-        return self._destAttrValue
-
-    @destAttrValue.setter
-    def destAttrValue(self, value):
-        # type: (any) -> None
-        """
-        Args:
-            value:  `int`, `float, `bool`, etc
-        """
-        self._destAttrValue = value
-
-    @property
-    def srcAttrName(self):
-        """`str` name of the attribute on the sourceNode to match (note this node is a child of the sourceNode"""
-        return self._srcAttrName
-
-    @srcAttrName.setter
-    def srcAttrName(self, name):
-        self._srcAttrName = name
-
-    @property
-    def srcAttrValue(self):
-        """`int`, `float`, `bool`, etc This is the expected SourceNode.attribute value."""
-        return self._srcAttrValue
-
-    @srcAttrValue.setter
-    def srcAttrValue(self, value):
-        """
-
-        :param value: `int`, `float, `bool`, etc
-        """
-        self._srcAttrValue = value
-
-    @property
-    def srcAttrIndex(self):
-        return self._srcAttrIndex
-
-    @srcAttrIndex.setter
-    def srcAttrIndex(self, idx):
-        # type: (int) -> None
-        self._srcAttrIndex = idx
-
-    @property
-    def srcAttrIsIndexed(self):
-        return self._srcAttrIsIndexed
-
-    @srcAttrIsIndexed.setter
-    def srcAttrIsIndexed(self, isIndexed):
-        # type: (bool) -> None
-        self._srcAttrIsIndexed = isIndexed
-
-    @property
-    def destAttrIndex(self):
-        return self._destAttrIndex
-
-    @destAttrIndex.setter
-    def destAttrIndex(self, idx):
-        # type: (int) -> None
-        self._destAttrIndex = idx
-
-    @property
-    def destAttrIsIndexed(self):
-        return self._destAttrIsIndexed
-
-    @destAttrIsIndexed.setter
-    def destAttrIsIndexed(self, isIndexed):
-        # type: (bool) -> None
-        self._destAttrIsIndexed = isIndexed
+    @connectionData.setter
+    def connectionData(self, data):
+        self._connectionData = data
 
     def toData(self):
         super(ConnectionValidityNode, self).toData()
-        self.data[c_serialization.KEY_SRC_ATTRIBUTENAME] = self._srcAttrName
-        self.data[c_serialization.KEY_SRC_ATTRIBUTEVALUE] = self._srcAttrValue
-        self.data[c_serialization.KEY_SRC_ATTRIBUTEINDEX] = self._srcAttrIndex
-        self.data[c_serialization.KEY_SRC_ATTRIBUTEINDEXED] = self._srcAttrIsIndexed
-
-        self.data[c_serialization.KEY_DEST_ATTRIBUTENAME] = self._destAttrName
-        self.data[c_serialization.KEY_DEST_ATTRIBUTEVALUE] = self._destAttrValue
-        self.data[c_serialization.KEY_DEST_ATTRIBUTEINDEX] = self._destAttrIndex
-        self.data[c_serialization.KEY_DEST_ATTRIBUTEINDEXED] = self._destAttrIsIndexed
-
+        self.data[c_serialization.KEY_CONNDATA] = self._connectionData
         return self.data
 
     @classmethod
@@ -317,27 +222,17 @@ class ConnectionValidityNode(Node):
         name = data.get(c_serialization.KEY_NODENAME, "")
         longName = data.get(c_serialization.KEY_NODELONGNAME, "")
         displayName = data.get(c_serialization.KEY_NODEDISPLAYNAME, "")
-        nameSpace = data.get(c_serialization.KEY_NODENAMESPACE, "")
+        connectionData = data.get(c_serialization.KEY_CONNDATA, dict())
 
         inst = cls(name=name, longName=longName)
-        inst.srcAttrName = data.get(c_serialization.KEY_SRC_ATTRIBUTENAME, "--")
-        inst.srcAttrValue = data.get(c_serialization.KEY_SRC_ATTRIBUTEVALUE, 0)
-        inst.srcAttrIsIndexed = data.get(c_serialization.KEY_SRC_ATTRIBUTEINDEXED, False)
-        inst.srcAttrIndex = data.get(c_serialization.KEY_SRC_ATTRIBUTEINDEX, 0)
-
-        inst.destAttrName = data.get(c_serialization.KEY_DEST_ATTRIBUTENAME, "--")
-        inst.destAttrValue = data.get(c_serialization.KEY_DEST_ATTRIBUTEVALUE, 0)
-        inst.destAttrIsIndexed = data.get(c_serialization.KEY_DEST_ATTRIBUTEINDEXED, False)
-        inst.destAttrIndex = data.get(c_serialization.KEY_DEST_ATTRIBUTEINDEX, 0)
-
         inst.displayName = displayName
-        inst.nameSpace = nameSpace
+        inst.connectionData = connectionData
 
         return inst
 
 
 class DefaultValueNode(Node):
-    def __init__(self, name, longName, defaultValue=None, parent=None):
+    def __init__(self, name, longName, parent=None):
         # type: (str, str, any, Node) -> None
         super(DefaultValueNode, self).__init__(
             name=name,
@@ -345,20 +240,19 @@ class DefaultValueNode(Node):
             parent=parent,
             nodeType=c_serialization.NT_DEFAULTVALUE,
         )
-        self._defaultValue = defaultValue
+        self._defaultValueData = dict()
 
     @property
-    def defaultValue(self):
-        return self._defaultValue
+    def defaultValueData(self):
+        return self._defaultValueData
 
-    @defaultValue.setter
-    def defaultValue(self, value):
-        # type: (any) -> None
-        self._defaultValue = value
+    @defaultValueData.setter
+    def defaultValueData(self, data):
+        self._defaultValueData = data
 
     def toData(self):
         super(DefaultValueNode, self).toData()
-        self.data[c_serialization.KEY_DEFAULTVALUE] = self._defaultValue
+        self.data[c_serialization.KEY_DEFAULTVALUEDATA] = self._defaultValueData
 
         return self.data
 
@@ -367,12 +261,11 @@ class DefaultValueNode(Node):
         # type: (dict, Node) -> DefaultValueNode
         name = data.get(c_serialization.KEY_NODENAME, "")
         longName = data.get(c_serialization.KEY_NODELONGNAME, "")
-        value = data.get(c_serialization.KEY_DEFAULTVALUE, "")
         displayName = data.get(c_serialization.KEY_NODEDISPLAYNAME, "")
-        nameSpace = data.get(c_serialization.KEY_NODENAMESPACE, "")
+        defaultValueData = data.get(c_serialization.KEY_DEFAULTVALUEDATA, dict())
 
-        inst = cls(name=name, longName=longName, defaultValue=value, parent=parent)
+        inst = cls(name=name, longName=longName, parent=parent)
         inst.displayName = displayName
-        inst.nameSpace = nameSpace
+        inst.defaultValueData = defaultValueData
 
         return inst

@@ -1,4 +1,16 @@
 #  Copyright (c) 2019.  James Dunlop
+import inside as c_inside
+MAYA_CONNECTED_NODETYPES_IGNORES = list()
+if c_inside.insideMaya():
+    from maya.api import OpenMaya as om2
+    MAYA_CONNECTED_NODETYPES_IGNORES = [om2.MFn.kMessageAttribute,
+                                        om2.MFn.kNodeGraphEditorBookmarks,
+                                        om2.MFn.kNodeGraphEditorBookmarkInfo,
+                                        om2.MFn.kNodeGraphEditorInfo,
+                                        om2.MFn.kHyperLayout,
+                                        om2.MFn.kContainer
+                                        ]
+
 JSON_EXT = ".json"
 UINAME = "Validate Rig:"
 
@@ -61,5 +73,3 @@ MAYA_DEFAULTATTRS = [
 ]
 
 MAYA_DEFAULTVALUEATTRIBUTE_IGNORES = ["message", "controllerObject", "dependNode"]
-
-MAYA_CONNECTED_NODETYPES_IGNORES = ["nodeGraphEditorInfo", "container", "hyperLayout"]

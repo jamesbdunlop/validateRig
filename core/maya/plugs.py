@@ -176,8 +176,6 @@ def setMPlugValue(mplug, value):
     return status
 
 
-
-
 def getMPlugFromLongName(nodeLongName, plugName):
     # type: (str, str) -> om2.MPlug
     if isinstance(plugName, list):
@@ -228,18 +226,50 @@ def isMPlugIndexed(mPlug):
 
     return isIndexed
 
-def fetchIndexedPlugData(mplug):
+
+def fetchIndexedPlugData(mplug, plgData=None):
+    # type: (om2.MPlug, list) -> list
+    """
+    builds a list of the hrc of the plug. the last is the list is the first plug in the hrc.
+    eg:
+        plgData = [[False, True, u'cvs[0]', 0], [True, False, u'jd_hermiteArrayCrv1.cvs', None]]
+        plgData = [isElement, isChild, plugName, plgIdx], [isElement, isChild, plugName, plgIdx]]
+    """
     isIndexedMPlug = isMPlugIndexed(mplug)
-    attrIndex = None
-    attrName = None
+    if plgData is None:
+        plgData = list()
+
+    currentPlug = [None] * 4
     if isIndexedMPlug and mplug.isElement:
-        attrIndex = mplug.logicalIndex()
+        # partialName(includeNodeName=False, includeNonMandatoryIndices=False,
+        # includeInstancedIndices=False, useAlias=False, useFullAttributePath=False,
+        # useLongNames=False)
+        parentPlug = om2.MPlug(mplug.node(), mplug.attribute())
+        for x in range(parentPlug.numElements()):
+            if parentPlug.elementByLogicalIndex(x) == mplug:
+                currentPlug[3] = x
+        currentPlug[2] = mplug.partialName(False, False, False, False, True, True)
 
     elif mplug.isChild:
-        parent = mplug.parent()
-        attrName = parent.partialName(False, False, False, True, True, True)
-        for x in range(parent.numChildren()):
-            if parent.child(x) == mplug:
-                attrIndex = x
+        parentPlug = mplug.parent()
+        # partialName(includeNodeName=False, includeNonMandatoryIndices=False,
+        # includeInstancedIndices=False, useAlias=False, useFullAttributePath=False,
+        # useLongNames=False)
+        currentPlug[2] = parentPlug.partialName(False, False, False, False, True, True)
+        for x in range(parentPlug.numChildren()):
+            if parentPlug.child(x) == mplug:
+                currentPlug[3] = x
 
-    return [mplug.isElement, mplug.isChild, attrIndex, attrName]
+    else:
+        currentPlug[2] = mplug.partialName(False, False, False, False, True, True)
+        currentPlug[3] = None
+
+    currentPlug[0] = mplug.isElement
+    currentPlug[1] = mplug.isChild
+    plgData.append(currentPlug)
+
+    if currentPlug[1] and isMPlugIndexed(parentPlug):
+        fetchIndexedPlugData(parentPlug, plgData)
+
+    print(mplug.name(), plgData)
+    return plgData

@@ -5,7 +5,7 @@ from core import nodes as c_nodes
 from uiElements.trees import treewidgetitems
 from const import serialization as c_serialization
 from const import constants as vrc_constants
-
+import inside as c_inside
 logger = logging.getLogger(__name__)
 
 QTDISPLAYROLE = QtCore.Qt.DisplayRole
@@ -27,32 +27,50 @@ def treeWidgetItemFromNode(node):
         )
 
     elif node.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
-        rowsData = (
-            (vrc_constants.SRC_ATTR_COLUMN, QTDISPLAYROLE, node.srcAttrName),
-            (vrc_constants.SRC_ATTRVALUE_COLUMN, QTDISPLAYROLE, node.srcAttrValue),
-            (vrc_constants.DEST_NODENAME_COLUMN, QTDISPLAYROLE, node.displayName),
-            (vrc_constants.DEST_ATTR_COLUMN, QTDISPLAYROLE, node.destAttrName),
-            (vrc_constants.DEST_ATTRVALUE_COLUMN, QTDISPLAYROLE, node.destAttrValue),
-        )
+        data = node.connectionData
+        if c_inside.insideMaya():
+            srcData = data.get("srcData", None)
+            destData = data.get("destData", None)
+
+            srcAttrName = srcData.get("attrName", None)
+            srcAttrValue = srcData.get("attrValue", None)
+
+            destNodeName = destData.get("nodeName", None)
+            destAttrValue = destData.get("attrValue", None)
+            destPlugData = destData.get("plugData", None)
+
+            _, _, destPlugName, _ = destPlugData[0]
+
+            rowsData = (
+                (vrc_constants.SRC_ATTR_COLUMN, QTDISPLAYROLE, srcAttrName),
+                (vrc_constants.SRC_ATTRVALUE_COLUMN, QTDISPLAYROLE, srcAttrValue),
+
+                (vrc_constants.DEST_NODENAME_COLUMN, QTDISPLAYROLE, destNodeName),
+                (vrc_constants.DEST_ATTR_COLUMN, QTDISPLAYROLE, destPlugName),
+                (vrc_constants.DEST_ATTRVALUE_COLUMN, QTDISPLAYROLE, destAttrValue),
+            )
+
         rowdataDict = appendRowData(rowdataDict, rowsData)
 
     elif node.nodeType == c_serialization.NT_DEFAULTVALUE:
-        rowsData = (
-            (vrc_constants.SRC_ATTR_COLUMN, QTDISPLAYROLE, node.displayName),
-            (vrc_constants.SRC_ATTRVALUE_COLUMN, QTDISPLAYROLE, str(node.defaultValue)),
-            (
-                vrc_constants.DEST_NODENAME_COLUMN,
-                QTDISPLAYROLE,
-                vrc_constants.SEPARATOR,
-            ),
-            (vrc_constants.DEST_ATTR_COLUMN, QTDISPLAYROLE, vrc_constants.SEPARATOR),
-            (
-                vrc_constants.DEST_ATTRVALUE_COLUMN,
-                QTDISPLAYROLE,
-                vrc_constants.SEPARATOR,
-            ),
-        )
-        rowdataDict = appendRowData(rowdataDict, rowsData)
+        data = node.defaultValueData
+        for eachDefaultValue, value in data.iteritems():
+            rowsData = (
+                (vrc_constants.SRC_ATTR_COLUMN, QTDISPLAYROLE, eachDefaultValue),
+                (vrc_constants.SRC_ATTRVALUE_COLUMN, QTDISPLAYROLE, str(value)),
+                (
+                    vrc_constants.DEST_NODENAME_COLUMN,
+                    QTDISPLAYROLE,
+                    vrc_constants.SEPARATOR,
+                ),
+                (vrc_constants.DEST_ATTR_COLUMN, QTDISPLAYROLE, vrc_constants.SEPARATOR),
+                (
+                    vrc_constants.DEST_ATTRVALUE_COLUMN,
+                    QTDISPLAYROLE,
+                    vrc_constants.SEPARATOR,
+                ),
+            )
+            rowdataDict = appendRowData(rowdataDict, rowsData)
 
     for colID, data in rowdataDict.items():
         qtRole = data[0]

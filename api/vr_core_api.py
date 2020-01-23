@@ -21,9 +21,9 @@ def createSourceNode(name, longName, validityNodes=None):
     return node
 
 
-def createDefaultValueNode(name, longName, defaultValue):
+def createDefaultValueNode(name, longName):
     # type: (str, str, any) -> None
-    node = DefaultValueNode(name=name, longName=longName, defaultValue=defaultValue)
+    node = DefaultValueNode(name=name, longName=longName)
     return node
 
 

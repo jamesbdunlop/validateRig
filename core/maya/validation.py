@@ -39,67 +39,86 @@ def __validateDefaultNodes(sourceNode):
         if eachValidationNode.nodeType != c_serialization.NT_DEFAULTVALUE:
             continue
 
-        logger.info(
-            "Checking defaultValue for: {}".format(eachValidationNode.displayName)
-        )
+        defaultValueData = eachValidationNode.defaultValueData
         defaultNodeLongName = eachValidationNode.longName
-        defaultAttrName = eachValidationNode.name
-        defaultNodeValue = eachValidationNode.defaultValue
-
-        attrValue = cm_utils.getAttrValue(defaultNodeLongName, defaultAttrName)
-        result = defaultNodeValue == attrValue
-        if not setValidationStatus(eachValidationNode, result):
-            passed = False
-        logger.info("\tresult: {}".format(result))
+        for attrName, attrValue in defaultValueData.iteritems():
+            attrValue = cm_utils.getAttrValue(defaultNodeLongName, attrName)
+            result = attrValue == attrValue
+            if not setValidationStatus(eachValidationNode, result):
+                passed = False
 
     return passed
 
 
+def fetchMPlugFromConnectionData(noddeLongName, plugData):
+    copyPlugData = plugData[:]
+    mPlug = None
+    while copyPlugData:
+        plgIsElement, plgIsChild, plgPlugName, plgIndex = copyPlugData[-1]
+        if mPlug is None:
+            mPlug = cm_plugs.getMPlugFromLongName(noddeLongName, plgPlugName)
+
+        if mPlug.isArray:
+            mPlug = mPlug.elementByLogicalIndex(plgIndex)
+        else:
+            mPlug = mPlug.child(plgIndex)
+
+        copyPlugData.pop()
+    return mPlug
+
+
 def __validateConnectionNodes(sourceNode):
     # type: (SourceNode) -> bool
-    GETATTR_IGNORESTYPES = (cm_types.MESSAGE, cm_types.MATRIXF44)
+
     passed = True
     for eachValidationNode in sourceNode.iterDescendants():
         if eachValidationNode.nodeType != c_serialization.NT_CONNECTIONVALIDITY:
             continue
 
-        logger.info(
-            "Checking connections for: {}".format(eachValidationNode.displayName)
-        )
-        srcMPlug = cm_plugs.getMPlugFromLongName(
-            sourceNode.longName, eachValidationNode.srcAttrName
-        )
-        destMPlug = cm_plugs.getMPlugFromLongName(
-            eachValidationNode.longName, eachValidationNode.destAttrName
-        )
-        if eachValidationNode.srcAttrIsIndexed:
-            idx = eachValidationNode.srcAttrIndex
-            if srcMPlug.isArray:
-                srcMPlug = srcMPlug.elementByLogicalIndex(idx)
-            else:
-                srcMPlug = srcMPlug.child(idx)
+        data = eachValidationNode.connectionData
+        srcData = data.get("srcData", None)
+        destData = data.get("destData", None)
+        srcAttrName = srcData.get("attrName", None)
+        srcAttrValue = srcData.get("attrValue", None)
+        srcPlugData = srcData.get("plugData", None)
 
-        if eachValidationNode.destAttrIsIndexed:
-            idx = eachValidationNode.destAttrIndex
-            if destMPlug.isArray:
-                destMPlug = destMPlug.elementByLogicalIndex(idx)
-            else:
-                destMPlug = destMPlug.child(idx)
+        destNodeName = destData.get("nodeName", None)
+        destAttrValue = destData.get("attrValue", None)
+        destPlugData = destData.get("plugData", None)
+
+        srcIsElement, srcIsChild, srcPlugName, _ = srcPlugData[0]
+        isSrcIndexed = False
+        if srcIsElement or srcIsChild:
+            isSrcIndexed = True
+        if not isSrcIndexed:
+            print(eachValidationNode.longName, srcAttrName)
+            srcMPlug = cm_plugs.getMPlugFromLongName(eachValidationNode.longName, srcAttrName)
+        else:
+            srcMPlug = fetchMPlugFromConnectionData(eachValidationNode.longName, srcPlugData)
+
+        destIsElement, destIsChild, destPlugName, _ = destPlugData[0]
+        isDestIndexed = False
+        if destIsElement or destIsChild:
+            isDestIndexed = True
+        if not isDestIndexed:
+            destMPlug = cm_plugs.getMPlugFromLongName(destNodeName, destPlugName)
+        else:
+            destMPlug = fetchMPlugFromConnectionData(destNodeName, destPlugData)
 
         conns = destMPlug.connectedTo(True, False)
-
         result = False
         if conns:
             result = conns[0] == srcMPlug
-
         if not setValidationStatus(eachValidationNode, result):
             passed = False
 
+        # DEFAULT VALUES OF THE SRC ATTR NOW AS WE CULL DEFAULT VALUE NODES IF THEY'RE ALREADY CONNECTION ATTRS
         resultSrcValue = True
         srcPlugType = cm_plugs.getMPlugType(srcMPlug)
+        GETATTR_IGNORESTYPES = (cm_types.MESSAGE, cm_types.MATRIXF44)
         if srcPlugType not in GETATTR_IGNORESTYPES:
-            srcAttrValue = cm_plugs.getMPlugValue(srcMPlug)
-            resultSrcValue = eachValidationNode.srcAttrValue == srcAttrValue
+            currentSrcAttrValue = cm_plugs.getMPlugValue(srcMPlug)
+            resultSrcValue = srcAttrValue == currentSrcAttrValue
 
         result = all((result, resultSrcValue))
         if not setValidationStatus(eachValidationNode, result):

@@ -10,7 +10,7 @@ from const import constants as c_const
 from core.maya import types as cm_types
 from core.maya import plugs as cm_plugs
 from core.maya import utils as cm_utils
-
+reload(cm_plugs)
 logger = logging.getLogger(__name__)
 
 """
@@ -50,17 +50,17 @@ def asSourceNode(nodeLongName, attributes=None, connections=False):
     # type: (str, list[str], bool, bool) -> SourceNode
 
     validityNodes = list()
-    connAttrNames = list()
+    # connAttrNames = list()
     if connections:
         connNodes = list(__createConnectionNodes(nodeLongName))
         validityNodes += connNodes
-        connAttrNames = [n.srcAttrName for n in connNodes]
+        # connAttrNames = [n.srcAttrName for n in connNodes]
 
     if attributes is not None:
         defaultNodes = list(__createDefaultValueNodes(nodeLongName, attributes))
-        for eachDefaultNode in defaultNodes:
-            if eachDefaultNode.name in connAttrNames:
-                defaultNodes.remove(eachDefaultNode)
+        # for eachDefaultNode in defaultNodes:
+            # if eachDefaultNode.name in connAttrNames:
+            #     defaultNodes.remove(eachDefaultNode)
         validityNodes += defaultNodes
 
     # Now the sourceNodes
@@ -84,9 +84,10 @@ def __createDefaultValueNodes(nodeLongName, defaultAttributes):
             continue
 
         attrValue = cm_utils.getAttrValue(nodeLongName, eachAttr)
-        defaultValueNode = createDefaultValueNode(
-            name=eachAttr, longName=nodeLongName, defaultValue=attrValue
-        )
+        attrData = {eachAttr: attrValue}
+
+        defaultValueNode = createDefaultValueNode(name=eachAttr, longName=nodeLongName)
+        defaultValueNode.defaultValueData = attrData
 
         yield defaultValueNode
 
@@ -108,73 +109,38 @@ def __createConnectionNodes(nodeLongName):
             if not eachConnMPlug.isSource:
                 continue
 
-            srcMPlugAttrName = eachConnMPlug.partialName(
-                False, False, False, True, True, True
-            )
             srcMPlugType = cm_plugs.getMPlugType(eachConnMPlug)
+            srcPlugDataDict = dict()
 
-            srcMPlugAttrValue = None
+            #[[isElement, isChild, plugName, plgIdx], [isElement, isChild, plugName, plgIdx]]
+            plgData = cm_plugs.fetchIndexedPlugData(eachConnMPlug)
+            _, _, srcPlugName, _ = plgData[0]
+            srcPlugDataDict['attrName'] = srcPlugName
+            srcPlugDataDict['plugData'] = plgData
             if srcMPlugType not in GETATTR_IGNORESTYPES:
-                srcMPlugAttrValue = cm_plugs.getMPlugValue(eachConnMPlug)
-
-            (
-                srcIsElement,
-                srcIsChild,
-                srcAttrIndex,
-                srcAttrName,
-            ) = cm_plugs.fetchIndexedPlugData(eachConnMPlug)
-            if srcIsChild:
-                srcMPlugAttrName = srcAttrName
+                srcPlugDataDict['attrValue'] = cm_plugs.getMPlugValue(eachConnMPlug)
 
             # Dest plugs connected to this plug
-            destinations = (
-                eachConnMPlug.destinations()
-            )  # method skips over any unit conversion nodes
+            destinations = (eachConnMPlug.destinations())  # method skips over any unit conversion nodes
             for eachDestMPlug in destinations:
                 destPlugNodeMFn = om2.MFnDependencyNode(eachDestMPlug.node())
 
                 # Skip entirely shitty maya nodes we don't care about
-                if eachDestMPlug.node().apiType() in (
-                    om2.MFn.kMessageAttribute,
-                    om2.MFn.kNodeGraphEditorBookmarks,
-                    om2.MFn.kNodeGraphEditorBookmarkInfo,
-                    om2.MFn.kNodeGraphEditorInfo,
-                    om2.MFn.kContainer,
-                ):
+                if eachDestMPlug.node().apiType() in c_const.MAYA_CONNECTED_NODETYPES_IGNORES:
                     continue
 
-                destMPlugAttrName = str(
-                    eachDestMPlug.partialName(False, False, False, True, True, True)
-                )
                 destPlugType = cm_plugs.getMPlugType(eachDestMPlug)
-
-                destinationAttributeValue = None
+                destPlugDataDict = dict()
+                destPlugDataDict["nodeName"] = om2.MFnDependencyNode(eachDestMPlug.node()).name()
+                destPlugDataDict['plugData'] = cm_plugs.fetchIndexedPlugData(eachDestMPlug)
                 if destPlugType not in GETATTR_IGNORESTYPES:
-                    destinationAttributeValue = cm_plugs.getMPlugValue(eachDestMPlug)
-
-                (
-                    destIsElement,
-                    destIsChild,
-                    destAttrIndex,
-                    destAttrName,
-                ) = cm_plugs.fetchIndexedPlugData(eachDestMPlug)
-                if destIsChild:
-                    destMPlugAttrName = destAttrName
+                    destPlugDataDict['attrValue'] = cm_plugs.getMPlugValue(eachDestMPlug)
 
                 #################
                 # Create Node now
-                connectionNode = createConnectionValidityNode(
-                    name=destPlugNodeMFn.name(),
-                    longName=destPlugNodeMFn.absoluteName(),
-                )
-                connectionNode.srcAttrName = srcMPlugAttrName
-                connectionNode.srcAttrValue = srcMPlugAttrValue
-                connectionNode.srcAttrIsIndexed = any((srcIsElement, srcIsChild))
-                connectionNode.srcAttrIndex = srcAttrIndex
-
-                connectionNode.destAttrName = destMPlugAttrName
-                connectionNode.destAttrValue = destinationAttributeValue
-                connectionNode.destAttrIsIndexed = any((destIsElement, destIsChild))
-                connectionNode.destAttrIndex = destAttrIndex
-
+                connectionNode = createConnectionValidityNode(name=mFn.name(),
+                                                              longName=nodeLongName
+                                                              )
+                connectionNode.connectionData = {"srcData": srcPlugDataDict,
+                                                 "destData": destPlugDataDict}
                 yield connectionNode
