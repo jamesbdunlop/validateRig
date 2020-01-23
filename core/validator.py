@@ -178,7 +178,6 @@ class Validator(QtCore.QObject):
     def __createNameSpacedShortName(self, node):
         # type: (Node) -> str
         shortName = "{}:{}".format(self.nameSpace, node.name) if self.nameSpace else node.name
-
         return shortName
 
     def updateNameSpaceInLongName(self, nameSpace):
@@ -202,6 +201,8 @@ class Validator(QtCore.QObject):
             newNameSpace = ""
 
         newName = newNameSpace.join(tokens)
+        print(newName)
+        print("####")
 
         return newName
 

@@ -10,7 +10,7 @@ from const import constants as c_const
 from core.maya import types as cm_types
 from core.maya import plugs as cm_plugs
 from core.maya import utils as cm_utils
-reload(cm_plugs)
+
 logger = logging.getLogger(__name__)
 
 """
@@ -138,8 +138,8 @@ def __createConnectionNodes(nodeLongName):
 
                 #################
                 # Create Node now
-                connectionNode = createConnectionValidityNode(name=mFn.name(),
-                                                              longName=nodeLongName
+                connectionNode = createConnectionValidityNode(name=destPlugNodeMFn.name().split(":")[-1],
+                                                              longName=destPlugNodeMFn.absoluteName()
                                                               )
                 connectionNode.connectionData = {"srcData": srcPlugDataDict,
                                                  "destData": destPlugDataDict}

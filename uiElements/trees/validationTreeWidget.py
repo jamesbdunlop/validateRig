@@ -8,7 +8,7 @@ from const import constants as vrc_constants
 from const import serialization as c_serialization
 from uiElements.trees import factory as cuit_factory
 from uiElements.dialogs import attributeList as uid_attributeList
-reload(cuit_factory)
+
 logger = logging.getLogger(__name__)
 
 

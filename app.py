@@ -16,7 +16,6 @@ from uiElements.trees import validationTreeWidget as uit_validationTreeWidget
 from uiElements.dialogs import saveToJSONFile as uid_saveToJSON
 from uiElements.dialogs import loadFromJSONFile as uid_loadFromJSON
 from uiElements.dialogs import createValidator as uid_createValidator
-reload(uit_validationTreeWidget)
 if c_inside.insideMaya():
     from maya import cmds
 

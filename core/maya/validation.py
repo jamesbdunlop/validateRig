@@ -5,7 +5,6 @@ from const import constants as vrc_constants
 from core.maya import utils as cm_utils
 from core.maya import plugs as cm_plugs
 from core.maya import types as cm_types
-reload(cm_plugs)
 import maya.api.OpenMaya as om2
 
 logger = logging.getLogger(__name__)
