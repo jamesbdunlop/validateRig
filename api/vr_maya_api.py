@@ -50,24 +50,25 @@ def asSourceNode(nodeLongName, attributes=None, connections=False):
     # type: (str, list[str], bool, bool) -> SourceNode
 
     validityNodes = list()
-    # connAttrNames = list()
+    connAttrNames = list()
     if connections:
         connNodes = list(__createConnectionNodes(nodeLongName))
         validityNodes += connNodes
-        # connAttrNames = [n.srcAttrName for n in connNodes]
+        connAttrNames = [n.connectionData.get("srcData")["attrName"] for n in connNodes]
 
     if attributes is not None:
         defaultNodes = list(__createDefaultValueNodes(nodeLongName, attributes))
-        # for eachDefaultNode in defaultNodes:
-            # if eachDefaultNode.name in connAttrNames:
-            #     defaultNodes.remove(eachDefaultNode)
+        for eachDefaultNode in defaultNodes:
+            data = eachDefaultNode.defaultValueData
+            for dvName, _ in data.iteritems():
+                if dvName in connAttrNames:
+                    defaultNodes.remove(eachDefaultNode)
+
         validityNodes += defaultNodes
 
     # Now the sourceNodes
     shortName = cm_utils.cleanMayaLongName(nodeLongName)
-    sourceNode = createSourceNode(
-        name=shortName, longName=nodeLongName, validityNodes=validityNodes
-    )
+    sourceNode = createSourceNode(name=shortName, longName=nodeLongName, validityNodes=validityNodes)
 
     nameSpace = cm_utils.getNamespaceFromLongName(nodeLongName)
     if nameSpace:
@@ -121,7 +122,9 @@ def __createConnectionNodes(nodeLongName):
                 srcPlugDataDict['attrValue'] = cm_plugs.getMPlugValue(eachConnMPlug)
 
             # Dest plugs connected to this plug
-            destinations = (eachConnMPlug.destinations())  # method skips over any unit conversion nodes
+            destinations = (mplg for mplg in eachConnMPlug.destinations() if
+                            not mplg.node().apiType() in c_const.MAYA_CONNECTED_NODETYPES_IGNORES)  # method skips  over any unit conversion nodes
+            logger.info("\tdestinations: %s" % [(mplg.name(), mplg.node().apiType()) for mplg in destinations])
             for eachDestMPlug in destinations:
                 destPlugNodeMFn = om2.MFnDependencyNode(eachDestMPlug.node())
 

@@ -45,6 +45,23 @@ class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
         # type: (int, QtCore.Qt.DisplayRole, str) -> None
         self.setData(columnId, qtRole, value)
 
+    def updateDefaultValue(self):
+        qtRole = QTDISPLAYROLE
+        if self.nodeType() == c_serialization.NT_DEFAULTVALUE:
+            data = self.node().defaultValueData
+            for _, dvValue in data.iteritems():
+                valueColId = vrc_constants.SRC_ATTRVALUE_COLUMN
+                self.updateColumnData(valueColId, qtRole, dvValue)
+
+    def updateConnectionSrcValue(self):
+        qtRole = QTDISPLAYROLE
+        if self.nodeType() == c_serialization.NT_CONNECTIONVALIDITY:
+            data = self.node().connectionData
+            srcData = data.get("srcData", None)
+            value = srcData.get("attrValue")
+            valueColId = vrc_constants.SRC_ATTRVALUE_COLUMN
+            self.updateColumnData(valueColId, qtRole, value)
+
     def setColumnFontStyle(self):
         font = QtGui.QFont("EA Font", weight=1)
         font.setBold(True)

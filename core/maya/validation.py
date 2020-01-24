@@ -38,11 +38,11 @@ def __validateDefaultNodes(sourceNode):
         if eachValidationNode.nodeType != c_serialization.NT_DEFAULTVALUE:
             continue
 
-        defaultValueData = eachValidationNode.defaultValueData
+        data = eachValidationNode.defaultValueData
         defaultNodeLongName = eachValidationNode.longName
-        for attrName, attrValue in defaultValueData.iteritems():
-            attrValue = cm_utils.getAttrValue(defaultNodeLongName, attrName)
-            result = attrValue == attrValue
+        for dvName, dvValue in data.iteritems():
+            attrValue = cm_utils.getAttrValue(defaultNodeLongName, dvName)
+            result = dvValue == attrValue
             if not setValidationStatus(eachValidationNode, result):
                 passed = False
 
@@ -187,36 +187,32 @@ def __repairConnectionNodes(sourceNode):
 
         data = eachValidationNode.connectionData
         srcData = data.get("srcData", None)
-        destData = data.get("destData", None)
         srcAttrValue = srcData.get("attrName", None)
         srcAttrName = srcData.get("attrValue", None)
         srcPlugData = srcData.get("plugData", None)
 
+        destData = data.get("destData", None)
         destNodeName = destData.get("nodeName", None)
         destPlugData = destData.get("plugData", None)
 
+        ############################################################
         srcIsElement, srcIsChild, srcPlugName, _ = srcPlugData[0]
-        isSrcIndexed = False
         if srcIsElement or srcIsChild:
-            isSrcIndexed = True
-        if not isSrcIndexed:
-            srcMPlug = cm_plugs.getMPlugFromLongName(eachValidationNode.longName, srcAttrName)
-        else:
             srcMPlug = fetchMPlugFromConnectionData(eachValidationNode.longName, srcPlugData)
 
-        destIsElement, destIsChild, destPlugName, _ = destPlugData[0]
-        isDestIndexed = False
-        if destIsElement or destIsChild:
-            isDestIndexed = True
-        if not isDestIndexed:
-            destMPlug = cm_plugs.getMPlugFromLongName(destNodeName, destPlugName)
         else:
+            srcMPlug = cm_plugs.getMPlugFromLongName(eachValidationNode.longName, srcAttrName)
+
+        ############################################################
+        destIsElement, destIsChild, destPlugName, _ = destPlugData[0]
+        if destIsElement or destIsChild:
             destMPlug = fetchMPlugFromConnectionData(destNodeName, destPlugData)
 
+        else:
+            destMPlug = cm_plugs.getMPlugFromLongName(destNodeName, destPlugName)
+
         mDagMod.connect(srcMPlug, destMPlug)
-
         cm_plugs.setMPlugValue(srcMPlug, srcAttrValue)
-
         setValidationStatus(eachValidationNode, True)
 
     mDagMod.doIt()

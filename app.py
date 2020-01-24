@@ -490,6 +490,14 @@ class ValidationUI(QtWidgets.QMainWindow):
 
         return inst
 
+    @classmethod
+    def from_validators(cls, validators, parent=None):
+        inst = cls(parent=parent)
+        for eachValidatiorData in validators:
+            inst.__addValidationPairFromData(data=eachValidatiorData.toData(), expanded=False)
+
+        return inst
+
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv).instance()

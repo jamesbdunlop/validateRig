@@ -55,3 +55,15 @@ def getNamespaceFromLongName(nodeLongName):
         nameSpace = nodeName.split(":")[0]
 
     return nameSpace
+
+
+def getUDAttrs(nodeName):
+    lsAttrs = cmds.listAttr(nodeName, ud=True)
+    if lsAttrs is None:
+        return []
+
+    ud = [ud for ud in cmds.listAttr(nodeName, ud=True)]
+    if ud is None:
+        return []
+
+    return ud

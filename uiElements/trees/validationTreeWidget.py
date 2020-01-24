@@ -149,6 +149,23 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
                 self.validator().removeSourceNode(sourceNode)
                 self.takeTopLevelItem(x)
 
+    def updateDefaultValueFromScene(self):
+        for eachTreeWidgetItem in self.selectedItems():
+            pass
+            # node = eachTreeWidgetItem.node()
+            # vr_mayaApi.updateDefaultValueNodeFromScene(node)
+            eachTreeWidgetItem.updateDefaultValue()
+
+    def updateConnectionNodeSrcAttrValueFromScene(self):
+        for eachTreeWidgetItem in self.selectedItems():
+            pass
+            connectionNode = eachTreeWidgetItem.node()
+            # status, e = vr_mayaApi.updateConnectionNodeSrcAttrValueFromScene(connectionNode)
+            # if not status:
+            #     print(e)
+
+            # eachTreeWidgetItem.updateConnectionSrcValue()
+
     # Drag and Drop
     def dragEnterEvent(self, QDragEnterEvent):
         super(ValidationTreeWidget, self).dragEnterEvent(QDragEnterEvent)
@@ -179,27 +196,19 @@ class MayaValidationTreeWidget(ValidationTreeWidget):
         for longNodeName in nodeNames:
             if not self.validator().sourceNodeLongNameExists(longNodeName):
                 logger.info("Creating new sourceNode.")
-                self.srcNodesWidget = uid_attributeList.MayaValidityNodesSelector(
-                    longNodeName=longNodeName, parent=self
-                )
+                self.srcNodesWidget = uid_attributeList.MayaValidityNodesSelector(longNodeName=longNodeName, parent=self)
 
             else:
                 logger.info("SourceNode: {} exists!".format(longNodeName))
-                existingSourceNode = self.validator().findSourceNodeByLongName(
-                    longNodeName
-                )
-                self.srcNodesWidget = uid_attributeList.MayaValidityNodesSelector.fromSourceNode(
-                    sourceNode=existingSourceNode, parent=self
-                )
+                existingSourceNode = self.validator().findSourceNodeByLongName(longNodeName)
+                self.srcNodesWidget = uid_attributeList.MayaValidityNodesSelector.fromSourceNode(sourceNode=existingSourceNode, parent=self)
 
             if self.srcNodesWidget is None:
                 continue
 
             self.mainAttrWidget.addListWidget(self.srcNodesWidget)
 
-        self.mainAttrWidget.sourceNodesAccepted.connect(
-            self._processSourceNodeAttributeWidgets
-        )
+        self.mainAttrWidget.sourceNodesAccepted.connect(self._processSourceNodeAttributeWidgets)
         self.mainAttrWidget.move(QtGui.QCursor.pos())
         self.mainAttrWidget.show()
 

@@ -201,8 +201,6 @@ class Validator(QtCore.QObject):
             newNameSpace = ""
 
         newName = newNameSpace.join(tokens)
-        print(newName)
-        print("####")
 
         return newName
 
