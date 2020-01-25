@@ -44,7 +44,6 @@ class Test_COREAPI(unittest.TestCase):
         defaultValueNode = vrigApi.createDefaultValueNode(
             name=self.defaultValueNodeName,
             longName=self.defaultValueNodeName,
-            defaultValue=False,
         )
         self.assertIsInstance(defaultValueNode, c_nodes.DefaultValueNode)
 

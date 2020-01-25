@@ -13,24 +13,25 @@ from core import parser as c_parser
 
 from uiElements.themes import factory as uit_factory
 from uiElements.trees import validationTreeWidget as uit_validationTreeWidget
+from uiElements.trees import factory as uitt_factory
 from uiElements.dialogs import saveToJSONFile as uid_saveToJSON
 from uiElements.dialogs import loadFromJSONFile as uid_loadFromJSON
 from uiElements.dialogs import createValidator as uid_createValidator
-if c_inside.insideMaya():
-    from maya import cmds
+
 
 logger = logging.getLogger(__name__)
-
 ############################
 # TO DO
 # Update selected from scene
 # Missing node report
+# Drag and drop bugs, stuff not updating
+# fix all UI deps on inside.insideMaya() so this check only exists in the API
 
 
 class ValidationUI(QtWidgets.QMainWindow):
-    def __init__(
-        self, title=vrc_constants.UINAME, theme="core", themecolor="", parent=None
-    ):
+    getNSFromDCC = QtCore.Signal(object, name="getNSFromDCC")
+
+    def __init__(self, title=vrc_constants.UINAME, theme="core", themecolor="", parent=None):
         # type: (str, str, str, QtWidgets.QWidget) -> None
         super(ValidationUI, self).__init__(parent=parent)
         self.setWindowTitle(title)
@@ -42,9 +43,7 @@ class ValidationUI(QtWidgets.QMainWindow):
         self.setStyleSheet(self.sheet)
         self.setAcceptDrops(True)
 
-        self._validators = (
-            []
-        )  # list of tuples of validators and widgets (Validator, QTreeWidget)
+        self._validators = [] # list of tuples of validators and widgets (Validator, QTreeWidget)
 
         # MAIN MENU
         self.appMenu = QtWidgets.QMenuBar()
@@ -262,12 +261,7 @@ class ValidationUI(QtWidgets.QMainWindow):
 
     # UI Getters
     def __getNameSpaceFromScene(self):
-        if c_inside.insideMaya():
-            # Smelly find of NS from : in name.
-            firstSelected = cmds.ls(sl=True)[0]
-            if ":" in firstSelected:
-                self.nameSpaceInput.setText(cmds.ls(sl=True)[0].split(":")[0])
-
+        self.getNSFromDCC.emit(self.nameSpaceInput)
         self.__updateValidatorsNameSpace()
 
     # UI Search
@@ -338,7 +332,7 @@ class ValidationUI(QtWidgets.QMainWindow):
 
     def dropEvent(self, QDropEvent):
         super(ValidationUI, self).dropEvent(QDropEvent)
-        if not c_inside.insideMaya() and QDropEvent.mimeData().text().endswith(".json"):
+        if QDropEvent.mimeData().text().endswith(".json"):
             self.processJSONDrop(QDropEvent)
         return QDropEvent.accept()
 
@@ -383,7 +377,7 @@ class ValidationUI(QtWidgets.QMainWindow):
     def __createValidationTreeWidget(self, validator):
         # type: (c_validator.Validator) -> uit_validationTreeWidget.ValidationTreeWidget
         """Creates a treeView widget for the treeWidget/validator pair for adding source nodes to."""
-        treewidget = uit_validationTreeWidget.getValidationTreeWidget(validator, self)
+        treewidget = uitt_factory.getValidationTreeWidget(validator, self)
         treewidget.remove.connect(self.__removeValidatorFromUI)
 
         return treewidget

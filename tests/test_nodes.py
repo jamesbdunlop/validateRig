@@ -27,26 +27,24 @@ class Test_Nodes(unittest.TestCase):
         )
         #######################################
         self.connectionValidityNodeName = c_testData.VALIDITY_NODENAME
-        self.connectionValidityNodeAttrName = c_testData.VALIDITY_DEST_ATTRNAME
-        self.connectionValidityNodeAttrValue = c_testData.VALIDITY_DEST_ATTRVALUE
         self.connectionValidityNodeType = c_testData.VALIDITY_NODETYPE
+
         self.connectionValidityNode = c_nodes.ConnectionValidityNode(
             name=self.connectionValidityNodeName,
             longName=self.connectionValidityNodeName,
         )
-        self.connectionValidityNode.destAttrName = self.connectionValidityNodeAttrName
-        self.connectionValidityNode.destAttrValue = self.connectionValidityNodeAttrValue
-        self.connectionValidityNode.srcAttrName = self.srcNodeAttrName
-        self.connectionValidityNode.srcAttrValue = self.srcNodeAttrValue
+        self.connectionValidityNode.connectionData = {}
+
         #######################################
         self.defaultValueNodeName = c_testData.DEFAULT_NODENAME
         self.defaultValueNodeValue = c_testData.DEFAULT_NODEVALUE
         self.defaultValueNodeType = c_testData.DEFAULT_NODETYPE
+
         self.defaultValueNode = c_nodes.DefaultValueNode(
             name=self.defaultValueNodeName,
             longName=self.defaultValueNodeName,
-            defaultValue=self.defaultValueNodeValue,
         )
+        self.defaultValueNode.defaultValueData = {}
 
         self.sourceNode.addChild(self.connectionValidityNode)
         self.sourceNode.addChild(self.defaultValueNode)
@@ -62,17 +60,14 @@ class Test_Nodes(unittest.TestCase):
                     c_serialization.KEY_NODELONGNAME: self.connectionValidityNodeName,
                     c_serialization.KEY_NODETYPE: self.connectionValidityNodeType,
                     c_serialization.KEY_NODEDISPLAYNAME: self.connectionValidityNodeName,
-                    c_serialization.KEY_DEST_ATTRIBUTENAME: self.connectionValidityNodeAttrName,
-                    c_serialization.KEY_DEST_ATTRIBUTEVALUE: self.connectionValidityNodeAttrValue,
-                    c_serialization.KEY_SRC_ATTRIBUTENAME: self.srcNodeAttrName,
-                    c_serialization.KEY_SRC_ATTRIBUTEVALUE: self.srcNodeAttrValue,
+                    c_serialization.KEY_CONNDATA: {},
                 },
                 {
                     c_serialization.KEY_NODENAME: self.defaultValueNodeName,
                     c_serialization.KEY_NODELONGNAME: self.defaultValueNodeName,
                     c_serialization.KEY_NODETYPE: self.defaultValueNodeType,
                     c_serialization.KEY_NODEDISPLAYNAME: self.defaultValueNodeName,
-                    c_serialization.KEY_DEFAULTVALUE: self.defaultValueNodeValue,
+                    c_serialization.KEY_DEFAULTVALUEDATA: {},
                 },
             ],
         }
@@ -195,56 +190,12 @@ class Test_Nodes(unittest.TestCase):
             "connectionValidityNodeName is not %s" % self.connectionValidityNodeName,
         )
 
-    def test_connectionValidityNode_destAttrName(self):
-        self.assertEqual(
-            self.connectionValidityNodeAttrName,
-            self.connectionValidityNode.destAttrName,
-            "connectionValidityNode.destAttrName is not %s"
-            % self.connectionValidityNodeAttrName,
-        )
-
-    def test_connectionValidityNode_destAttrValuee(self):
-        self.assertEqual(
-            self.connectionValidityNodeAttrValue,
-            self.connectionValidityNode.destAttrValue,
-            "connectionValidityNode.destAttrValue is not %s"
-            % self.connectionValidityNodeAttrValue,
-        )
-
-    def test_connectionValidityNode_srcAttrName(self):
-        self.assertEqual(
-            self.srcNodeAttrName,
-            self.connectionValidityNode.srcAttrName,
-            "srcAttrName is not %s" % self.srcNodeAttrName,
-        )
-
-    def test_connectionValidityNode_srcAttrValue(self):
-        self.assertEqual(
-            self.srcNodeAttrValue,
-            self.connectionValidityNode.srcAttrValue,
-            "srcAttrValue is not %s" % self.srcNodeAttrValue,
-        )
-
     ## DEFAULTVALUE NODE SPECIFIC
     def test_defaultValueNode_name(self):
         self.assertEqual(
             self.defaultValueNodeName,
             self.defaultValueNode.name,
             "defaultValueNode.name is not %s" % self.defaultValueNodeName,
-        )
-
-    def test_defaultValueNode_value(self):
-        self.assertEqual(
-            self.defaultValueNodeValue,
-            self.defaultValueNode.defaultValue,
-            "defaultValueNode.defaultValue is not %s" % self.defaultValueNodeValue,
-        )
-
-        self.defaultValueNode.defaultValue = None
-        self.assertEqual(
-            None,
-            self.defaultValueNode.defaultValue,
-            "defaultValueNode.defaultValue is not None!",
         )
 
 

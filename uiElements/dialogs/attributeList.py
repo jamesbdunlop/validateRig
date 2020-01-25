@@ -225,9 +225,7 @@ class MayaValidityNodesSelector(BaseSourceNodeValidityNodesSelector):
                     if not self.connsListWidget.isItemSelected(eachItem):
                         self.connsListWidget.setItemSelected(eachItem, True)
 
-    def __getValidityNodesFromDefaultValuesListWidget(
-        self, longNodeName, defaultValuesListWidget
-    ):
+    def __getValidityNodesFromDefaultValuesListWidget(self, longNodeName, defaultValuesListWidget):
         # type: (str, QtWidgets.QListWidget) -> list[DefaultValueNode]
         """
         Args:
@@ -235,10 +233,10 @@ class MayaValidityNodesSelector(BaseSourceNodeValidityNodesSelector):
         """
         nodes = list()
         for eachAttr in defaultValuesListWidget.selectedItems():
-            value = cmds.getAttr("{}.{}".format(longNodeName, eachAttr.text()))
-            dvNode = DefaultValueNode(
-                name=eachAttr.text(), longName=longNodeName, defaultValue=value
-            )
+            attrName = eachAttr.text()
+            value = cmds.getAttr("{}.{}".format(longNodeName, attrName))
+            dvNode = DefaultValueNode(name=attrName, longName=longNodeName)
+            dvNode.defaultValueData = {attrName: value}
 
             if self.sourceNode() is None:
                 nodes.append(dvNode)
@@ -246,7 +244,7 @@ class MayaValidityNodesSelector(BaseSourceNodeValidityNodesSelector):
 
             found = False
             for validityNode in self.sourceNode().iterChildren():
-                if validityNode.name == eachAttr.text():
+                if validityNode.name == attrName:
                     found = True
             if found:
                 continue
@@ -272,10 +270,7 @@ class MayaValidityNodesSelector(BaseSourceNodeValidityNodesSelector):
             connectionNode = ConnectionValidityNode(
                 name=nodeName, longName=longNodeName
             )
-            connectionNode.destAttrName = destAttrName
-            connectionNode.destAttrValue = cmds.getAttr(dest)
-            connectionNode.srcAttrName = src.split(".")[-1]
-            connectionNode.srcAttrValue = cmds.getAttr(src)
+
 
             if self.sourceNode() is None:
                 nodes.append(connectionNode)

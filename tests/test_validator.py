@@ -18,31 +18,27 @@ class Test_Validator(unittest.TestCase):
         )
 
         self.sourceNodeName = c_testdata.SRC_NODENAME
-        self.sourceNodeLongName = "|{}:{}".format(
-            c_testdata.VALIDATOR_NAMESPACE, self.sourceNodeName
-        )
-        self.srcNodeAttrName = c_testdata.SRC_ATTRNAME
-        self.srcNodeAttrValue = c_testdata.SRC_ATTRVALUE
+        self.sourceNodeLongName = "|{}:{}".format(c_testdata.VALIDATOR_NAMESPACE, self.sourceNodeName)
+        self.sourceNode = c_nodes.SourceNode(name=self.sourceNodeName, longName=self.sourceNodeLongName)
 
-        self.connectionValidityNodeName = c_testdata.VALIDITY_NODENAME
-        self.connectionValidityNodeLongName = "|{}:{}".format(
-            c_testdata.VALIDATOR_NAMESPACE, c_testdata.VALIDITY_NODENAME
-        )
-        self.connectionValidityNodeAttrName = c_testdata.VALIDITY_DEST_ATTRNAME
-        self.connectionValidityNodeAttrValue = c_testdata.VALIDITY_DEST_ATTRVALUE
 
-        self.sourceNode = c_nodes.SourceNode(
-            name=self.sourceNodeName, longName=self.sourceNodeLongName
-        )
+        connData = {
+                "srcData": {
+                    "attrName": "testConnSrcAttrName",
+                    "plugData": [[False, False, "", 0], ],
+                },
+                "destData": {
+                    "nodeName": "testDestNodeName",
+                    "plugData": {"testAttrName": 666},
+                }
 
-        self.connectionValidityNode = c_nodes.ConnectionValidityNode(
-            name=self.connectionValidityNodeName,
-            longName=self.connectionValidityNodeLongName,
-        )
-        self.connectionValidityNode.destAttrName = self.connectionValidityNodeAttrName
-        self.connectionValidityNode.destAttrValue = self.connectionValidityNodeAttrValue
-        self.connectionValidityNode.srcAttrName = self.srcNodeAttrName
-        self.connectionValidityNode.srcAttrValue = self.srcNodeAttrValue
+            }
+        self.connectionNodeName = c_testdata.VALIDITY_NODENAME
+        self.connectionNodeLongName = "|{}:{}".format(c_testdata.VALIDATOR_NAMESPACE, c_testdata.VALIDITY_NODENAME)
+        self.connectionValidityNode = c_nodes.ConnectionValidityNode(name=self.connectionNodeName,
+                                                                     longName=self.connectionNodeLongName)
+
+        self.connectionValidityNode.connectionData = connData
 
         self.sourceNode.addChild(self.connectionValidityNode)
 
@@ -60,14 +56,11 @@ class Test_Validator(unittest.TestCase):
                     c_serialization.KEY_NODETYPE: c_testdata.SRC_NODETYPE,
                     c_serialization.KEY_VAILIDITYNODES: [
                         {
-                            c_serialization.KEY_NODENAME: self.connectionValidityNodeName,
-                            c_serialization.KEY_NODELONGNAME: self.connectionValidityNodeLongName,
-                            c_serialization.KEY_NODEDISPLAYNAME: self.connectionValidityNodeName,
+                            c_serialization.KEY_NODENAME: self.connectionNodeName,
+                            c_serialization.KEY_NODELONGNAME: self.connectionNodeLongName,
+                            c_serialization.KEY_NODEDISPLAYNAME: self.connectionNodeName,
                             c_serialization.KEY_NODETYPE: c_testdata.VALIDITY_NODETYPE,
-                            c_serialization.KEY_DEST_ATTRIBUTENAME: self.connectionValidityNodeAttrName,
-                            c_serialization.KEY_DEST_ATTRIBUTEVALUE: self.connectionValidityNodeAttrValue,
-                            c_serialization.KEY_SRC_ATTRIBUTENAME: self.srcNodeAttrName,
-                            c_serialization.KEY_SRC_ATTRIBUTEVALUE: self.srcNodeAttrValue,
+                            c_serialization.KEY_CONNDATA: connData,
                         }
                     ],
                 }

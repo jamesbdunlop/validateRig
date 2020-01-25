@@ -1,19 +1,21 @@
 #  Copyright (c) 2019.  James Dunlop
 import logging
 from PySide2 import QtWidgets, QtCore, QtGui
-import inside as c_inside
-from core.validator import Validator
-from core.nodes import Node, SourceNode
-from const import constants as vrc_constants
-from const import serialization as c_serialization
-from uiElements.trees import factory as cuit_factory
-from uiElements.dialogs import attributeList as uid_attributeList
 
+from validateRig.api import vr_core_api
+from validateRig.core.validator import Validator
+from validateRig.core.nodes import SourceNode
+from validateRig.const import constants as vrc_constants
+from validateRig.const import serialization as c_serialization
+from validateRig.uiElements.trees.treeWidgetItems import factory as cuitwi_factory
+
+reload(vr_core_api)
 logger = logging.getLogger(__name__)
 
 
 class ValidationTreeWidget(QtWidgets.QTreeWidget):
     remove = QtCore.Signal(list, name="remove")
+    updateNode = QtCore.Signal(object, name='updateNode')
 
     def __init__(self, validator, parent=None):
         # type: (Validator, QtWidgets.QWidget) -> None
@@ -61,6 +63,12 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
             nodeType == c_serialization.NT_CONNECTIONVALIDITY
             or nodeType == c_serialization.NT_DEFAULTVALUE
         ):
+            updateFromDCC = menu.addAction("Update from DCC")
+            if nodeType == c_serialization.NT_DEFAULTVALUE:
+                updateFromDCC.triggered.connect(self.updateDefaultValueFromDCC)
+            else:
+                updateFromDCC.triggered.connect(self.updateConnectionNodeSrcAttrValueFromScene)
+
             remove = menu.addAction("Remove ValidationNode")
             remove.triggered.connect(self.__removeSelectedTreeWidgetItems)
 
@@ -75,7 +83,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
 
     def __addTopLevelTreeWidgetItemFromSourceNode(self, sourceNode):
         # type: (SourceNode) -> QtWidgets.QTreeWidgetItem
-        item = cuit_factory.treeWidgetItemFromNode(node=sourceNode)
+        item = cuitwi_factory.treeWidgetItemFromNode(node=sourceNode)
         self.addTopLevelItem(item)
 
         return item
@@ -110,13 +118,13 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
                     continue
 
                 self.__removeAllTreeWidgetItemChildren(treeWidgetItem)
-                addValidityNodesToTreeWidgetItem(sourceNode, treeWidgetItem)
+                ValidationTreeWidget.addValidityNodesToTreeWidgetItem(sourceNode, treeWidgetItem)
                 continue
 
             # New
             self.validator().addSourceNode(sourceNode, True)
             treeWidgetItem = self.__addTopLevelTreeWidgetItemFromSourceNode(sourceNode)
-            addValidityNodesToTreeWidgetItem(sourceNode, treeWidgetItem)
+            ValidationTreeWidget.addValidityNodesToTreeWidgetItem(sourceNode, treeWidgetItem)
 
     def __removeSelectedTreeWidgetItems(self):
         for eachTreeWidgetItem in self.selectedItems():
@@ -149,22 +157,19 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
                 self.validator().removeSourceNode(sourceNode)
                 self.takeTopLevelItem(x)
 
-    def updateDefaultValueFromScene(self):
+    def updateDefaultValueFromDCC(self):
         for eachTreeWidgetItem in self.selectedItems():
-            pass
-            # node = eachTreeWidgetItem.node()
-            # vr_mayaApi.updateDefaultValueNodeFromScene(node)
+            logger.info("Updated defaultValue from DCC")
+            defaultValueNode = eachTreeWidgetItem.node()
+            self.updateNode.emit(defaultValueNode)
             eachTreeWidgetItem.updateDefaultValue()
 
     def updateConnectionNodeSrcAttrValueFromScene(self):
         for eachTreeWidgetItem in self.selectedItems():
-            pass
+            logger.info("Updated srcAttrValue and destAttrValue from DCC")
             connectionNode = eachTreeWidgetItem.node()
-            # status, e = vr_mayaApi.updateConnectionNodeSrcAttrValueFromScene(connectionNode)
-            # if not status:
-            #     print(e)
-
-            # eachTreeWidgetItem.updateConnectionSrcValue()
+            self.updateNode.emit(connectionNode)
+            eachTreeWidgetItem.updateConnectionSrcValue()
 
     # Drag and Drop
     def dragEnterEvent(self, QDragEnterEvent):
@@ -177,128 +182,59 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
 
     def dropEvent(self, QDropEvent):
         super(ValidationTreeWidget, self).dropEvent(QDropEvent)
-
-
-class MayaValidationTreeWidget(ValidationTreeWidget):
-    def __init__(self, validator, parent=None):
-        super(MayaValidationTreeWidget, self).__init__(
-            validator=validator, parent=parent
-        )
-
-    def processMayaDrop(self, QDropEvent):
         nodeNames = QDropEvent.mimeData().text().split("\n")
+        self.attrWidget = vr_core_api.processValidationTreeWidgetDropEvent(nodeNames, self.validator, parent=None)
+        self.attrWidget.sourceNodesAccepted.connect(self._processSourceNodeAttributeWidgets)
+        self.attrWidget.move(QtGui.QCursor.pos())
+        self.attrWidget.show()
 
-        self.mainAttrWidget = uid_attributeList.MultiSourceNodeListWidgets(
-            "SourceNodes", None
-        )
-
-        # Check to see if this exists in the validator we dropped over.
-        for longNodeName in nodeNames:
-            if not self.validator().sourceNodeLongNameExists(longNodeName):
-                logger.info("Creating new sourceNode.")
-                self.srcNodesWidget = uid_attributeList.MayaValidityNodesSelector(longNodeName=longNodeName, parent=self)
-
-            else:
-                logger.info("SourceNode: {} exists!".format(longNodeName))
-                existingSourceNode = self.validator().findSourceNodeByLongName(longNodeName)
-                self.srcNodesWidget = uid_attributeList.MayaValidityNodesSelector.fromSourceNode(sourceNode=existingSourceNode, parent=self)
-
-            if self.srcNodesWidget is None:
-                continue
-
-            self.mainAttrWidget.addListWidget(self.srcNodesWidget)
-
-        self.mainAttrWidget.sourceNodesAccepted.connect(self._processSourceNodeAttributeWidgets)
-        self.mainAttrWidget.move(QtGui.QCursor.pos())
-        self.mainAttrWidget.show()
-
-    def dropEvent(self, QDropEvent):
-        super(MayaValidationTreeWidget, self).dropEvent(QDropEvent)
-        if not c_inside.insideMaya():
-            return None
-
-        self.processMayaDrop(QDropEvent)
-
+    # Clicks
     def mouseDoubleClickEvent(self, event=QtGui.QMouseEvent):
-        if not c_inside.insideMaya():
-            return
-
-        from maya import cmds
-
+        nodeNames = list()
         for eachItem in self.selectedItems():
             node = eachItem.node()
             nodeType = node.nodeType
             if nodeType == c_serialization.NT_SOURCENODE:
                 itemName = eachItem.data(0, QtCore.Qt.DisplayRole)
+
             elif nodeType == c_serialization.NT_CONNECTIONVALIDITY:
                 itemName = eachItem.data(4, QtCore.Qt.DisplayRole)
+
             elif nodeType == c_serialization.NT_DEFAULTVALUE:
                 sourceNodeTWI = eachItem.parent()
                 itemName = sourceNodeTWI.data(0, QtCore.Qt.DisplayRole)
+
             else:
                 itemName = ""
 
-            modifier = event.modifiers()
-            if modifier == QtCore.Qt.ControlModifier:
-                cmds.select(itemName, add=True)
+            nodeNames.append(itemName)
+
+        vr_core_api.selectNodesInDCC(nodeNames, event)
+
+    @staticmethod
+    def addValidityNodesToTreeWidgetItem(sourceNode, sourceNodeTreeWItm):
+        # type: (Node, QtWidgets.QTreeWidgetItem) -> None
+        connectionAttrSrcNames = list()
+        parentNode = None
+
+        for eachValidityNode in sourceNode.iterChildren():
+            treewidgetItem = cuitwi_factory.treeWidgetItemFromNode(node=eachValidityNode)
+
+            if eachValidityNode.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
+                data = eachValidityNode.connectionData
+                srcData = data.get("srcData", None)
+                srcAttrName = srcData.get("attrName", None)
+                if srcAttrName not in connectionAttrSrcNames:
+                    connectionAttrSrcNames.append(srcAttrName)
+                    sourceNodeTreeWItm.addChild(treewidgetItem)
+                    # First found becomes the parentNode!
+                    parentNode = treewidgetItem
+                else:
+                    # parent this to the parentNode
+                    parentNode.addChild(treewidgetItem)
             else:
-                cmds.select(itemName, r=True)
-
-
-def getValidationTreeWidget(validator, parent):
-    # type: (Validator, QtWidgets.QWidget) -> QtWidgets.QTreeWidget
-    """
-    Args:
-        validator: The validator to be used by the treeWidget
-        parent: QTWidget for the treeWidget
-    """
-
-    if c_inside.insideMaya():
-        treeWidget = MayaValidationTreeWidget(validator, parent)
-
-    else:
-        treeWidget = ValidationTreeWidget(validator, parent)
-
-    for sourceNode in validator.iterSourceNodes():
-        sourceNodeTreeWItm = cuit_factory.treeWidgetItemFromNode(node=sourceNode)
-        treeWidget.addTopLevelItem(sourceNodeTreeWItm)
-        addValidityNodesToTreeWidgetItem(sourceNode, sourceNodeTreeWItm)
-        # Crashes maya
-        # cuit_factory.setSourceNodeItemWidgetsFromNode(
-        #     node=sourceNode, treewidget=treeWidget, twi=sourceNodeTreeWItm
-        # )
-
-    treeWidget.resizeColumnToContents(vrc_constants.SRC_NODENAME_COLUMN)
-    treeWidget.resizeColumnToContents(vrc_constants.DEST_NODENAME_COLUMN)
-
-    return treeWidget
-
-
-def addValidityNodesToTreeWidgetItem(sourceNode, sourceNodeTreeWItm):
-    # type: (Node, QtWidgets.QTreeWidgetItem) -> None
-    connectionAttrSrcNames = list()
-    parentNode = None
-
-    for eachValidityNode in sourceNode.iterChildren():
-        treewidgetItem = cuit_factory.treeWidgetItemFromNode(node=eachValidityNode)
-
-        if eachValidityNode.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
-            data = eachValidityNode.connectionData
-            srcData = data.get("srcData", None)
-            srcAttrName = srcData.get("attrName", None)
-
-            if srcAttrName not in connectionAttrSrcNames:
-                connectionAttrSrcNames.append(srcAttrName)
                 sourceNodeTreeWItm.addChild(treewidgetItem)
-                # First found becomes the parentNode!
-                parentNode = treewidgetItem
-            else:
-                # parent this to the parentNode
-                parentNode.addChild(treewidgetItem)
-
-        else:
-            sourceNodeTreeWItm.addChild(treewidgetItem)
-        # Crashes maya
-        # cuit_factory.setSourceNodeItemWidgetsFromNode(
-        #     node=eachValidityNode, treewidget=treeWidget, twi=treewidgetItem
-        # )
+            # Crashes maya
+            # cuitwi_factory.setSourceNodeItemWidgetsFromNode(
+            #     node=eachValidityNode, treewidget=treeWidget, twi=treewidgetItem
+            # )
