@@ -159,17 +159,21 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
 
     def updateDefaultValueFromDCC(self):
         for eachTreeWidgetItem in self.selectedItems():
-            logger.debug("Updated defaultValue from DCC")
             defaultValueNode = eachTreeWidgetItem.node()
             self.updateNode.emit(defaultValueNode)
             eachTreeWidgetItem.updateDefaultValue()
 
     def updateConnectionNodeSrcAttrValueFromScene(self):
         for eachTreeWidgetItem in self.selectedItems():
-            logger.debug("Updated srcAttrValue and destAttrValue from DCC")
             connectionNode = eachTreeWidgetItem.node()
             self.updateNode.emit(connectionNode)
-            eachTreeWidgetItem.updateConnectionSrcValue()
+            eachTreeWidgetItem.updateConnectionValue()
+
+            for eachChild in eachTreeWidgetItem.children:
+                connectionNode = eachChild.node()
+                self.updateNode.emit(connectionNode)
+                eachChild.updateConnectionValue()
+
 
     # Drag and Drop
     def dragEnterEvent(self, QDragEnterEvent):

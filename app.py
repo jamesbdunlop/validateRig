@@ -17,12 +17,10 @@ from validateRig.uiElements.dialogs import saveToJSONFile as vruied_saveToJSON
 from validateRig.uiElements.dialogs import loadFromJSONFile as vruied_loadFromJSON
 from validateRig.uiElements.dialogs import createValidator as vruied_createValidator
 
-
 logger = logging.getLogger(__name__)
+
 ############################
-# TO DO
-# Update selected from scene
-# Missing node report
+# TODO
 # Drag and drop bugs, stuff not updating
 # fix all UI deps on inside.insideMaya() so this check only exists in the API
 
@@ -176,25 +174,21 @@ class ValidationUI(QtWidgets.QMainWindow):
                 self.isolateFailedButton.show()
 
     def __updateValidationStatus(self):
-        treeWidgets = list(self.__iterTreeWidgets())
-
-        # Iterthrough all the descendants of a SourceNode and if ANY of the children fail to pass validation set the
-        # rootTreeWidgetItem to fail and the validation status to failed.
-        for x, eachValidationTreeWidget in enumerate(treeWidgets):
-            topLevelItems = list(eachValidationTreeWidget.iterTopLevelTreeWidgetItems())
-            for treeWidgetItem in topLevelItems:
-                sourceNodeStatus = list()
-                for child in treeWidgetItem.iterDescendants():
-                    status = child.node().status
-                    child.reportStatus = status
-                    sourceNodeStatus.append(
-                        status == vrconst_constants.NODE_VALIDATION_PASSED
-                    )
-
-                topLevelStatus = all(sourceNodeStatus)
-                treeWidgetItem.reportStatus = vrconst_constants.NODE_VALIDATION_FAILED
-                if topLevelStatus:
-                    treeWidgetItem.reportStatus = vrconst_constants.NODE_VALIDATION_PASSED
+        for validator, treewidget in self.__iterValidatorTreeWidgetPairs():
+            topLevelItems = list(treewidget.iterTopLevelTreeWidgetItems())
+            for eachRootItem in topLevelItems:
+                sourceNode = eachRootItem.node()
+                eachRootItem.reportStatus = sourceNode.status
+                for childTWI in eachRootItem.iterDescendants():
+                    status = childTWI.node().status
+                    childTWI.reportStatus = status
+                    failed = (vrconst_constants.NODE_VALIDATION_NA,
+                              vrconst_constants.NODE_VALIDATION_FAILED,
+                              vrconst_constants.NODE_VALIDATION_MISSINGSRC,
+                              vrconst_constants.NODE_VALIDATION_MISSINGDEST,
+                              )
+                    if status in failed and sourceNode.status not in failed:
+                        eachRootItem.reportStatus = status
 
         self.__toggleFixAllButton()
 
@@ -214,9 +208,7 @@ class ValidationUI(QtWidgets.QMainWindow):
             useFromDisk = self.__promptUseOriginalNamespace()
 
         for eachValidator in self.__iterValidators():
-            if (
-                useFromDisk == QtWidgets.QMessageBox.Yes
-            ):  # Todo this check sucks who the fk is gunna know what 16384 means!
+            if (useFromDisk == QtWidgets.QMessageBox.Yes):
                 nameSpace = eachValidator.nameSpaceOnCreate
 
             currentNamespace = eachValidator.nameSpace
@@ -282,6 +274,10 @@ class ValidationUI(QtWidgets.QMainWindow):
 
         for _, treeWidget in self._validators:
             yield treeWidget
+
+    def __iterValidatorTreeWidgetPairs(self):
+        for eachValidator, eachTreeWidget in self._validators:
+            yield eachValidator, eachTreeWidget
 
     def __toggleIsolateFailed(self, sender):
         treeWidgets = list(self.__iterTreeWidgets())

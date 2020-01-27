@@ -3,7 +3,7 @@ import logging
 from validateRig.const import serialization as c_serialization
 from validateRig.const import constants as vrconst_constants
 from validateRig.core.maya import utils as cm_utils
-from validateRig.core.maya import plugs as cm_plugs
+from validateRig.core.maya import plugs as vrcm_plugs
 from validateRig.core.maya import types as cm_types
 
 import maya.api.OpenMaya as om2
@@ -20,6 +20,12 @@ def validateValidatorSourceNodes(validator):
         eachSourceNode.status = vrconst_constants.NODE_VALIDATION_PASSED
         srcNodeName = eachSourceNode.longName
         if not cm_utils.exists(srcNodeName):
+            logger.error("Missing node %s" % eachSourceNode.longName)
+            eachSourceNode.status = vrconst_constants.NODE_VALIDATION_MISSINGSRC
+            validator.status = vrconst_constants.NODE_VALIDATION_MISSINGSRC
+            # Set all children to failed
+            for eachChild in eachSourceNode.iterChildren():
+                eachChild.status = vrconst_constants.NODE_VALIDATION_MISSINGSRC
             continue
 
         defaultStatus = __validateDefaultNodes(eachSourceNode)
@@ -38,6 +44,9 @@ def __validateDefaultNodes(sourceNode):
     for eachValidationNode in sourceNode.iterDescendants():
         if eachValidationNode.nodeType != c_serialization.NT_DEFAULTVALUE:
             continue
+        if not cm_utils.exists(eachValidationNode.longName):
+            eachValidationNode.status = vrconst_constants.NODE_VALIDATION_MISSINGSRC
+            continue
 
         data = eachValidationNode.defaultValueData
         defaultNodeLongName = eachValidationNode.longName
@@ -52,48 +61,15 @@ def __validateDefaultNodes(sourceNode):
     return passed
 
 
-def fetchMPlugFromConnectionData(nodeLongName, plugData):
-    copyPlugData = plugData[:]
-    mPlug = None
-
-    logger.debug("-----------fetchMPlugFromConnectionData-------------")
-    logger.debug("\t-- %s" % plugData)
-    while copyPlugData:
-        plgIsElement, plgIsChild, plgPlugName, plgIndex = copyPlugData[-1]
-        logger.debug("\t%-- s %s %s %s" % (plgIsElement, plgIsChild, plgPlugName, plgIndex))
-
-        if mPlug is None:
-            mPlug = cm_plugs.getMPlugFromLongName(nodeLongName, plgPlugName)
-            if plgIsElement:
-                mPlug = mPlug.elementByLogicalIndex(plgIndex)
-            elif plgIsChild:
-                mPlug = mPlug.child(plgIndex)
-            logger.debug("\tFound starting plug: %s" % (mPlug.name()))
-
-        elif plgIsElement:
-            logger.debug("\t\t%s IsElement" % (plgPlugName))
-            logger.debug("\t\tparentPlug: %s" % (mPlug.name()))
-            mPlug = mPlug.elementByLogicalIndex(plgIndex)
-            logger.debug("\t\tnewPlug: %s" % (mPlug.name()))
-
-        elif plgIsChild:
-            logger.debug("\t\t%s IsChild" % (plgPlugName))
-            logger.debug("\t\tparentPlug: %s" % (mPlug.name()))
-            mPlug = mPlug.child(plgIndex)
-            logger.debug("\t\tnewPlug: %s" % (mPlug.name()))
-
-        copyPlugData.pop()
-
-    logger.debug("FINAL PLUG %s" % mPlug.name())
-    return mPlug
-
-
 def __validateConnectionNodes(sourceNode):
     # type: (SourceNode) -> bool
 
     passed = True
     for eachValidationNode in sourceNode.iterDescendants():
         if eachValidationNode.nodeType != c_serialization.NT_CONNECTIONVALIDITY:
+            continue
+        if not cm_utils.exists(eachValidationNode.longName):
+            eachValidationNode.status = vrconst_constants.NODE_VALIDATION_MISSINGDEST
             continue
 
         data = eachValidationNode.connectionData
@@ -108,9 +84,9 @@ def __validateConnectionNodes(sourceNode):
         if srcIsElement or srcIsChild:
             isSrcIndexed = True
         if not isSrcIndexed:
-            srcMPlug = cm_plugs.getMPlugFromLongName(sourceNode.longName, srcAttrName)
+            srcMPlug = vrcm_plugs.getMPlugFromLongName(sourceNode.longName, srcAttrName)
         else:
-            srcMPlug = fetchMPlugFromConnectionData(sourceNode.longName, srcPlugData)
+            srcMPlug = vrcm_plugs.fetchMPlugFromConnectionData(sourceNode.longName, srcPlugData)
 
         destNodeName = destData.get("nodeName", None)
         destAttrValue = destData.get("attrValue", None)
@@ -121,9 +97,9 @@ def __validateConnectionNodes(sourceNode):
         if destIsElement or destIsChild:
             isDestIndexed = True
         if not isDestIndexed:
-            destMPlug = cm_plugs.getMPlugFromLongName(destNodeName, destPlugName)
+            destMPlug = vrcm_plugs.getMPlugFromLongName(destNodeName, destPlugName)
         else:
-            destMPlug = fetchMPlugFromConnectionData(destNodeName, destPlugData)
+            destMPlug = vrcm_plugs.fetchMPlugFromConnectionData(destNodeName, destPlugData)
 
         conns = destMPlug.connectedTo(True, False)
         result = False
@@ -136,17 +112,17 @@ def __validateConnectionNodes(sourceNode):
 
         # DEFAULT VALUES OF THE SRC ATTR NOW AS WE CULL DEFAULT VALUE NODES IF THEY'RE ALREADY CONNECTION ATTRS
         resultSrcValue = True
-        srcPlugType = cm_plugs.getMPlugType(srcMPlug)
+        srcPlugType = vrcm_plugs.getMPlugType(srcMPlug)
         GETATTR_IGNORESTYPES = (cm_types.MESSAGE, cm_types.MATRIXF44)
         if srcPlugType not in GETATTR_IGNORESTYPES:
-            currentSrcAttrValue = cm_plugs.getMPlugValue(srcMPlug)
+            currentSrcAttrValue = vrcm_plugs.getMPlugValue(srcMPlug)
             resultSrcValue = srcAttrValue == currentSrcAttrValue
 
         resultDestValue = True
-        destPlugType = cm_plugs.getMPlugType(destMPlug)
+        destPlugType = vrcm_plugs.getMPlugType(destMPlug)
         GETATTR_IGNORESTYPES = (cm_types.MESSAGE, cm_types.MATRIXF44)
         if destPlugType not in GETATTR_IGNORESTYPES:
-            currentDestAttrValue = cm_plugs.getMPlugValue(destMPlug)
+            currentDestAttrValue = vrcm_plugs.getMPlugValue(destMPlug)
             resultDestValue = destAttrValue == currentDestAttrValue
 
         result = all((result, resultSrcValue, resultDestValue))
@@ -185,14 +161,15 @@ def __repairDefaultNodes(sourceNode):
             continue
         if eachValidationNode.nodeType != c_serialization.NT_DEFAULTVALUE:
             continue
-
+        # Exists check here
         mSel = om2.MSelectionList()
         mSel.add(eachValidationNode.longName)
         mFn = om2.MFnDependencyNode(mSel.getDependNode(0))
         srcMPlug = mFn.findPlug(eachValidationNode.name, False)
 
-        defaultValue = eachValidationNode.defaultValue
-        cm_plugs.setMPlugValue(srcMPlug, defaultValue)
+        data = eachValidationNode.defaultValueData
+        defaultValue = data.values()[0]
+        vrcm_plugs.setMPlugValue(srcMPlug, defaultValue)
 
         setValidationStatus(eachValidationNode, True)
 
@@ -223,21 +200,21 @@ def __repairConnectionNodes(sourceNode):
         ############################################################
         srcIsElement, srcIsChild, srcPlugName, _ = srcPlugData[0]
         if srcIsElement or srcIsChild:
-            srcMPlug = fetchMPlugFromConnectionData(eachValidationNode.longName, srcPlugData)
+            srcMPlug = vrcm_plugs.fetchMPlugFromConnectionData(eachValidationNode.longName, srcPlugData)
 
         else:
-            srcMPlug = cm_plugs.getMPlugFromLongName(eachValidationNode.longName, srcAttrName)
+            srcMPlug = vrcm_plugs.getMPlugFromLongName(eachValidationNode.longName, srcAttrName)
 
         ############################################################
         destIsElement, destIsChild, destPlugName, _ = destPlugData[0]
         if destIsElement or destIsChild:
-            destMPlug = fetchMPlugFromConnectionData(destNodeName, destPlugData)
+            destMPlug = vrcm_plugs.fetchMPlugFromConnectionData(destNodeName, destPlugData)
 
         else:
-            destMPlug = cm_plugs.getMPlugFromLongName(destNodeName, destPlugName)
+            destMPlug = vrcm_plugs.getMPlugFromLongName(destNodeName, destPlugName)
 
         mDagMod.connect(srcMPlug, destMPlug)
-        cm_plugs.setMPlugValue(srcMPlug, srcAttrValue)
+        vrcm_plugs.setMPlugValue(srcMPlug, srcAttrValue)
         setValidationStatus(eachValidationNode, True)
 
     mDagMod.doIt()

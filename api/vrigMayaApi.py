@@ -47,24 +47,26 @@ validator.to_fileJSON(filePath="C:/Temp/testMayaValidator.json")
 
 def asSourceNode(nodeLongName, attributes=None, connections=False):
     # type: (str, list[str], bool, bool) -> SourceNode
-
+    logger.info("###################")
+    logger.info("%s as sourceNode." % nodeLongName)
     validityNodes = list()
     connAttrNames = list()
     if connections:
         connNodes = list(__createConnectionNodes(nodeLongName))
         validityNodes += connNodes
-        connAttrNames = [set(n.connectionData.get("srcData")["attrName"] for n in connNodes)]
-    logger.debug("connAttrNames: %s" % connAttrNames)
+        connAttrNames = [n.connectionData.get("srcData")["attrName"] for n in connNodes]
+    logger.info("connAttrNames: %s" % connAttrNames)
+    logger.info("attributes: %s" % connAttrNames)
 
+    validDefaultValueAttributes = list()
     if attributes is not None:
-        defaultNodes = list(__createDefaultValueNodes(nodeLongName, attributes))
-        for eachDefaultNode in defaultNodes:
-            data = eachDefaultNode.defaultValueData
-            for dvName, _ in data.iteritems():
-                if dvName in connAttrNames:
-                    defaultNodes.remove(eachDefaultNode)
+        for eachAttrName in attributes:
+            if eachAttrName not in connAttrNames:
+                validDefaultValueAttributes.append(eachAttrName)
 
-        validityNodes += defaultNodes
+    logger.info("Creating dvNodes for: %s" % validDefaultValueAttributes)
+    defaultNodes = list(__createDefaultValueNodes(nodeLongName, validDefaultValueAttributes))
+    validityNodes += defaultNodes
 
     # Now the sourceNodes
     shortName = cm_utils.cleanMayaLongName(nodeLongName)

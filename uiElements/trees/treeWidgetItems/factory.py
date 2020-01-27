@@ -7,7 +7,7 @@ from validateRig.const import serialization as vrc_serialization
 from validateRig.const import constants as vrconst_constants
 from validateRig.core import nodes as vrc_nodes
 from validateRig.uiElements.trees.treeWidgetItems import treewidgetitems as vruiettwi_treewidgetitems
-
+reload(vruiettwi_treewidgetitems)
 logger = logging.getLogger(__name__)
 
 QTDISPLAYROLE = QtCore.Qt.DisplayRole

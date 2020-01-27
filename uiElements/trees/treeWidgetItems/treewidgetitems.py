@@ -1,9 +1,12 @@
 #  Copyright (c) 2019.  James Dunlop
+import logging
 from PySide2 import QtWidgets, QtCore, QtGui
 
 from validateRig.const import constants as vrconst_constants
 from validateRig.const import serialization as vrc_serialization
 from validateRig.core.nodes import Node
+
+logger = logging.getLogger(__name__)
 
 QTDISPLAYROLE = QtCore.Qt.DisplayRole
 
@@ -50,17 +53,22 @@ class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
         qtRole = QTDISPLAYROLE
         if self.nodeType() == vrc_serialization.NT_DEFAULTVALUE:
             data = self.node().defaultValueData
-            for _, dvValue in data.iteritems():
-                valueColId = vrconst_constants.SRC_ATTRVALUE_COLUMN
-                self.updateColumnData(valueColId, qtRole, dvValue)
+            dvValue  = data.values()[0]
+            valueColId = vrconst_constants.SRC_ATTRVALUE_COLUMN
+            self.updateColumnData(valueColId, qtRole, str(dvValue))
 
-    def updateConnectionSrcValue(self):
+    def updateConnectionValue(self):
         qtRole = QTDISPLAYROLE
         if self.nodeType() == vrc_serialization.NT_CONNECTIONVALIDITY:
             data = self.node().connectionData
             srcData = data.get("srcData", None)
             value = srcData.get("attrValue")
             valueColId = vrconst_constants.SRC_ATTRVALUE_COLUMN
+            self.updateColumnData(valueColId, qtRole, value)
+
+            destData = data.get("destData", None)
+            value = destData.get("attrValue")
+            valueColId = vrconst_constants.DEST_ATTRVALUE_COLUMN
             self.updateColumnData(valueColId, qtRole, value)
 
     def setColumnFontStyle(self):

@@ -12,9 +12,6 @@ def exists(srcNodeName):
     # type: (str) -> bool
 
     exists = cmds.objExists(srcNodeName)
-    if not exists:
-        logger.error("Failed to find sourceNode %s in scene!" % srcNodeName)
-
     return exists
 
 

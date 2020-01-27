@@ -57,13 +57,41 @@ def saveValidatorsToFile(validators, filepath):
 
 def updateNodeValuesFromDCC(node):
     #type: (c_nodes.Node) -> bool
-
     nodeType = node.nodeType
     if vr_insideDCC.insideMaya():
+        from validateRig.core.maya import plugs as vrcm_plugs
+
         if nodeType == c_serialization.NT_DEFAULTVALUE:
-            pass
+            logger.info("Updating defaultValueNode value from Maya")
+            data = node.defaultValueData
+            attrName = data.keys()[0]
+            mPlug = vrcm_plugs.getMPlugFromLongName(node.longName, attrName)
+            value = vrcm_plugs.getMPlugValue(mPlug)
+            logger.info("MayaName: %s MayaValue: %s" % (mPlug.name(), value))
+            newData = {attrName: value}
+
+            node.defaultValueData = newData
+
         elif nodeType == c_serialization.NT_CONNECTIONVALIDITY:
-            pass
+            logger.info("Updating connectionNode value from Maya")
+            data = node.connectionData
+            srcData = data.get("srcData", list())
+            srcPlugData = srcData.get("plugData", list())
+            srcNodeName = node.parent.longName
+            srcMPlug = vrcm_plugs.fetchMPlugFromConnectionData(srcNodeName, srcPlugData)
+            srcValue = vrcm_plugs.getMPlugValue(srcMPlug)
+            logger.info("MayaName: %s MayaValue: %s" % (srcMPlug.name(), srcValue))
+            srcData["attrValue"] = srcValue
+
+            destData = data.get("destData", list())
+            destPlugData = destData.get("plugData", list())
+            destNodeName = node.longName
+            destMPlug = vrcm_plugs.fetchMPlugFromConnectionData(destNodeName, destPlugData)
+            destValue = vrcm_plugs.getMPlugValue(destMPlug)
+            logger.info("MayaName: %s MayaValue: %s" % (destMPlug.name(), destValue))
+            destData["attrValue"] = destValue
+
+            node.connectionData = data
 
     return False
 

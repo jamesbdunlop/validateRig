@@ -11,6 +11,8 @@ logger = logging.getLogger(__name__)
 
 def getMPlugValue(mplug):
     # type: (MPlug) -> any
+    if not om2.MObjectHandle(mplug.node()).isValid():
+        return
 
     pAttribute = mplug.attribute()
     apiType = pAttribute.apiType()
@@ -74,6 +76,9 @@ def getMPlugValue(mplug):
 
 def getMPlugType(mplug):
     # type: (MPlug) -> int
+    if not om2.MObjectHandle(mplug.node()).isValid():
+        return
+
     pAttribute = mplug.attribute()
     apiType = pAttribute.apiType()
 
@@ -184,12 +189,14 @@ def getMPlugFromLongName(nodeLongName, plugName):
         plugName = plugName[0]
 
     mSel = om2.MSelectionList()
-    mSel.add(str(nodeLongName))
-    mObj = mSel.getDependNode(0)
-    mFn = om2.MFnDependencyNode(mObj)
-
-    logger.debug("Finding plug %s on %s" % (plugName, nodeLongName))
-    mplug = mFn.findPlug(plugName, False)
+    try:
+        mSel.add(str(nodeLongName))
+        mObj = mSel.getDependNode(0)
+        mFn = om2.MFnDependencyNode(mObj)
+        mplug = mFn.findPlug(plugName, False)
+    except RuntimeError:
+        logger.error("Failed to add to MSelectionList. %s does not exist!" % nodeLongName)
+        mplug = om2.MPlug()
 
     return mplug
 
@@ -290,3 +297,41 @@ def fetchIndexedPlugData(mplug, plgData=None):
     # compound.child(0).array(0) etc
     return fetchIndexedPlugData(parentPlug, plgData)
 
+
+def fetchMPlugFromConnectionData(nodeLongName, plugData):
+    copyPlugData = plugData[:]
+    mPlug = None
+
+    logger.debug("-----------fetchMPlugFromConnectionData-------------")
+    logger.debug("\t--copyPlugData: %s" % copyPlugData)
+    while copyPlugData:
+        plgIsElement, plgIsChild, plgPlugName, plgIndex = copyPlugData[-1]
+        logger.debug("\t%-- s %s %s %s" % (plgIsElement, plgIsChild, plgPlugName, plgIndex))
+
+        if mPlug is None:
+            mPlug = getMPlugFromLongName(nodeLongName, plgPlugName)
+            if plgIsElement:
+                mPlug = mPlug.elementByLogicalIndex(plgIndex)
+            elif plgIsChild:
+                mPlug = mPlug.child(plgIndex)
+            logger.debug("\tFound starting plug: %s" % (mPlug.name()))
+
+        elif plgIsElement:
+            logger.debug("\t\t%s IsElement" % (plgPlugName))
+            logger.debug("\t\tparentPlug: %s" % (mPlug.name()))
+            mPlug = mPlug.elementByLogicalIndex(plgIndex)
+            logger.debug("\t\tnewPlug: %s" % (mPlug.name()))
+
+        elif plgIsChild:
+            logger.debug("\t\t%s IsChild" % (plgPlugName))
+            logger.debug("\t\tparentPlug: %s" % (mPlug.name()))
+            mPlug = mPlug.child(plgIndex)
+            logger.debug("\t\tnewPlug: %s" % (mPlug.name()))
+
+        copyPlugData.pop()
+
+    if mPlug is None:
+        raise Exception("Unable to find MPlug from plugData: %s!" % plugData)
+
+    logger.debug("FINAL PLUG %s" % mPlug.name())
+    return mPlug
