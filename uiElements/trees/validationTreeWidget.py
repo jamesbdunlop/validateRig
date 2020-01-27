@@ -9,7 +9,6 @@ from validateRig.core.validator import Validator
 from validateRig.core.nodes import SourceNode
 from validateRig.uiElements.trees.treeWidgetItems import factory as cuitwi_factory
 
-reload(vrigCoreApi)
 logger = logging.getLogger(__name__)
 
 

@@ -4,9 +4,6 @@ from validateRig import insideDCC as vr_insideDCC
 from validateRig.core import validator as vrc_validator
 if vr_insideDCC.insideMaya():
     import validateRig.core.maya.validation as cm_mayaValidation
-    reload(cm_mayaValidation)
-    #from core.maya import validation as cm_mayaValidation
-
 
 logger = logging.getLogger(__name__)
 

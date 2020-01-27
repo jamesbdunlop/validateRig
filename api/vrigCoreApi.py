@@ -135,7 +135,6 @@ def processValidationTreeWidgetDropEvent(nodeNames, validator, parent=None):
         srcNodesWidget = None
         if vr_insideDCC.insideMaya():
             from validateRig.core.maya import validityNodeListWidget as vrcm_validityNodeListWidget
-            reload(vrcm_validityNodeListWidget)
             if existingSourceNode is None:
                 srcNodesWidget = vrcm_validityNodeListWidget.MayaValidityNodesSelector(longNodeName=longNodeName, parent=None)
             else:

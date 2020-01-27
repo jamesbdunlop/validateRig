@@ -6,7 +6,6 @@ from validateRig.uiElements.trees.treeWidgetItems import factory as cuiettwi_fac
 from validateRig.api import vrigCoreApi as vrapi_core
 
 logger = logging.getLogger(__name__)
-reload(vruit_validationTreeWidget)
 
 
 def getValidationTreeWidget(validator, parent):

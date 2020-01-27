@@ -8,8 +8,6 @@ from validateRig.core.maya import utils as vrcm_utils
 
 logger = logging.getLogger(__name__)
 
-reload(vrcm_plugs)
-reload(vrcm_utils)
 """
 # Example Usage:
 # What we're doing in this example...

@@ -19,11 +19,6 @@ from validateRig.uiElements.dialogs import createValidator as vruied_createValid
 
 logger = logging.getLogger(__name__)
 
-############################
-# TODO
-# Drag and drop bugs, stuff not updating
-# fix all UI deps on inside.insideMaya() so this check only exists in the API
-
 
 class ValidationUI(QtWidgets.QMainWindow):
     getNSFromDCC = QtCore.Signal(object, name="getNSFromDCC")
