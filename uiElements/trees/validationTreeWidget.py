@@ -28,6 +28,8 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.widgetUnderMouse = None
         self._validator = validator
+        delegate = Delegate()
+        self.setItemDelegate(delegate)
 
     def validator(self):
         return self._validator
@@ -235,6 +237,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
                 if srcAttrName not in connectionAttrSrcNames:
                     connectionAttrSrcNames.append(srcAttrName)
                     sourceNodeTreeWItm.addChild(treewidgetItem)
+
                     # First found becomes the parentNode!
                     parentNode = treewidgetItem
                 else:
@@ -246,3 +249,17 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
             # cuitwi_factory.setSourceNodeItemWidgetsFromNode(
             #     node=eachValidityNode, treewidget=treeWidget, twi=treewidgetItem
             # )
+
+
+class Delegate(QtWidgets.QStyledItemDelegate):
+    def paint(self, painter, option, qmodelidx):
+        super(Delegate, self).paint(painter, option, qmodelidx)
+
+        painter.save()
+        if qmodelidx.isValid():
+            model = qmodelidx.model()
+            data = model.data(qmodelidx, QtCore.Qt.DisplayRole)
+            if data is None:
+                return
+
+        painter.restore()
