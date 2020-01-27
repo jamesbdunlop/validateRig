@@ -191,6 +191,11 @@ class SourceNode(Node):
         inst.displayName = displayName
         return inst
 
+    def __repr__(self):
+        return (
+            "shortName: %s\nlongName: %s\ndisplayName: %s\nnodeType: %s\nstatus: %s\nchildren:%s"
+            % (self.name, self.longName, self.displayName, self.nodeType, self.status, [n.name for n in self.iterChildren()])
+        )
 
 class ConnectionValidityNode(Node):
     def __init__(self, name, longName, parent=None):

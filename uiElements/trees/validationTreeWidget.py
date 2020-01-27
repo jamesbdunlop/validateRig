@@ -102,6 +102,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         # type: (QtWidgets.QTreeWidgetItem) -> None
         # Kinda annoying but QT sucks at just using childCount() for some reason! Most likely the data changes
         # out from under and it just hangs onto the last one or something odd.
+        logger.info("Removing all twi children")
         while treeWidgetItem.childCount():
             for x in range(treeWidgetItem.childCount()):
                 treeWidgetItem.takeChild(x)
@@ -109,12 +110,14 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
     def _processSourceNodeAttributeWidgets(self, sourceNodesList):
         # type: (list[SourceNode]) -> None
         for sourceNode in sourceNodesList:
-            existingSourceNode = self.validator().findSourceNodeByLongName(
-                sourceNode.longName
-            )
+            existingSourceNode = self.validator().findSourceNodeByLongName(sourceNode.longName)
+            logger.info("Found existingSourceNode %s" % existingSourceNode.longName)
             if existingSourceNode is not None:
-                treeWidgetItem = self.__findTreeWidgetItemByExactName(sourceNode.name)
+                treeWidgetItem = self.__findTreeWidgetItemByExactName(sourceNode.displayName)
                 if treeWidgetItem is None:
+                    logger.info("Didn't find treeWidgetItem for %s" % sourceNode.displayName)
+                    treeWidgetItem = self.__addTopLevelTreeWidgetItemFromSourceNode(sourceNode)
+                    ValidationTreeWidget.addValidityNodesToTreeWidgetItem(sourceNode, treeWidgetItem)
                     continue
 
                 self.__removeAllTreeWidgetItemChildren(treeWidgetItem)
@@ -133,6 +136,9 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
 
             sourceNodeTreeWidgetItem = eachTreeWidgetItem.parent()
             sourceNodeTreeWidgetItem.removeChild(eachTreeWidgetItem)
+
+            existingSourceNode = self.validator().findSourceNodeByLongName(eachTreeWidgetItem.node().longName)
+            self.validator().removeSourceNode(existingSourceNode)
 
     def __removeAllChildrenFromSelectedItems(self):
         for eachTreeWidgetItem in self.selectedItems():
@@ -173,7 +179,6 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
                 connectionNode = eachChild.node()
                 self.updateNode.emit(connectionNode)
                 eachChild.updateConnectionValue()
-
 
     # Drag and Drop
     def dragEnterEvent(self, QDragEnterEvent):

@@ -66,12 +66,9 @@ MAYA_DEFAULTATTRS = [
     "scaleX",
     "scaleY",
     "scaleZ",
-    "parentInverseMatrix",
-    "parentMatrix",
     "matrix",
+    "parentMatrix",
     "inverseMatrix",
-    "worldMatrix",
-    "worldInverseMatrix",
     "visibility",
 ]
 

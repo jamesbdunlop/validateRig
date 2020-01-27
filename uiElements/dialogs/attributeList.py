@@ -79,6 +79,7 @@ class MultiSourceNodeListWidgets(QtWidgets.QWidget):
         if self.sharedAttributes.isChecked():
             srcListWidget = self._listWidgets[0]
 
+        logger.info("Emit sourceNodes list()")
         self.sourceNodesAccepted.emit(
             [
                 listWidget.toSourceNode(srcListWidget)

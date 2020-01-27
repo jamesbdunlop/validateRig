@@ -2,9 +2,9 @@
 import logging
 from validateRig.const import serialization as c_serialization
 from validateRig.const import constants as vrconst_constants
-from validateRig.core.maya import utils as cm_utils
+from validateRig.core.maya import utils as vrcm_utils
 from validateRig.core.maya import plugs as vrcm_plugs
-from validateRig.core.maya import types as cm_types
+from validateRig.core.maya import types as vrcm_types
 
 import maya.api.OpenMaya as om2
 
@@ -19,7 +19,7 @@ def validateValidatorSourceNodes(validator):
     for eachSourceNode in validator.iterSourceNodes():
         eachSourceNode.status = vrconst_constants.NODE_VALIDATION_PASSED
         srcNodeName = eachSourceNode.longName
-        if not cm_utils.exists(srcNodeName):
+        if not vrcm_utils.exists(srcNodeName):
             logger.error("Missing node %s" % eachSourceNode.longName)
             eachSourceNode.status = vrconst_constants.NODE_VALIDATION_MISSINGSRC
             validator.status = vrconst_constants.NODE_VALIDATION_MISSINGSRC
@@ -44,19 +44,34 @@ def __validateDefaultNodes(sourceNode):
     for eachValidationNode in sourceNode.iterDescendants():
         if eachValidationNode.nodeType != c_serialization.NT_DEFAULTVALUE:
             continue
-        if not cm_utils.exists(eachValidationNode.longName):
+        if not vrcm_utils.exists(eachValidationNode.longName):
             eachValidationNode.status = vrconst_constants.NODE_VALIDATION_MISSINGSRC
             continue
 
         data = eachValidationNode.defaultValueData
         defaultNodeLongName = eachValidationNode.longName
-        logger.debug("defaultNodeLongName: %s" % defaultNodeLongName)
-        for dvName, dvValue in data.iteritems():
-            logger.debug("dvName: %s" % dvName)
-            attrValue = cm_utils.getAttrValue(defaultNodeLongName, dvName)
-            result = dvValue == attrValue
-            if not setValidationStatus(eachValidationNode, result):
-                passed = False
+        logger.info("defaultNodeLongName: %s" % defaultNodeLongName)
+        dvAttrName = data.keys()[0]
+        logger.info("dvName: %s" % dvAttrName)
+
+        dvValue = data.values()[0]
+        logger.info("dvValue: %s" % dvValue)
+
+        dvMPlug = vrcm_plugs.getMPlugFromLongName(defaultNodeLongName, dvAttrName)
+        dvMPlugType = vrcm_plugs.getMPlugType(dvMPlug)
+        dvMPlugValue = vrcm_plugs.getMPlugValue(dvMPlug)
+        logger.info("dvMPlugType: %s" % dvMPlugType)
+        logger.info("dvMPlugValue: %s" % dvMPlugValue)
+        if dvMPlugType == vrcm_types.MATRIXF44:
+            dvValue = om2.MMatrix((
+                (dvValue[0], dvValue[1], dvValue[2], dvValue[3]),
+                (dvValue[4], dvValue[5], dvValue[6], dvValue[7]),
+                (dvValue[8], dvValue[9], dvValue[10], dvValue[11]),
+                (dvValue[12], dvValue[13], dvValue[14], dvValue[15]),
+                 ))
+        result = dvValue == dvMPlugValue
+        if not setValidationStatus(eachValidationNode, result):
+            passed = False
 
     return passed
 
@@ -68,7 +83,7 @@ def __validateConnectionNodes(sourceNode):
     for eachValidationNode in sourceNode.iterDescendants():
         if eachValidationNode.nodeType != c_serialization.NT_CONNECTIONVALIDITY:
             continue
-        if not cm_utils.exists(eachValidationNode.longName):
+        if not vrcm_utils.exists(eachValidationNode.longName):
             eachValidationNode.status = vrconst_constants.NODE_VALIDATION_MISSINGDEST
             continue
 
@@ -140,7 +155,7 @@ def repairValidatorSourceNodes(validator):
 
     for eachSourceNode in validator.iterSourceNodes():
         srcNodeName = eachSourceNode.longName
-        if not cm_utils.exists(srcNodeName):
+        if not vrcm_utils.exists(srcNodeName):
             continue
 
         defaultStatus = __repairDefaultNodes(eachSourceNode)

@@ -1,6 +1,8 @@
 #  Copyright (c) 2019.  James Dunlop
 import logging
 from PySide2 import QtWidgets, QtCore
+from functools import partial
+
 from validateRig import insideDCC as vr_insideDCC
 from validateRig.const import serialization as c_serialization
 from validateRig.core import validator as c_validator
@@ -126,18 +128,22 @@ def processValidationTreeWidgetDropEvent(nodeNames, validator, parent=None):
 
     # Check to see if this exists in the validator we dropped over.
     for longNodeName in nodeNames:
-        if not validator().sourceNodeLongNameExists(longNodeName):
-            logger.debug("Creating new sourceNode.")
-            srcNodesWidget = uid_attributeList.MayaValidityNodesSelector(longNodeName=longNodeName, parent=None)
-
-        else:
-            logger.debug("SourceNode: {} exists!".format(longNodeName))
+        existingSourceNode = None
+        if validator().sourceNodeLongNameExists(longNodeName):
             existingSourceNode = validator().findSourceNodeByLongName(longNodeName)
-            srcNodesWidget = uid_attributeList.MayaValidityNodesSelector.fromSourceNode(sourceNode=existingSourceNode, parent=None)
+
+
+        srcNodesWidget = None
+        if vr_insideDCC.insideMaya():
+            if existingSourceNode is None:
+                srcNodesWidget = uid_attributeList.MayaValidityNodesSelector(longNodeName=longNodeName, parent=None)
+            else:
+                srcNodesWidget = uid_attributeList.MayaValidityNodesSelector.fromSourceNode(sourceNode=existingSourceNode, parent=None)
 
         if srcNodesWidget is None:
             continue
 
         attrWidget.addListWidget(srcNodesWidget)
+        attrWidget.sourceNodesAccepted.connect(partial(validator().addSourceNodes, force=True))
 
     return attrWidget

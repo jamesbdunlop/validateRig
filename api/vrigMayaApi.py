@@ -2,16 +2,16 @@
 import logging
 
 from validateRig.api.vrigCoreApi import *
-from validateRig.const import constants as c_const
-from validateRig.core.maya import types as cm_types
-from validateRig.core.maya import plugs as cm_plugs
-from validateRig.core.maya import utils as cm_utils
+from validateRig.const import constants as vrconst_constants
+from validateRig.core.maya import types as vrcm_types
+from validateRig.core.maya import plugs as vrcm_plugs
+from validateRig.core.maya import utils as vrcm_utils
 
 from maya.api import OpenMaya as om2
 
 logger = logging.getLogger(__name__)
 
-reload(cm_plugs)
+reload(vrcm_plugs)
 """
 # Example Usage:
 # What we're doing in this example...
@@ -22,7 +22,7 @@ reload(cm_plugs)
 
 from maya.api import OpenMaya as om2
 import validateRig.api.vr_maya_api as vr_maya_api
-import validateRig.core.maya.utils as vr_cm_utils
+import validateRig.core.maya.utils as vr_vrcm_utils
 #########################################################################################
 sourceNodes = list()
 crvs = [cmds.listRelatives(crv, p=True, f=True)[0] for crv in cmds.ls(type="nurbsCurve")]
@@ -38,7 +38,7 @@ for eachCurve in crvs:
     sourceNodes.append(srcNode)
     
 validator = vr_maya_api.createValidator("testRig")
-validator.nameSpace = vr_cm_utils.getNamespaceFromLongName(crvs[0])
+validator.nameSpace = vr_vrcm_utils.getNamespaceFromLongName(crvs[0])
 validator.addSourceNodes(sourceNodes, True)
 validator.to_fileJSON(filePath="C:/Temp/testMayaValidator.json")
 #########################################################################################
@@ -69,10 +69,10 @@ def asSourceNode(nodeLongName, attributes=None, connections=False):
     validityNodes += defaultNodes
 
     # Now the sourceNodes
-    shortName = cm_utils.cleanMayaLongName(nodeLongName)
+    shortName = vrcm_utils.cleanMayaLongName(nodeLongName)
     sourceNode = createSourceNode(name=shortName, longName=nodeLongName, validityNodes=validityNodes)
 
-    nameSpace = cm_utils.getNamespaceFromLongName(nodeLongName)
+    nameSpace = vrcm_utils.getNamespaceFromLongName(nodeLongName)
     if nameSpace:
         nsShortName = "{}:{}".format(nameSpace, shortName)
         sourceNode.displayName = nsShortName
@@ -83,11 +83,12 @@ def asSourceNode(nodeLongName, attributes=None, connections=False):
 def __createDefaultValueNodes(nodeLongName, defaultAttributes):
     # type: (str, list[str]) -> DefaultValueNode
     for eachAttr in defaultAttributes:
-        if eachAttr in c_const.MAYA_DEFAULTVALUEATTRIBUTE_IGNORES:
+        if eachAttr in vrconst_constants.MAYA_DEFAULTVALUEATTRIBUTE_IGNORES:
             continue
 
-        attrValue = cm_utils.getAttrValue(nodeLongName, eachAttr)
-        attrData = {eachAttr: attrValue}
+        dvMPlug = vrcm_plugs.getMPlugFromLongName(nodeLongName, eachAttr)
+        dvMPlugValue = vrcm_plugs.getMPlugValue(dvMPlug)
+        attrData = {eachAttr: dvMPlugValue}
 
         defaultValueNode = createDefaultValueNode(name=eachAttr, longName=nodeLongName)
         defaultValueNode.defaultValueData = attrData
@@ -104,7 +105,7 @@ def __createConnectionNodes(nodeLongName):
     mObj = mSel.getDependNode(0)
     mFn = om2.MFnDependencyNode(mObj)
 
-    GETATTR_IGNORESTYPES = (cm_types.MESSAGE, cm_types.MATRIXF44)
+    GETATTR_IGNORESTYPES = (vrcm_types.MESSAGE, vrcm_types.MATRIXF44)
 
     connections = mFn.getConnections()
     sourcePlugs = [plg for plg in connections if plg.isSource]
@@ -116,24 +117,24 @@ def __createConnectionNodes(nodeLongName):
     # Find source plugs
     for eachSourcePlug in sourcePlugs:
         logger.debug("Processing sourceMPlug: %s ..." % eachSourcePlug.name())
-        srcMPlugType = cm_plugs.getMPlugType(eachSourcePlug)
+        srcMPlugType = vrcm_plugs.getMPlugType(eachSourcePlug)
         srcPlugDataDict = dict()
 
         # [[isElement, isChild, plugName, plgIdx], [isElement, isChild, plugName, plgIdx]]
-        plgData = cm_plugs.fetchIndexedPlugData(eachSourcePlug)
+        plgData = vrcm_plugs.fetchIndexedPlugData(eachSourcePlug)
         logger.debug("%s plgData: %s" % (eachSourcePlug.name(), plgData))
         _, _, srcPlugName, _ = plgData[0]
         srcPlugDataDict['attrName'] = srcPlugName
         srcPlugDataDict['plugData'] = plgData
         if srcMPlugType not in GETATTR_IGNORESTYPES:
-            value = cm_plugs.getMPlugValue(eachSourcePlug)
+            value = vrcm_plugs.getMPlugValue(eachSourcePlug)
             logger.debug("attrValue: %s" % value)
             srcPlugDataDict['attrValue'] = value
 
         # Dest plugs connected to this plug
         # Note .destinations() method skips  over any unit conversion nodes
         destinationPlugs = (mplg for mplg in eachSourcePlug.destinations() if
-                            mplg.node().apiType() not in c_const.MAYA_CONNECTED_NODETYPES_IGNORES)
+                            mplg.node().apiType() not in vrconst_constants.MAYA_CONNECTED_NODETYPES_IGNORES)
         if not destinationPlugs:
             logger.debug("%s has no destination connections!" % eachSourcePlug.name())
             continue
@@ -146,11 +147,11 @@ def __createConnectionNodes(nodeLongName):
             # core.maya.plugs : mPlug: testRigNamespace:jd_hermiteArrayCrv1.cvs[0].worldMtx isIndexed: True #
             # core.maya.plugs : Cleaning partialName: cvs[0] #
             # core.maya.plugs : PLUGDATA: [[False, True, u'cvs', 2]]  #
-            destPlugData['plugData'] = cm_plugs.fetchIndexedPlugData(eachDestMPlug)
+            destPlugData['plugData'] = vrcm_plugs.fetchIndexedPlugData(eachDestMPlug)
 
-            destPlugType = cm_plugs.getMPlugType(eachDestMPlug)
+            destPlugType = vrcm_plugs.getMPlugType(eachDestMPlug)
             if destPlugType not in GETATTR_IGNORESTYPES:
-                destPlugData['attrValue'] = cm_plugs.getMPlugValue(eachDestMPlug)
+                destPlugData['attrValue'] = vrcm_plugs.getMPlugValue(eachDestMPlug)
             logger.debug("destPlugData: %s" % destPlugData)
 
             #################

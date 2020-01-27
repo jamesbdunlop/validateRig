@@ -23,26 +23,6 @@ def cleanMayaLongName(nodeLongName):
     return newName
 
 
-def getAttrValue(nodeLongName, attributeName):
-    # type: (str, str) -> list[str, any]
-
-    mSel = om2.MSelectionList()
-    mSel.add(nodeLongName)
-    mObj = mSel.getDependNode(0)
-    mFn = om2.MFnDependencyNode(mObj)
-    plg = mFn.findPlug(attributeName, False)
-
-    ignoreTypes = (cm_types.MESSAGE,)  # can't query for and I don't care to.
-    plugType = cm_plugs.getMPlugType(plg)
-
-    if plugType in ignoreTypes:
-        return None
-
-    value = cm_plugs.getMPlugValue(plg)
-
-    return value
-
-
 def getNamespaceFromLongName(nodeLongName):
     # type: (str) -> str
 
