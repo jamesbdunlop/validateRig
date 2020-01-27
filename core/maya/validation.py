@@ -1,10 +1,11 @@
 #  Copyright (c) 2020.  James Dunlop
 import logging
-from const import serialization as c_serialization
-from const import constants as vrc_constants
-from core.maya import utils as cm_utils
-from core.maya import plugs as cm_plugs
-from core.maya import types as cm_types
+from validateRig.const import serialization as c_serialization
+from validateRig.const import constants as vrconst_constants
+from validateRig.core.maya import utils as cm_utils
+from validateRig.core.maya import plugs as cm_plugs
+from validateRig.core.maya import types as cm_types
+
 import maya.api.OpenMaya as om2
 
 logger = logging.getLogger(__name__)
@@ -14,9 +15,9 @@ logger = logging.getLogger(__name__)
 def validateValidatorSourceNodes(validator):
     # type: (Validator) -> None
 
-    validator.status = vrc_constants.NODE_VALIDATION_PASSED
+    validator.status = vrconst_constants.NODE_VALIDATION_PASSED
     for eachSourceNode in validator.iterSourceNodes():
-        eachSourceNode.status = vrc_constants.NODE_VALIDATION_PASSED
+        eachSourceNode.status = vrconst_constants.NODE_VALIDATION_PASSED
         srcNodeName = eachSourceNode.longName
         if not cm_utils.exists(srcNodeName):
             continue
@@ -26,8 +27,8 @@ def validateValidatorSourceNodes(validator):
 
         passed = all((defaultStatus, connectionStatus))
         if not passed:
-            eachSourceNode.status = vrc_constants.NODE_VALIDATION_FAILED
-            validator.status = vrc_constants.NODE_VALIDATION_FAILED
+            eachSourceNode.status = vrconst_constants.NODE_VALIDATION_FAILED
+            validator.status = vrconst_constants.NODE_VALIDATION_FAILED
 
 
 def __validateDefaultNodes(sourceNode):
@@ -40,7 +41,9 @@ def __validateDefaultNodes(sourceNode):
 
         data = eachValidationNode.defaultValueData
         defaultNodeLongName = eachValidationNode.longName
+        logger.debug("defaultNodeLongName: %s" % defaultNodeLongName)
         for dvName, dvValue in data.iteritems():
+            logger.debug("dvName: %s" % dvName)
             attrValue = cm_utils.getAttrValue(defaultNodeLongName, dvName)
             result = dvValue == attrValue
             if not setValidationStatus(eachValidationNode, result):
@@ -49,20 +52,39 @@ def __validateDefaultNodes(sourceNode):
     return passed
 
 
-def fetchMPlugFromConnectionData(noddeLongName, plugData):
+def fetchMPlugFromConnectionData(nodeLongName, plugData):
     copyPlugData = plugData[:]
     mPlug = None
+
+    logger.debug("-----------fetchMPlugFromConnectionData-------------")
+    logger.debug("\t-- %s" % plugData)
     while copyPlugData:
         plgIsElement, plgIsChild, plgPlugName, plgIndex = copyPlugData[-1]
-        if mPlug is None:
-            mPlug = cm_plugs.getMPlugFromLongName(noddeLongName, plgPlugName)
+        logger.debug("\t%-- s %s %s %s" % (plgIsElement, plgIsChild, plgPlugName, plgIndex))
 
-        if mPlug.isArray:
+        if mPlug is None:
+            mPlug = cm_plugs.getMPlugFromLongName(nodeLongName, plgPlugName)
+            if plgIsElement:
+                mPlug = mPlug.elementByLogicalIndex(plgIndex)
+            elif plgIsChild:
+                mPlug = mPlug.child(plgIndex)
+            logger.debug("\tFound starting plug: %s" % (mPlug.name()))
+
+        elif plgIsElement:
+            logger.debug("\t\t%s IsElement" % (plgPlugName))
+            logger.debug("\t\tparentPlug: %s" % (mPlug.name()))
             mPlug = mPlug.elementByLogicalIndex(plgIndex)
-        else:
+            logger.debug("\t\tnewPlug: %s" % (mPlug.name()))
+
+        elif plgIsChild:
+            logger.debug("\t\t%s IsChild" % (plgPlugName))
+            logger.debug("\t\tparentPlug: %s" % (mPlug.name()))
             mPlug = mPlug.child(plgIndex)
+            logger.debug("\t\tnewPlug: %s" % (mPlug.name()))
 
         copyPlugData.pop()
+
+    logger.debug("FINAL PLUG %s" % mPlug.name())
     return mPlug
 
 
@@ -81,18 +103,18 @@ def __validateConnectionNodes(sourceNode):
         srcAttrValue = srcData.get("attrValue", None)
         srcPlugData = srcData.get("plugData", None)
 
-        destNodeName = destData.get("nodeName", None)
-        destAttrValue = destData.get("attrValue", None)
-        destPlugData = destData.get("plugData", None)
-
         srcIsElement, srcIsChild, srcPlugName, _ = srcPlugData[0]
         isSrcIndexed = False
         if srcIsElement or srcIsChild:
             isSrcIndexed = True
         if not isSrcIndexed:
-            srcMPlug = cm_plugs.getMPlugFromLongName(eachValidationNode.longName, srcAttrName)
+            srcMPlug = cm_plugs.getMPlugFromLongName(sourceNode.longName, srcAttrName)
         else:
-            srcMPlug = fetchMPlugFromConnectionData(eachValidationNode.longName, srcPlugData)
+            srcMPlug = fetchMPlugFromConnectionData(sourceNode.longName, srcPlugData)
+
+        destNodeName = destData.get("nodeName", None)
+        destAttrValue = destData.get("attrValue", None)
+        destPlugData = destData.get("plugData", None)
 
         destIsElement, destIsChild, destPlugName, _ = destPlugData[0]
         isDestIndexed = False
@@ -107,7 +129,9 @@ def __validateConnectionNodes(sourceNode):
         result = False
         if conns:
             result = conns[0] == srcMPlug
+
         if not setValidationStatus(eachValidationNode, result):
+            logger.debug("NOT CONNECTED %s %s " % (srcMPlug.name(), destMPlug.name()))
             passed = False
 
         # DEFAULT VALUES OF THE SRC ATTR NOW AS WE CULL DEFAULT VALUE NODES IF THEY'RE ALREADY CONNECTION ATTRS
@@ -127,6 +151,7 @@ def __validateConnectionNodes(sourceNode):
 
         result = all((result, resultSrcValue, resultDestValue))
         if not setValidationStatus(eachValidationNode, result):
+            logger.debug("NOT AT DEFAULT VALUE %s %s " % (srcMPlug.name(), destMPlug.name()))
             passed = False
 
     return passed
@@ -147,16 +172,16 @@ def repairValidatorSourceNodes(validator):
 
         passed = all((defaultStatus, connectionStatus))
         if passed:
-            validator.status = vrc_constants.NODE_VALIDATION_FAILED
+            validator.status = vrconst_constants.NODE_VALIDATION_FAILED
         else:
-            validator.status = vrc_constants.NODE_VALIDATION_PASSED
+            validator.status = vrconst_constants.NODE_VALIDATION_PASSED
 
 
 def __repairDefaultNodes(sourceNode):
     # type: (SourceNode) -> bool
 
     for eachValidationNode in sourceNode.iterDescendants():
-        if eachValidationNode.status == vrc_constants.NODE_VALIDATION_PASSED:
+        if eachValidationNode.status == vrconst_constants.NODE_VALIDATION_PASSED:
             continue
         if eachValidationNode.nodeType != c_serialization.NT_DEFAULTVALUE:
             continue
@@ -182,7 +207,7 @@ def __repairConnectionNodes(sourceNode):
     for eachValidationNode in sourceNode.iterDescendants():
         if eachValidationNode.nodeType != c_serialization.NT_CONNECTIONVALIDITY:
             continue
-        if eachValidationNode.status == vrc_constants.NODE_VALIDATION_PASSED:
+        if eachValidationNode.status == vrconst_constants.NODE_VALIDATION_PASSED:
             continue
 
         data = eachValidationNode.connectionData
@@ -224,8 +249,8 @@ def setValidationStatus(validationNode, result):
     # type: (ValidationNode, bool) -> bool
 
     if result:
-        validationNode.status = vrc_constants.NODE_VALIDATION_PASSED
+        validationNode.status = vrconst_constants.NODE_VALIDATION_PASSED
         return result
 
-    validationNode.status = vrc_constants.NODE_VALIDATION_FAILED
+    validationNode.status = vrconst_constants.NODE_VALIDATION_FAILED
     return result

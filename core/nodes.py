@@ -1,22 +1,22 @@
 #  Copyright (c) 2019.  James Dunlop
 import logging
 from PySide2 import QtCore
-from core import parser as c_parser
-from const import constants as vrc_constants
-from const import serialization as c_serialization
+
+from validateRig.const import serialization as vrconst_serialization
+from validateRig.const import constants as vrconst_constants
 
 logger = logging.getLogger(__name__)
 
 
 class Node(QtCore.QObject):
     def __init__(
-        self, name, longName, nodeType=c_serialization.NT_VALIDATIONNODE, parent=None,
+        self, name, longName, nodeType=vrconst_serialization.NT_VALIDATIONNODE, parent=None,
     ):
         # type: (str, str, int, Node) -> None
         self._name = name
         self._longName = longName
         self._nodeType = nodeType
-        self._validationStatus = vrc_constants.NODE_VALIDATION_NA
+        self._validationStatus = vrconst_constants.NODE_VALIDATION_NA
         self._parent = parent
         self._children = list()
         self._nameSpace = self._longName.split("|")[-1].split(":")[0]
@@ -102,20 +102,20 @@ class Node(QtCore.QObject):
 
     def toData(self):
         self.data = dict()
-        self.data[c_serialization.KEY_NODENAME] = self.name
-        self.data[c_serialization.KEY_NODELONGNAME] = self.longName
-        self.data[c_serialization.KEY_NODEDISPLAYNAME] = self.displayName
-        self.data[c_serialization.KEY_NODETYPE] = self.nodeType
+        self.data[vrconst_serialization.KEY_NODENAME] = self.name
+        self.data[vrconst_serialization.KEY_NODELONGNAME] = self.longName
+        self.data[vrconst_serialization.KEY_NODEDISPLAYNAME] = self.displayName
+        self.data[vrconst_serialization.KEY_NODETYPE] = self.nodeType
 
         return self.data
 
     @classmethod
     def fromData(cls, data):
         # type: (dict) -> Node
-        name = data.get(c_serialization.KEY_NODENAME, "")
-        longName = data.get(c_serialization.KEY_NODELONGNAME, "")
-        displayName = data.get(c_serialization.KEY_NODEDISPLAYNAME, "")
-        nodeType = data.get(c_serialization.KEY_NODETYPE, "")
+        name = data.get(vrconst_serialization.KEY_NODENAME, "")
+        longName = data.get(vrconst_serialization.KEY_NODELONGNAME, "")
+        displayName = data.get(vrconst_serialization.KEY_NODEDISPLAYNAME, "")
+        nodeType = data.get(vrconst_serialization.KEY_NODETYPE, "")
 
         inst = cls(name=name, longName=longName, nodeType=nodeType)
         inst.displayName = displayName
@@ -140,7 +140,7 @@ class SourceNode(Node):
         super(SourceNode, self).__init__(
             name=name,
             longName=longName,
-            nodeType=c_serialization.NT_SOURCENODE,
+            nodeType=vrconst_serialization.NT_SOURCENODE,
             parent=parent,
         )
         self._children = validityNodes or list()
@@ -148,12 +148,12 @@ class SourceNode(Node):
     @staticmethod
     def isNodeTypeEqualToDefaultValue(nodeType):
         # type: (int) -> bool
-        return nodeType == c_serialization.NT_DEFAULTVALUE
+        return nodeType == vrconst_serialization.NT_DEFAULTVALUE
 
     @staticmethod
     def createValidityNodeFromData(data, parent=None):
         # type: (dict) -> Node
-        nodeType = data[c_serialization.KEY_NODETYPE]
+        nodeType = data[vrconst_serialization.KEY_NODETYPE]
         if SourceNode.isNodeTypeEqualToDefaultValue(nodeType):
             return DefaultValueNode.fromData(data, parent)
 
@@ -161,9 +161,9 @@ class SourceNode(Node):
 
     def toData(self):
         super(SourceNode, self).toData()
-        self.data[c_serialization.KEY_VAILIDITYNODES] = list()
+        self.data[vrconst_serialization.KEY_VAILIDITYNODES] = list()
         for eachNode in self.iterChildren():
-            self.data[c_serialization.KEY_VAILIDITYNODES].append(eachNode.toData())
+            self.data[vrconst_serialization.KEY_VAILIDITYNODES].append(eachNode.toData())
 
         return self.data
 
@@ -174,15 +174,15 @@ class SourceNode(Node):
         Args:
             data: previously serialized SourceNode.toData() ususally loaded from .json
         """
-        sourceNodeName = data.get(c_serialization.KEY_NODENAME, None)
-        sourceNodeLongName = data.get(c_serialization.KEY_NODELONGNAME, None)
-        displayName = data.get(c_serialization.KEY_NODEDISPLAYNAME, "")
+        sourceNodeName = data.get(vrconst_serialization.KEY_NODENAME, None)
+        sourceNodeLongName = data.get(vrconst_serialization.KEY_NODELONGNAME, None)
+        displayName = data.get(vrconst_serialization.KEY_NODEDISPLAYNAME, "")
         if sourceNodeName is None:
             raise KeyError("NoneType is not a valid sourceNodeName!")
 
         inst = cls(name=sourceNodeName, longName=sourceNodeLongName)
 
-        serializedValidityNodes = data.get(c_serialization.KEY_VAILIDITYNODES, list())
+        serializedValidityNodes = data.get(vrconst_serialization.KEY_VAILIDITYNODES, list())
         validityNodes = [
             cls.createValidityNodeFromData(validityNodeData, inst)
             for validityNodeData in serializedValidityNodes
@@ -199,7 +199,7 @@ class ConnectionValidityNode(Node):
             name=name,
             longName=longName,
             parent=parent,
-            nodeType=c_serialization.NT_CONNECTIONVALIDITY,
+            nodeType=vrconst_serialization.NT_CONNECTIONVALIDITY,
         )
 
         self._connectionData = dict()
@@ -214,15 +214,15 @@ class ConnectionValidityNode(Node):
 
     def toData(self):
         super(ConnectionValidityNode, self).toData()
-        self.data[c_serialization.KEY_CONNDATA] = self._connectionData
+        self.data[vrconst_serialization.KEY_CONNDATA] = self._connectionData
         return self.data
 
     @classmethod
     def fromData(cls, data, parent):
-        name = data.get(c_serialization.KEY_NODENAME, "")
-        longName = data.get(c_serialization.KEY_NODELONGNAME, "")
-        displayName = data.get(c_serialization.KEY_NODEDISPLAYNAME, "")
-        connectionData = data.get(c_serialization.KEY_CONNDATA, dict())
+        name = data.get(vrconst_serialization.KEY_NODENAME, "")
+        longName = data.get(vrconst_serialization.KEY_NODELONGNAME, "")
+        displayName = data.get(vrconst_serialization.KEY_NODEDISPLAYNAME, "")
+        connectionData = data.get(vrconst_serialization.KEY_CONNDATA, dict())
 
         inst = cls(name=name, longName=longName)
         inst.displayName = displayName
@@ -238,7 +238,7 @@ class DefaultValueNode(Node):
             name=name,
             longName=longName,
             parent=parent,
-            nodeType=c_serialization.NT_DEFAULTVALUE,
+            nodeType=vrconst_serialization.NT_DEFAULTVALUE,
         )
         self._defaultValueData = dict()
 
@@ -252,17 +252,17 @@ class DefaultValueNode(Node):
 
     def toData(self):
         super(DefaultValueNode, self).toData()
-        self.data[c_serialization.KEY_DEFAULTVALUEDATA] = self._defaultValueData
+        self.data[vrconst_serialization.KEY_DEFAULTVALUEDATA] = self._defaultValueData
 
         return self.data
 
     @classmethod
     def fromData(cls, data, parent):
         # type: (dict, Node) -> DefaultValueNode
-        name = data.get(c_serialization.KEY_NODENAME, "")
-        longName = data.get(c_serialization.KEY_NODELONGNAME, "")
-        displayName = data.get(c_serialization.KEY_NODEDISPLAYNAME, "")
-        defaultValueData = data.get(c_serialization.KEY_DEFAULTVALUEDATA, dict())
+        name = data.get(vrconst_serialization.KEY_NODENAME, "")
+        longName = data.get(vrconst_serialization.KEY_NODELONGNAME, "")
+        displayName = data.get(vrconst_serialization.KEY_NODEDISPLAYNAME, "")
+        defaultValueData = data.get(vrconst_serialization.KEY_DEFAULTVALUEDATA, dict())
 
         inst = cls(name=name, longName=longName, parent=parent)
         inst.displayName = displayName

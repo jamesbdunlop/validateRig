@@ -2,45 +2,46 @@
 
 import unittest
 import logging
-from const import serialization as c_serialization
-from const import testData as c_testData
-import core.nodes as c_nodes
+
+from validateRig.const import testData as vrc_testData
+from validateRig.const import serialization as vrconst_serialization
+from validateRig.core import nodes as vrc_nodes
 
 logger = logging.getLogger(__name__)
 
 
 class Test_Nodes(unittest.TestCase):
     def setUp(self):
-        self.nodeName = c_testData.NODENAME
+        self.nodeName = vrc_testData.NODENAME
         self.nodeNameSpace = "myNameSpace"
         self.nodeLongName = "|{}:{}".format(self.nodeNameSpace, self.nodeName)
         self.newNamespace = "fart"
         self.newNodeLongName = "|{}:{}".format(self.newNamespace, self.nodeName)
 
-        self.baseNode = c_nodes.Node(name=self.nodeName, longName=self.nodeLongName)
+        self.baseNode = vrc_nodes.Node(name=self.nodeName, longName=self.nodeLongName)
         #######################################
-        self.sourceNodeName = c_testData.SRC_NODENAME
-        self.srcNodeAttrName = c_testData.SRC_ATTRNAME
-        self.srcNodeAttrValue = c_testData.SRC_ATTRVALUE
-        self.sourceNode = c_nodes.SourceNode(
+        self.sourceNodeName = vrc_testData.SRC_NODENAME
+        self.srcNodeAttrName = vrc_testData.SRC_ATTRNAME
+        self.srcNodeAttrValue = vrc_testData.SRC_ATTRVALUE
+        self.sourceNode = vrc_nodes.SourceNode(
             name=self.sourceNodeName, longName=self.sourceNodeName
         )
         #######################################
-        self.connectionValidityNodeName = c_testData.VALIDITY_NODENAME
-        self.connectionValidityNodeType = c_testData.VALIDITY_NODETYPE
+        self.connectionValidityNodeName = vrc_testData.VALIDITY_NODENAME
+        self.connectionValidityNodeType = vrc_testData.VALIDITY_NODETYPE
 
-        self.connectionValidityNode = c_nodes.ConnectionValidityNode(
+        self.connectionValidityNode = vrc_nodes.ConnectionValidityNode(
             name=self.connectionValidityNodeName,
             longName=self.connectionValidityNodeName,
         )
         self.connectionValidityNode.connectionData = {}
 
         #######################################
-        self.defaultValueNodeName = c_testData.DEFAULT_NODENAME
-        self.defaultValueNodeValue = c_testData.DEFAULT_NODEVALUE
-        self.defaultValueNodeType = c_testData.DEFAULT_NODETYPE
+        self.defaultValueNodeName = vrc_testData.DEFAULT_NODENAME
+        self.defaultValueNodeValue = vrc_testData.DEFAULT_NODEVALUE
+        self.defaultValueNodeType = vrc_testData.DEFAULT_NODETYPE
 
-        self.defaultValueNode = c_nodes.DefaultValueNode(
+        self.defaultValueNode = vrc_nodes.DefaultValueNode(
             name=self.defaultValueNodeName,
             longName=self.defaultValueNodeName,
         )
@@ -50,39 +51,39 @@ class Test_Nodes(unittest.TestCase):
         self.sourceNode.addChild(self.defaultValueNode)
 
         self.expectedToData = {
-            c_serialization.KEY_NODENAME: self.sourceNodeName,
-            c_serialization.KEY_NODELONGNAME: self.sourceNodeName,
-            c_serialization.KEY_NODETYPE: c_testData.SRC_NODETYPE,
-            c_serialization.KEY_NODEDISPLAYNAME: self.sourceNodeName,
-            c_serialization.KEY_VAILIDITYNODES: [
+            vrconst_serialization.KEY_NODENAME: self.sourceNodeName,
+            vrconst_serialization.KEY_NODELONGNAME: self.sourceNodeName,
+            vrconst_serialization.KEY_NODETYPE: vrc_testData.SRC_NODETYPE,
+            vrconst_serialization.KEY_NODEDISPLAYNAME: self.sourceNodeName,
+            vrconst_serialization.KEY_VAILIDITYNODES: [
                 {
-                    c_serialization.KEY_NODENAME: self.connectionValidityNodeName,
-                    c_serialization.KEY_NODELONGNAME: self.connectionValidityNodeName,
-                    c_serialization.KEY_NODETYPE: self.connectionValidityNodeType,
-                    c_serialization.KEY_NODEDISPLAYNAME: self.connectionValidityNodeName,
-                    c_serialization.KEY_CONNDATA: {},
+                    vrconst_serialization.KEY_NODENAME: self.connectionValidityNodeName,
+                    vrconst_serialization.KEY_NODELONGNAME: self.connectionValidityNodeName,
+                    vrconst_serialization.KEY_NODETYPE: self.connectionValidityNodeType,
+                    vrconst_serialization.KEY_NODEDISPLAYNAME: self.connectionValidityNodeName,
+                    vrconst_serialization.KEY_CONNDATA: {},
                 },
                 {
-                    c_serialization.KEY_NODENAME: self.defaultValueNodeName,
-                    c_serialization.KEY_NODELONGNAME: self.defaultValueNodeName,
-                    c_serialization.KEY_NODETYPE: self.defaultValueNodeType,
-                    c_serialization.KEY_NODEDISPLAYNAME: self.defaultValueNodeName,
-                    c_serialization.KEY_DEFAULTVALUEDATA: {},
+                    vrconst_serialization.KEY_NODENAME: self.defaultValueNodeName,
+                    vrconst_serialization.KEY_NODELONGNAME: self.defaultValueNodeName,
+                    vrconst_serialization.KEY_NODETYPE: self.defaultValueNodeType,
+                    vrconst_serialization.KEY_NODEDISPLAYNAME: self.defaultValueNodeName,
+                    vrconst_serialization.KEY_DEFAULTVALUEDATA: {},
                 },
             ],
         }
 
     ## GENEERIC NODE
     def test_instanceTypes(self):
-        self.assertIsInstance(self.sourceNode, c_nodes.Node)
-        self.assertIsInstance(self.defaultValueNode, c_nodes.DefaultValueNode)
+        self.assertIsInstance(self.sourceNode, vrc_nodes.Node)
+        self.assertIsInstance(self.defaultValueNode, vrc_nodes.DefaultValueNode)
         self.assertIsInstance(
-            self.connectionValidityNode, c_nodes.ConnectionValidityNode
+            self.connectionValidityNode, vrc_nodes.ConnectionValidityNode
         )
 
     def test_node_fromData(self):
-        newNode = c_nodes.Node.fromData(self.expectedToData)
-        self.assertIsInstance(newNode, c_nodes.Node)
+        newNode = vrc_nodes.Node.fromData(self.expectedToData)
+        self.assertIsInstance(newNode, vrc_nodes.Node)
 
     def test_node_name(self):
         self.assertEqual(
@@ -166,11 +167,11 @@ class Test_Nodes(unittest.TestCase):
         )
 
     def test_sourceNode_fromData(self):
-        newSourceNode = c_nodes.SourceNode.fromData(self.expectedToData)
-        self.assertIsInstance(newSourceNode, c_nodes.SourceNode)
+        newSourceNode = vrc_nodes.SourceNode.fromData(self.expectedToData)
+        self.assertIsInstance(newSourceNode, vrc_nodes.SourceNode)
 
         with self.assertRaises(KeyError) as context:
-            c = c_nodes.SourceNode.fromData({})
+            c = vrc_nodes.SourceNode.fromData({})
         self.assertTrue(
             "NoneType is not a valid sourceNodeName!" in str(context.exception)
         )

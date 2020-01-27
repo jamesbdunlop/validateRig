@@ -2,24 +2,25 @@
 
 import unittest
 import logging
-from const import serialization as c_serialization
-from const import testData as c_testdata
-import core.nodes as c_nodes
-import core.validator as c_validator
-import core.factory as c_factory
+
+from validateRig.const import testData as vrc_testData
+from validateRig.const import serialization as vrconst_serialization
+from validateRig.core import nodes as vrc_nodes
+from validateRig.core import validator as vrc_validator
+from validateRig.core import factory as vrc_factory
 
 logger = logging.getLogger(__name__)
 
 
 class Test_Validator(unittest.TestCase):
     def setUp(self):
-        self.validator = c_factory.createValidator(
-            name=c_testdata.VALIDATOR_NAME, nameSpace=c_testdata.VALIDATOR_NAMESPACE, data=None
+        self.validator = vrc_factory.createValidator(
+            name=vrc_testData.VALIDATOR_NAME, nameSpace=vrc_testData.VALIDATOR_NAMESPACE, data=None
         )
 
-        self.sourceNodeName = c_testdata.SRC_NODENAME
-        self.sourceNodeLongName = "|{}:{}".format(c_testdata.VALIDATOR_NAMESPACE, self.sourceNodeName)
-        self.sourceNode = c_nodes.SourceNode(name=self.sourceNodeName, longName=self.sourceNodeLongName)
+        self.sourceNodeName = vrc_testData.SRC_NODENAME
+        self.sourceNodeLongName = "|{}:{}".format(vrc_testData.VALIDATOR_NAMESPACE, self.sourceNodeName)
+        self.sourceNode = vrc_nodes.SourceNode(name=self.sourceNodeName, longName=self.sourceNodeLongName)
 
 
         connData = {
@@ -33,9 +34,9 @@ class Test_Validator(unittest.TestCase):
                 }
 
             }
-        self.connectionNodeName = c_testdata.VALIDITY_NODENAME
-        self.connectionNodeLongName = "|{}:{}".format(c_testdata.VALIDATOR_NAMESPACE, c_testdata.VALIDITY_NODENAME)
-        self.connectionValidityNode = c_nodes.ConnectionValidityNode(name=self.connectionNodeName,
+        self.connectionNodeName = vrc_testData.VALIDITY_NODENAME
+        self.connectionNodeLongName = "|{}:{}".format(vrc_testData.VALIDATOR_NAMESPACE, vrc_testData.VALIDITY_NODENAME)
+        self.connectionValidityNode = vrc_nodes.ConnectionValidityNode(name=self.connectionNodeName,
                                                                      longName=self.connectionNodeLongName)
 
         self.connectionValidityNode.connectionData = connData
@@ -46,21 +47,21 @@ class Test_Validator(unittest.TestCase):
         self.validator.addSourceNode(self.sourceNode)
 
         self.expectedToData = {
-            c_serialization.KEY_VALIDATOR_NAME: c_testdata.VALIDATOR_NAME,
-            c_serialization.KEY_VALIDATORNAMESPACE: c_testdata.VALIDATOR_NAMESPACE,
-            c_serialization.KEY_VALIDATOR_NODES: [
+            vrconst_serialization.KEY_VALIDATOR_NAME: vrc_testData.VALIDATOR_NAME,
+            vrconst_serialization.KEY_VALIDATORNAMESPACE: vrc_testData.VALIDATOR_NAMESPACE,
+            vrconst_serialization.KEY_VALIDATOR_NODES: [
                 {
-                    c_serialization.KEY_NODENAME: self.sourceNodeName,
-                    c_serialization.KEY_NODELONGNAME: self.sourceNodeLongName,
-                    c_serialization.KEY_NODEDISPLAYNAME: self.sourceNodeName,
-                    c_serialization.KEY_NODETYPE: c_testdata.SRC_NODETYPE,
-                    c_serialization.KEY_VAILIDITYNODES: [
+                    vrconst_serialization.KEY_NODENAME: self.sourceNodeName,
+                    vrconst_serialization.KEY_NODELONGNAME: self.sourceNodeLongName,
+                    vrconst_serialization.KEY_NODEDISPLAYNAME: self.sourceNodeName,
+                    vrconst_serialization.KEY_NODETYPE: vrc_testData.SRC_NODETYPE,
+                    vrconst_serialization.KEY_VAILIDITYNODES: [
                         {
-                            c_serialization.KEY_NODENAME: self.connectionNodeName,
-                            c_serialization.KEY_NODELONGNAME: self.connectionNodeLongName,
-                            c_serialization.KEY_NODEDISPLAYNAME: self.connectionNodeName,
-                            c_serialization.KEY_NODETYPE: c_testdata.VALIDITY_NODETYPE,
-                            c_serialization.KEY_CONNDATA: connData,
+                            vrconst_serialization.KEY_NODENAME: self.connectionNodeName,
+                            vrconst_serialization.KEY_NODELONGNAME: self.connectionNodeLongName,
+                            vrconst_serialization.KEY_NODEDISPLAYNAME: self.connectionNodeName,
+                            vrconst_serialization.KEY_NODETYPE: vrc_testData.VALIDITY_NODETYPE,
+                            vrconst_serialization.KEY_CONNDATA: connData,
                         }
                     ],
                 }
@@ -68,7 +69,7 @@ class Test_Validator(unittest.TestCase):
         }
 
     def test_instanceTypes(self):
-        self.assertIsInstance(self.validator, c_validator.Validator)
+        self.assertIsInstance(self.validator, vrc_validator.Validator)
 
     def test_setters(self):
         testName = "FART"
@@ -105,17 +106,17 @@ class Test_Validator(unittest.TestCase):
     def test_Name(self):
         self.assertEqual(
             self.validator.name,
-            c_testdata.VALIDATOR_NAME,
+            vrc_testData.VALIDATOR_NAME,
             "ValidatorName: %s is not %s"
-            % (self.validator.name, c_testdata.VALIDATOR_NAME),
+            % (self.validator.name, vrc_testData.VALIDATOR_NAME),
         )
 
     def test_namespaceOnCreate(self):
         self.assertEqual(
-            c_testdata.VALIDATOR_NAMESPACE,
+            vrc_testData.VALIDATOR_NAMESPACE,
             self.validator.nameSpaceOnCreate,
             "_nameSpaceOnCreate: {} is not what it should be: {}".format(
-                self.validator.nameSpaceOnCreate, c_testdata.VALIDATOR_NAMESPACE
+                self.validator.nameSpaceOnCreate, vrc_testData.VALIDATOR_NAMESPACE
             ),
         )
 
@@ -129,7 +130,7 @@ class Test_Validator(unittest.TestCase):
 
         self.assertEqual(
             srcNode.displayName,
-            "{}:{}".format(c_testdata.VALIDATOR_NAMESPACE, srcNode.name),
+            "{}:{}".format(vrc_testData.VALIDATOR_NAMESPACE, srcNode.name),
         )
 
     def test_updateNameSpaceInLongName(self):
@@ -143,7 +144,7 @@ class Test_Validator(unittest.TestCase):
 
     def test_addSourceNode(self):
         nodeName = "2ndSourceNode"
-        srcNode = c_nodes.SourceNode(name=nodeName, longName=nodeName)
+        srcNode = vrc_nodes.SourceNode(name=nodeName, longName=nodeName)
 
         self.assertTrue(
             self.validator.addSourceNode(srcNode), "validator.addSourceNode failed!",
@@ -163,7 +164,7 @@ class Test_Validator(unittest.TestCase):
 
     def test_addSourceNodeFromData(self):
         nodeName = "3rdSourceNode"
-        srcNode = c_nodes.SourceNode(name=nodeName, longName=nodeName)
+        srcNode = vrc_nodes.SourceNode(name=nodeName, longName=nodeName)
         data = srcNode.toData()
         self.validator.addSourceNodeFromData(data)
         self.assertTrue(
@@ -172,7 +173,7 @@ class Test_Validator(unittest.TestCase):
 
     def test_removeSourceNode(self):
         nodeName = "toRemove"
-        tmpSourceNode = c_nodes.SourceNode(name=nodeName, longName=nodeName)
+        tmpSourceNode = vrc_nodes.SourceNode(name=nodeName, longName=nodeName)
         self.validator.addSourceNode(tmpSourceNode)
         self.assertTrue(
             self.validator.removeSourceNode(tmpSourceNode),
@@ -190,18 +191,18 @@ class Test_Validator(unittest.TestCase):
             "Failed to replaceExistingSourceNode!",
         )
 
-        srcN = c_nodes.SourceNode("Idontexist", "|fart:Idontexist")
+        srcN = vrc_nodes.SourceNode("Idontexist", "|fart:Idontexist")
         self.assertFalse(
             self.validator.sourceNodeExists(srcN),
             "Apparent Idontexist sourceNode exists?! It should not!",
         )
 
     def test_addSourceNodes(self):
-        tmp01 = c_nodes.SourceNode(
-            "Src1", "|{}:Src1".format(c_serialization.KEY_VALIDATORNAMESPACE)
+        tmp01 = vrc_nodes.SourceNode(
+            "Src1", "|{}:Src1".format(vrconst_serialization.KEY_VALIDATORNAMESPACE)
         )
-        tmp02 = c_nodes.SourceNode(
-            "Src2", "|{}:Src2".format(c_serialization.KEY_VALIDATORNAMESPACE)
+        tmp02 = vrc_nodes.SourceNode(
+            "Src2", "|{}:Src2".format(vrconst_serialization.KEY_VALIDATORNAMESPACE)
         )
         srcNodes = [tmp01, tmp02]
         self.assertTrue(

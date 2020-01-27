@@ -1,10 +1,10 @@
 #  Copyright (c) 2019.  James Dunlop
 from PySide2 import QtWidgets, QtCore
-import inside as c_inside
-from core.nodes import SourceNode, DefaultValueNode, ConnectionValidityNode
-from uiElements import validityNodeListWidget as ui_validityNodeListWidget
+import insideDCC as vr_insideDCC
+from validateRig.core.nodes import SourceNode, DefaultValueNode, ConnectionValidityNode
+from validateRig.uiElements import validityNodeListWidget as vruie_validityNodeListWidget
 
-if c_inside.insideMaya():
+if vr_insideDCC.insideMaya():
     from maya import cmds
 
 
@@ -116,7 +116,7 @@ class BaseSourceNodeValidityNodesSelector(QtWidgets.QWidget):
         defaultValuesGroupBox = QtWidgets.QGroupBox("Default Values")
         defaultValuesGroupBoxlayout = QtWidgets.QVBoxLayout(defaultValuesGroupBox)
         self.defaultValuesListWidget = (
-            ui_validityNodeListWidget.ValidityNodeListWidget()
+            vruie_validityNodeListWidget.ValidityNodeListWidget()
         )
         self.defaultValuesListWidget.setSelectionMode(
             QtWidgets.QAbstractItemView.ExtendedSelection
@@ -128,7 +128,7 @@ class BaseSourceNodeValidityNodesSelector(QtWidgets.QWidget):
             "Connections"
         )  # we hide this when showing only the one in the list all
         connectionsGroupBoxLayout = QtWidgets.QVBoxLayout(connectionsGroupBox)
-        self.connsListWidget = ui_validityNodeListWidget.ValidityNodeListWidget()
+        self.connsListWidget = vruie_validityNodeListWidget.ValidityNodeListWidget()
         self.connsListWidget.setSelectionMode(
             QtWidgets.QAbstractItemView.ExtendedSelection
         )

@@ -1,7 +1,8 @@
 #  Copyright (c) 2019.  James Dunlop
-import inside as c_inside
+import validateRig.insideDCC as vr_insideDCC
+
 MAYA_CONNECTED_NODETYPES_IGNORES = list()
-if c_inside.insideMaya():
+if vr_insideDCC.insideMaya():
     from maya.api import OpenMaya as om2
     MAYA_CONNECTED_NODETYPES_IGNORES = [om2.MFn.kMessageAttribute,
                                         om2.MFn.kNodeGraphEditorBookmarks,

@@ -2,14 +2,14 @@
 import logging
 from PySide2 import QtWidgets, QtCore, QtGui
 
-from validateRig.api import vr_core_api
+from validateRig.api import vrigCoreApi
+from validateRig.const import constants as vrconst_constants
+from validateRig.const import serialization as c_serialization
 from validateRig.core.validator import Validator
 from validateRig.core.nodes import SourceNode
-from validateRig.const import constants as vrc_constants
-from validateRig.const import serialization as c_serialization
 from validateRig.uiElements.trees.treeWidgetItems import factory as cuitwi_factory
 
-reload(vr_core_api)
+reload(vrigCoreApi)
 logger = logging.getLogger(__name__)
 
 
@@ -25,7 +25,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         self.resizeColumnToContents(True)
         self.setAcceptDrops(True)
         self.setColumnCount(8)
-        self.setHeaderLabels(vrc_constants.HEADER_LABELS)
+        self.setHeaderLabels(vrconst_constants.HEADER_LABELS)
         self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.widgetUnderMouse = None
         self._validator = validator
@@ -159,14 +159,14 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
 
     def updateDefaultValueFromDCC(self):
         for eachTreeWidgetItem in self.selectedItems():
-            logger.info("Updated defaultValue from DCC")
+            logger.debug("Updated defaultValue from DCC")
             defaultValueNode = eachTreeWidgetItem.node()
             self.updateNode.emit(defaultValueNode)
             eachTreeWidgetItem.updateDefaultValue()
 
     def updateConnectionNodeSrcAttrValueFromScene(self):
         for eachTreeWidgetItem in self.selectedItems():
-            logger.info("Updated srcAttrValue and destAttrValue from DCC")
+            logger.debug("Updated srcAttrValue and destAttrValue from DCC")
             connectionNode = eachTreeWidgetItem.node()
             self.updateNode.emit(connectionNode)
             eachTreeWidgetItem.updateConnectionSrcValue()
@@ -183,7 +183,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
     def dropEvent(self, QDropEvent):
         super(ValidationTreeWidget, self).dropEvent(QDropEvent)
         nodeNames = QDropEvent.mimeData().text().split("\n")
-        self.attrWidget = vr_core_api.processValidationTreeWidgetDropEvent(nodeNames, self.validator, parent=None)
+        self.attrWidget = vrigCoreApi.processValidationTreeWidgetDropEvent(nodeNames, self.validator, parent=None)
         self.attrWidget.sourceNodesAccepted.connect(self._processSourceNodeAttributeWidgets)
         self.attrWidget.move(QtGui.QCursor.pos())
         self.attrWidget.show()
@@ -209,7 +209,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
 
             nodeNames.append(itemName)
 
-        vr_core_api.selectNodesInDCC(nodeNames, event)
+        vrigCoreApi.selectNodesInDCC(nodeNames, event)
 
     @staticmethod
     def addValidityNodesToTreeWidgetItem(sourceNode, sourceNodeTreeWItm):

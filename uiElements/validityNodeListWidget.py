@@ -2,7 +2,8 @@
 import logging
 import sys
 from PySide2 import QtWidgets, QtCore
-from const import constants as vrc_constants
+
+from validateRig.const import constants as vrconst_constants
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +63,7 @@ class ValidityNodeListWidget(QtWidgets.QWidget):
         for x in range(count):
             listWidgetItem = self._listWidget.item(x)
             listWidgetItem.setHidden(False)
-            if listWidgetItem.text() not in vrc_constants.MAYA_DEFAULTATTRS:
+            if listWidgetItem.text() not in vrconst_constants.MAYA_DEFAULTATTRS:
                 listWidgetItem.setHidden(True)
 
         self.hideByCustomFiltersButton.setHidden(True)

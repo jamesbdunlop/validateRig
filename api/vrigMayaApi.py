@@ -1,18 +1,17 @@
 #  Copyright (c) 2019.  James Dunlop
 import logging
 
-from api.vr_core_api import *
+from validateRig.api.vrigCoreApi import *
+from validateRig.const import constants as c_const
+from validateRig.core.maya import types as cm_types
+from validateRig.core.maya import plugs as cm_plugs
+from validateRig.core.maya import utils as cm_utils
 
 from maya.api import OpenMaya as om2
 
-from const import constants as c_const
-
-from core.maya import types as cm_types
-from core.maya import plugs as cm_plugs
-from core.maya import utils as cm_utils
-
 logger = logging.getLogger(__name__)
 
+reload(cm_plugs)
 """
 # Example Usage:
 # What we're doing in this example...
@@ -55,7 +54,7 @@ def asSourceNode(nodeLongName, attributes=None, connections=False):
         connNodes = list(__createConnectionNodes(nodeLongName))
         validityNodes += connNodes
         connAttrNames = [set(n.connectionData.get("srcData")["attrName"] for n in connNodes)]
-    logger.info("connAttrNames: %s" % connAttrNames)
+    logger.debug("connAttrNames: %s" % connAttrNames)
 
     if attributes is not None:
         defaultNodes = list(__createDefaultValueNodes(nodeLongName, attributes))
@@ -105,61 +104,61 @@ def __createConnectionNodes(nodeLongName):
 
     GETATTR_IGNORESTYPES = (cm_types.MESSAGE, cm_types.MATRIXF44)
 
-    conns = mFn.getConnections()
-    logger.info("%s \n\tCONNS:  %s" % (mFn.name(), conns))
-    if not conns:
-        logger.info("%s has no connections. Skipping." % mFn.name())
+    connections = mFn.getConnections()
+    sourcePlugs = [plg for plg in connections if plg.isSource]
+    logger.debug("%s sourcePlugs:  %s" % (mFn.name(), [plg.name() for plg in sourcePlugs]))
+    if not sourcePlugs:
+        logger.debug("Skipping!! %s has no sourceplugs!" % mFn.name())
         yield None
 
     # Find source plugs
-    for eachConnMPlug in conns:
-        logger.info("\tProcessing connection: %s ..." % eachConnMPlug.name())
-        if not eachConnMPlug.isSource:
-            logger.info("\t\t%s is not a sourcePlug. Skipping." % eachConnMPlug.name())
-            continue
-
-        srcMPlugType = cm_plugs.getMPlugType(eachConnMPlug)
+    for eachSourcePlug in sourcePlugs:
+        logger.debug("Processing sourceMPlug: %s ..." % eachSourcePlug.name())
+        srcMPlugType = cm_plugs.getMPlugType(eachSourcePlug)
         srcPlugDataDict = dict()
 
-        #[[isElement, isChild, plugName, plgIdx], [isElement, isChild, plugName, plgIdx]]
-        plgData = cm_plugs.fetchIndexedPlugData(eachConnMPlug)
-        logger.info("\t\tplgData: %s" % plgData)
+        # [[isElement, isChild, plugName, plgIdx], [isElement, isChild, plugName, plgIdx]]
+        plgData = cm_plugs.fetchIndexedPlugData(eachSourcePlug)
+        logger.debug("%s plgData: %s" % (eachSourcePlug.name(), plgData))
         _, _, srcPlugName, _ = plgData[0]
         srcPlugDataDict['attrName'] = srcPlugName
         srcPlugDataDict['plugData'] = plgData
         if srcMPlugType not in GETATTR_IGNORESTYPES:
-            value = cm_plugs.getMPlugValue(eachConnMPlug)
-            logger.info("\t\tattrValue: %s" % value)
+            value = cm_plugs.getMPlugValue(eachSourcePlug)
+            logger.debug("attrValue: %s" % value)
             srcPlugDataDict['attrValue'] = value
 
         # Dest plugs connected to this plug
         # Note .destinations() method skips  over any unit conversion nodes
-        destinations = (mplg for mplg in eachConnMPlug.destinations() if
-                        mplg.node().apiType() not in c_const.MAYA_CONNECTED_NODETYPES_IGNORES)
-        if not destinations:
-            logger.info("\t\t%s has no destination connections!" % eachConnMPlug.name())
+        destinationPlugs = (mplg for mplg in eachSourcePlug.destinations() if
+                            mplg.node().apiType() not in c_const.MAYA_CONNECTED_NODETYPES_IGNORES)
+        if not destinationPlugs:
+            logger.debug("%s has no destination connections!" % eachSourcePlug.name())
             continue
 
-        logger.info("\t\tdestinations: %s" % destinations)
-        for eachDestMPlug in destinations:
-            logger.info("Processing destination plug: %s" % eachDestMPlug.name())
+        for eachDestMPlug in destinationPlugs:
+            logger.debug("Processing destination plug: %s" % eachDestMPlug.name())
             destPlugData = dict()
             destPlugData["nodeName"] = om2.MFnDependencyNode(eachDestMPlug.node()).name()
+            # validateRig.api.vrigMayaApi : Processing destination plug: testRigNamespace:jd_hermiteArrayCrv1.cvs[0].worldMtx
+            # core.maya.plugs : mPlug: testRigNamespace:jd_hermiteArrayCrv1.cvs[0].worldMtx isIndexed: True #
+            # core.maya.plugs : Cleaning partialName: cvs[0] #
+            # core.maya.plugs : PLUGDATA: [[False, True, u'cvs', 2]]  #
             destPlugData['plugData'] = cm_plugs.fetchIndexedPlugData(eachDestMPlug)
 
             destPlugType = cm_plugs.getMPlugType(eachDestMPlug)
             if destPlugType not in GETATTR_IGNORESTYPES:
                 destPlugData['attrValue'] = cm_plugs.getMPlugValue(eachDestMPlug)
+            logger.debug("destPlugData: %s" % destPlugData)
 
             #################
             # Create Node now
-            logger.info("\t\tdestPlugData: %s" % destPlugData)
             destPlugNodeMFn = om2.MFnDependencyNode(eachDestMPlug.node())
             connectionNode = createConnectionValidityNode(name=destPlugNodeMFn.name().split(":")[-1],
                                                           longName=destPlugNodeMFn.absoluteName()
                                                           )
             connectionNode.connectionData = {"srcData": srcPlugDataDict,
                                              "destData": destPlugData}
-            print("\t\tConnectionNode created successfully.")
+            logger.debug("ConnectionNode created successfully.")
+            logger.debug("####################################")
             yield connectionNode
-

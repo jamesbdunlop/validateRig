@@ -2,10 +2,11 @@
 
 import unittest
 import logging
-import api.vr_core_api as vrigApi
-from core import validator as c_validator
-from core import nodes as c_nodes
-from core import parser as c_parser
+
+from validateRig.api import vrigCoreApi as vrapi_core
+from validateRig.core import validator as vrc_validator
+from validateRig.core import nodes as vrc_nodes
+from validateRig.core import parser as vrc_parser
 
 logger = logging.getLogger(__name__)
 
@@ -19,45 +20,45 @@ class Test_COREAPI(unittest.TestCase):
         self.jsonPath = "T:\\software\\validateRig\\tests\\testValidator.json"
 
     def test_createValidatorByName(self):
-        validator = vrigApi.createValidator(name=self.validatorName, data=None)
-        self.assertIsInstance(validator, c_validator.Validator)
+        validator = vrapi_core.createValidator(name=self.validatorName, data=None)
+        self.assertIsInstance(validator, vrc_validator.Validator)
         self.assertEqual(validator.name, self.validatorName)
 
     def test_createValidatorFromData(self):
-        data = c_parser.read(self.jsonPath)
-        validator = vrigApi.createValidator(name=self.validatorName, data=data)
-        self.assertIsInstance(validator, c_validator.Validator)
+        data = vrc_parser.read(self.jsonPath)
+        validator = vrapi_core.createValidator(name=self.validatorName, data=data)
+        self.assertIsInstance(validator, vrc_validator.Validator)
 
     def test_createValidatorNameAsList(self):
         self.assertRaises(
             TypeError,
-            vrigApi.createValidator(name=[self.validatorName], data=None),
+            vrapi_core.createValidator(name=[self.validatorName], data=None),
         )
 
     def test_createSourceNode(self):
-        sourceNode = vrigApi.createSourceNode(
+        sourceNode = vrapi_core.createSourceNode(
             name=self.sourceNodeName, longName=self.sourceNodeName
         )
-        self.assertIsInstance(sourceNode, c_nodes.SourceNode)
+        self.assertIsInstance(sourceNode, vrc_nodes.SourceNode)
 
     def test_createDefaultValueNode(self):
-        defaultValueNode = vrigApi.createDefaultValueNode(
+        defaultValueNode = vrapi_core.createDefaultValueNode(
             name=self.defaultValueNodeName,
             longName=self.defaultValueNodeName,
         )
-        self.assertIsInstance(defaultValueNode, c_nodes.DefaultValueNode)
+        self.assertIsInstance(defaultValueNode, vrc_nodes.DefaultValueNode)
 
     def test_createConnectionValidityNode(self):
-        connectionNode = vrigApi.createConnectionValidityNode(
+        connectionNode = vrapi_core.createConnectionValidityNode(
             name=self.connectionNodeName,
             longName=self.connectionNodeName,
         )
-        self.assertIsInstance(connectionNode, c_nodes.ConnectionValidityNode)
+        self.assertIsInstance(connectionNode, vrc_nodes.ConnectionValidityNode)
 
     def test_toFile(self):
-        validator = vrigApi.createValidator(name=self.validatorName)
+        validator = vrapi_core.createValidator(name=self.validatorName)
         self.assertTrue(
-            vrigApi.saveValidatorsToFile(
+            vrapi_core.saveValidatorsToFile(
                 validators=[validator], filepath="C:/temp/test.json"
             )
         )

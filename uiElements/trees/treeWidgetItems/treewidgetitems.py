@@ -1,8 +1,9 @@
 #  Copyright (c) 2019.  James Dunlop
 from PySide2 import QtWidgets, QtCore, QtGui
-from const import constants as vrc_constants
-from const import serialization as c_serialization
-from core.nodes import Node
+
+from validateRig.const import constants as vrconst_constants
+from validateRig.const import serialization as vrc_serialization
+from validateRig.core.nodes import Node
 
 QTDISPLAYROLE = QtCore.Qt.DisplayRole
 
@@ -27,14 +28,14 @@ class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
         return self.node().nodeType
 
     def updateDisplayName(self,):
-        columnId = vrc_constants.SRC_NODENAME_COLUMN
+        columnId = vrconst_constants.SRC_NODENAME_COLUMN
         qtRole = QTDISPLAYROLE
         value = self.node().displayName
-        if self.nodeType() == c_serialization.NT_SOURCENODE:
+        if self.nodeType() == vrc_serialization.NT_SOURCENODE:
             self.updateColumnData(columnId, qtRole, value)
 
-        if self.nodeType() == c_serialization.NT_CONNECTIONVALIDITY:
-            destNodeNameColId = vrc_constants.DEST_NODENAME_COLUMN
+        if self.nodeType() == vrc_serialization.NT_CONNECTIONVALIDITY:
+            destNodeNameColId = vrconst_constants.DEST_NODENAME_COLUMN
             self.updateColumnData(destNodeNameColId, qtRole, value)
 
         for x in range(self.childCount()):
@@ -47,19 +48,19 @@ class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
 
     def updateDefaultValue(self):
         qtRole = QTDISPLAYROLE
-        if self.nodeType() == c_serialization.NT_DEFAULTVALUE:
+        if self.nodeType() == vrc_serialization.NT_DEFAULTVALUE:
             data = self.node().defaultValueData
             for _, dvValue in data.iteritems():
-                valueColId = vrc_constants.SRC_ATTRVALUE_COLUMN
+                valueColId = vrconst_constants.SRC_ATTRVALUE_COLUMN
                 self.updateColumnData(valueColId, qtRole, dvValue)
 
     def updateConnectionSrcValue(self):
         qtRole = QTDISPLAYROLE
-        if self.nodeType() == c_serialization.NT_CONNECTIONVALIDITY:
+        if self.nodeType() == vrc_serialization.NT_CONNECTIONVALIDITY:
             data = self.node().connectionData
             srcData = data.get("srcData", None)
             value = srcData.get("attrValue")
-            valueColId = vrc_constants.SRC_ATTRVALUE_COLUMN
+            valueColId = vrconst_constants.SRC_ATTRVALUE_COLUMN
             self.updateColumnData(valueColId, qtRole, value)
 
     def setColumnFontStyle(self):
@@ -67,12 +68,12 @@ class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
         font.setBold(True)
         font.setItalic(True)
         font.setUnderline(True)
-        self.setFont(vrc_constants.SRC_NODENAME_COLUMN, font)
+        self.setFont(vrconst_constants.SRC_NODENAME_COLUMN, font)
 
         font2 = QtGui.QFont("EA Font", weight=1)
         font2.setBold(True)
-        self.setFont(vrc_constants.SRC_ATTR_COLUMN, font2)
-        self.setFont(vrc_constants.DEST_NODENAME_COLUMN, font2)
+        self.setFont(vrconst_constants.SRC_ATTR_COLUMN, font2)
+        self.setFont(vrconst_constants.DEST_NODENAME_COLUMN, font2)
 
     def removeAllChildren(self):
         while self.childCount():
@@ -98,16 +99,16 @@ class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
     def reportStatus(self, status):
         self._reportStatus = status
         self.updateColumnData(
-            vrc_constants.REPORTSTATUS_COLUMN, QtCore.Qt.DisplayRole, self._reportStatus
+            vrconst_constants.REPORTSTATUS_COLUMN, QtCore.Qt.DisplayRole, self._reportStatus
         )
 
         font2 = QtGui.QFont("EA Font", weight=1)
         font2.setBold(True)
         font2.setCapitalization(QtGui.QFont.AllUppercase)
 
-        if self._reportStatus == vrc_constants.NODE_VALIDATION_PASSED:
-            self.setFont(vrc_constants.REPORTSTATUS_COLUMN, font2)
+        if self._reportStatus == vrconst_constants.NODE_VALIDATION_PASSED:
+            self.setFont(vrconst_constants.REPORTSTATUS_COLUMN, font2)
         else:
             font2.setItalic(True)
             font2.setStrikeOut(True)
-            self.setFont(vrc_constants.REPORTSTATUS_COLUMN, font2)
+            self.setFont(vrconst_constants.REPORTSTATUS_COLUMN, font2)

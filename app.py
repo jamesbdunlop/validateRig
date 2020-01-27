@@ -4,19 +4,18 @@ import os
 import logging
 from PySide2 import QtWidgets, QtCore
 
-import inside as c_inside
-from const import constants as vrc_constants
-from const import serialization as c_serialization
-from core import factory as c_factory
-from core import validator as c_validator
-from core import parser as c_parser
+from validateRig.const import constants as vrconst_constants
+from validateRig.const import serialization as vrconst_serialization
+from validateRig.core import factory as vrc_factory
+from validateRig.core import validator as vrc_validator
+from validateRig.core import parser as vrc_parser
 
-from uiElements.themes import factory as uit_factory
-from uiElements.trees import validationTreeWidget as uit_validationTreeWidget
-from uiElements.trees import factory as uitt_factory
-from uiElements.dialogs import saveToJSONFile as uid_saveToJSON
-from uiElements.dialogs import loadFromJSONFile as uid_loadFromJSON
-from uiElements.dialogs import createValidator as uid_createValidator
+from validateRig.uiElements.themes import factory as vruieth_factory
+from validateRig.uiElements.trees import validationTreeWidget as vruiet_validationTreeWidget
+from validateRig.uiElements.trees import factory as vruiett_factory
+from validateRig.uiElements.dialogs import saveToJSONFile as vruied_saveToJSON
+from validateRig.uiElements.dialogs import loadFromJSONFile as vruied_loadFromJSON
+from validateRig.uiElements.dialogs import createValidator as vruied_createValidator
 
 
 logger = logging.getLogger(__name__)
@@ -31,7 +30,7 @@ logger = logging.getLogger(__name__)
 class ValidationUI(QtWidgets.QMainWindow):
     getNSFromDCC = QtCore.Signal(object, name="getNSFromDCC")
 
-    def __init__(self, title=vrc_constants.UINAME, theme="core", themecolor="", parent=None):
+    def __init__(self, title=vrconst_constants.UINAME, theme="core", themecolor="", parent=None):
         # type: (str, str, str, QtWidgets.QWidget) -> None
         super(ValidationUI, self).__init__(parent=parent)
         self.setWindowTitle(title)
@@ -39,7 +38,7 @@ class ValidationUI(QtWidgets.QMainWindow):
         self.setWindowFlags(QtCore.Qt.Window)
         self.theme = theme
         self.themeColor = themecolor
-        self.sheet = uit_factory.getThemeData(self.theme, self.themeColor)
+        self.sheet = vruieth_factory.getThemeData(self.theme, self.themeColor)
         self.setStyleSheet(self.sheet)
         self.setAcceptDrops(True)
 
@@ -147,7 +146,7 @@ class ValidationUI(QtWidgets.QMainWindow):
                 for x in range(treeWidgetItem.childCount()):
                     child = treeWidgetItem.child(x)
                     cNode = child.node()
-                    if cNode.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
+                    if cNode.nodeType == vrconst_serialization.NT_CONNECTIONVALIDITY:
                         if (
                             searchString not in cNode.name
                             and searchString not in cNode.srcAttrName
@@ -157,7 +156,7 @@ class ValidationUI(QtWidgets.QMainWindow):
                         else:
                             child.setHidden(False)
                             treeWidgetItem.setHidden(False)
-                    elif cNode.nodeType == c_serialization.NT_DEFAULTVALUE:
+                    elif cNode.nodeType == vrconst_serialization.NT_DEFAULTVALUE:
                         if searchString not in cNode.name:
                             child.setHidden(True)
                         else:
@@ -189,13 +188,13 @@ class ValidationUI(QtWidgets.QMainWindow):
                     status = child.node().status
                     child.reportStatus = status
                     sourceNodeStatus.append(
-                        status == vrc_constants.NODE_VALIDATION_PASSED
+                        status == vrconst_constants.NODE_VALIDATION_PASSED
                     )
 
                 topLevelStatus = all(sourceNodeStatus)
-                treeWidgetItem.reportStatus = vrc_constants.NODE_VALIDATION_FAILED
+                treeWidgetItem.reportStatus = vrconst_constants.NODE_VALIDATION_FAILED
                 if topLevelStatus:
-                    treeWidgetItem.reportStatus = vrc_constants.NODE_VALIDATION_PASSED
+                    treeWidgetItem.reportStatus = vrconst_constants.NODE_VALIDATION_PASSED
 
         self.__toggleFixAllButton()
 
@@ -245,10 +244,10 @@ class ValidationUI(QtWidgets.QMainWindow):
                     child.updateDisplayName()
 
             eachValidationTreeWidget.resizeColumnToContents(
-                vrc_constants.SRC_NODENAME_COLUMN
+                vrconst_constants.SRC_NODENAME_COLUMN
             )
             eachValidationTreeWidget.resizeColumnToContents(
-                vrc_constants.DEST_NODENAME_COLUMN
+                vrconst_constants.DEST_NODENAME_COLUMN
             )
 
     def __expandAllTreeWidgets(self):
@@ -266,14 +265,14 @@ class ValidationUI(QtWidgets.QMainWindow):
 
     # UI Search
     def __findValidatorByName(self, name):
-        # type: (str) -> c_validator.Validator
+        # type: (str) -> vrc_validator.Validator
 
         for eachValidator in self.__iterValidators():
             if eachValidator.name == name:
                 return eachValidator
 
     def __iterValidators(self):
-        # type: () -> c_validator.Validator
+        # type: () -> vrc_validator.Validator
 
         for eachValidator, _ in self._validators:
             yield eachValidator
@@ -295,28 +294,28 @@ class ValidationUI(QtWidgets.QMainWindow):
                         eachChildTWI.setHidden(False)
                     continue
 
-                if (treeWidgetItem.node().status == vrc_constants.NODE_VALIDATION_PASSED and sender):
+                if (treeWidgetItem.node().status == vrconst_constants.NODE_VALIDATION_PASSED and sender):
                     treeWidgetItem.setHidden(True)
 
                 for eachChildTWI in treeWidgetItem.children:
-                    if (eachChildTWI.node().status == vrc_constants.NODE_VALIDATION_PASSED and sender):
+                    if (eachChildTWI.node().status == vrconst_constants.NODE_VALIDATION_PASSED and sender):
                         eachChildTWI.setHidden(True)
 
     # UI Dialogs
     def __saveDialog(self):
         """Writes to disk all the validation data for each validation treeWidget added to the UI"""
-        dialog = uid_saveToJSON.SaveJSONToFileDialog(parent=None)
+        dialog = vruied_saveToJSON.SaveJSONToFileDialog(parent=None)
         dialog.setStyleSheet(self.sheet)
         if dialog.exec_():
             for eachFile in dialog.selectedFiles():
                 self.to_fileJSON(filepath=eachFile)
 
     def __loadDialog(self):
-        dialog = uid_loadFromJSON.LoadFromJSONFileDialog(parent=None)
+        dialog = vruied_loadFromJSON.LoadFromJSONFileDialog(parent=None)
         dialog.setStyleSheet(self.sheet)
         if dialog.exec_():
             for filepath in dialog.selectedFiles():
-                data = c_parser.read(filepath)
+                data = vrc_parser.read(filepath)
                 if (
                     type(data) == list
                 ):  # We have a sessionSave from the UI of multiple validators
@@ -337,7 +336,7 @@ class ValidationUI(QtWidgets.QMainWindow):
         return QDropEvent.accept()
 
     def processJSONDrop(self, sender):
-        data = c_parser.read(sender.mimeData().text().replace("file:///", ""))
+        data = vrc_parser.read(sender.mimeData().text().replace("file:///", ""))
         self.__addValidationPairFromData(data)
 
     # App Creators
@@ -360,30 +359,30 @@ class ValidationUI(QtWidgets.QMainWindow):
         return validatorpair
 
     def __createValidatorFromData(self, data):
-        # type: (dict) -> c_validator.Validator
+        # type: (dict) -> vrc_validator.Validator
 
-        validatorName = data.get(c_serialization.KEY_VALIDATOR_NAME)
+        validatorName = data.get(vrconst_serialization.KEY_VALIDATOR_NAME)
         if self.__findValidatorByName(validatorName) is not None:
             msg = "Validator named: `%s` already exists! Skipping!" % validatorName
             logger.warning(msg)
             raise Exception(msg)
 
-        validator = c_factory.createValidator(
-            name=data.get(c_serialization.KEY_VALIDATOR_NAME, ""), data=data
+        validator = vrc_factory.createValidator(
+            name=data.get(vrconst_serialization.KEY_VALIDATOR_NAME, ""), data=data
         )
 
         return validator
 
     def __createValidationTreeWidget(self, validator):
-        # type: (c_validator.Validator) -> uit_validationTreeWidget.ValidationTreeWidget
+        # type: (vrc_validator.Validator) -> vruiet_validationTreeWidget.ValidationTreeWidget
         """Creates a treeView widget for the treeWidget/validator pair for adding source nodes to."""
-        treewidget = uitt_factory.getValidationTreeWidget(validator, self)
+        treewidget = vruiett_factory.getValidationTreeWidget(validator, self)
         treewidget.remove.connect(self.__removeValidatorFromUI)
 
         return treewidget
 
     def __createValidatorNameInputDialog(self):
-        self.nameInput = uid_createValidator.CreateValidatorDialog(
+        self.nameInput = vruied_createValidator.CreateValidatorDialog(
             title="Create Validator"
         )
         self.nameInput.setStyleSheet(self.sheet)
@@ -392,7 +391,7 @@ class ValidationUI(QtWidgets.QMainWindow):
 
     def __createValidatorByName(self, name):
         # type: (str) -> None
-        validatorData = c_validator.Validator(name=name).toData()
+        validatorData = vrc_validator.Validator(name=name).toData()
         self.__addValidationPairFromData(data=validatorData)
 
     # App Create from
@@ -417,14 +416,14 @@ class ValidationUI(QtWidgets.QMainWindow):
 
         validator.displayNameChanged.connect(self.__updateTreeWidgetDisplayNames)
 
-        groupBoxName = data.get(c_serialization.KEY_VALIDATOR_NAME, "None")
+        groupBoxName = data.get(vrconst_serialization.KEY_VALIDATOR_NAME, "None")
         self.__createValidationGroupBox(name=groupBoxName, treeWidget=treeWidget)
 
         if expanded:
             treeWidget.expandToDepth(depth)
 
     def __createValidationGroupBox(self, name, treeWidget):
-        # type: (str, uit_validationTreeWidget.ValidationTreeWidget) -> QtWidgets.QGroupBox
+        # type: (str, vruiet_validationTreeWidget.ValidationTreeWidget) -> QtWidgets.QGroupBox
 
         # Validator GBox and treeWidget as child
         groupBox = QtWidgets.QGroupBox(name)
@@ -458,7 +457,7 @@ class ValidationUI(QtWidgets.QMainWindow):
         # type: (str) -> bool
         """:param filepath: output path to validation.json file"""
         data = self.toData()
-        c_parser.write(filepath=filepath, data=data)
+        vrc_parser.write(filepath=filepath, data=data)
 
         return True
 
@@ -473,7 +472,7 @@ class ValidationUI(QtWidgets.QMainWindow):
         if not os.path.isfile(filepath):
             raise RuntimeError("%s is not valid!" % filepath)
 
-        previousValidatorAppData = c_parser.read(filepath)
+        previousValidatorAppData = vrc_parser.read(filepath)
 
         # Handle loading from either a previously saved sessionList or a Validator.toData()
         if type(previousValidatorAppData) != list:

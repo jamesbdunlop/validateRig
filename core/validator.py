@@ -2,10 +2,11 @@
 import logging
 from PySide2 import QtCore
 from PySide2.QtCore import Signal
-from const import serialization as c_serialization
-from const import constants as vrc_constants
-from core import parser as c_parser
-from core.nodes import SourceNode
+
+from validateRig.const import serialization as vrconst_serialization
+from validateRig.const import constants as vrconst_constants
+from validateRig.core import parser as c_parser
+from validateRig.core.nodes import SourceNode
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ class Validator(QtCore.QObject):
         self._nodes = (
             nodes or list()
         )  # list of SourceNodes with ConnectionValidityNodes
-        self._status = vrc_constants.NODE_VALIDATION_FAILED
+        self._status = vrconst_constants.NODE_VALIDATION_FAILED
 
     @property
     def nameSpaceOnCreate(self):
@@ -62,11 +63,11 @@ class Validator(QtCore.QObject):
 
     @property
     def failed(self):
-        return self.status == vrc_constants.NODE_VALIDATION_FAILED
+        return self.status == vrconst_constants.NODE_VALIDATION_FAILED
 
     @property
     def passed(self):
-        return self.status == vrc_constants.NODE_VALIDATION_PASSED
+        return self.status == vrconst_constants.NODE_VALIDATION_PASSED
 
     def findSourceNodeByLongName(self, longName):
         # type: (str) -> SourceNode
@@ -161,7 +162,7 @@ class Validator(QtCore.QObject):
         for eachSrcNode in self.iterSourceNodes():
             eachSrcNode.displayName = eachSrcNode.longName
             for eachChild in eachSrcNode.iterDescendants():
-                if eachChild.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
+                if eachChild.nodeType == vrconst_serialization.NT_CONNECTIONVALIDITY:
                     if ":" in eachChild.longName:
                         eachChild.displayName = eachChild.longName
 
@@ -171,7 +172,7 @@ class Validator(QtCore.QObject):
         for eachSrcNode in self.iterSourceNodes():
             eachSrcNode.displayName = self.__createNameSpacedShortName(eachSrcNode)
             for eachChild in eachSrcNode.iterDescendants():
-                if eachChild.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
+                if eachChild.nodeType == vrconst_serialization.NT_CONNECTIONVALIDITY:
                     if ":" in eachChild.longName:
                         eachChild.displayName = self.__createNameSpacedShortName(eachChild)
 
@@ -187,7 +188,7 @@ class Validator(QtCore.QObject):
             eachSrcNode.longName = newLongName
 
             for eachChild in eachSrcNode.iterDescendants():
-                if eachChild.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
+                if eachChild.nodeType == vrconst_serialization.NT_CONNECTIONVALIDITY:
                     newLongName = self.replaceNameSpace(eachChild.longName, nameSpace)
                     eachChild.longName = newLongName
 
@@ -206,11 +207,11 @@ class Validator(QtCore.QObject):
 
     def toData(self):
         data = dict()
-        data[c_serialization.KEY_VALIDATOR_NAME] = self.name
-        data[c_serialization.KEY_VALIDATORNAMESPACE] = self.nameSpace
-        data[c_serialization.KEY_VALIDATOR_NODES] = list()
+        data[vrconst_serialization.KEY_VALIDATOR_NAME] = self.name
+        data[vrconst_serialization.KEY_VALIDATORNAMESPACE] = self.nameSpace
+        data[vrconst_serialization.KEY_VALIDATOR_NODES] = list()
         for eachNode in self.iterSourceNodes():
-            data[c_serialization.KEY_VALIDATOR_NODES].append(eachNode.toData())
+            data[vrconst_serialization.KEY_VALIDATOR_NODES].append(eachNode.toData())
 
         return data
 
@@ -221,12 +222,12 @@ class Validator(QtCore.QObject):
 
     @classmethod
     def fromData(cls, name, data):
-        nameSpace = data.get(c_serialization.KEY_VALIDATORNAMESPACE, "")
+        nameSpace = data.get(vrconst_serialization.KEY_VALIDATORNAMESPACE, "")
         if name is None:
-            name = data.get(c_serialization.KEY_NODENAME, None)
+            name = data.get(vrconst_serialization.KEY_NODENAME, None)
 
         inst = cls(name, nameSpace)
-        for sourceNodeData in data.get(c_serialization.KEY_VALIDATOR_NODES, list()):
+        for sourceNodeData in data.get(vrconst_serialization.KEY_VALIDATOR_NODES, list()):
             inst.addSourceNodeFromData(sourceNodeData)
 
         return inst

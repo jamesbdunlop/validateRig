@@ -2,7 +2,7 @@
 
 import unittest
 import logging
-from core import parser as c_parser
+from validateRig.core import parser as vrc_parser
 
 logger = logging.getLogger(__name__)
 
@@ -16,9 +16,9 @@ class Test_Parser(unittest.TestCase):
         pass
 
     def test_readwriteFile(self):
-        self.assertTrue(c_parser.write(self.filepath, self.testOutData))
+        self.assertTrue(vrc_parser.write(self.filepath, self.testOutData))
         self.assertEqual(
-            c_parser.read(self.filepath), self.testOutData, "out data is not the same!"
+            vrc_parser.read(self.filepath), self.testOutData, "out data is not the same!"
         )
 
 

@@ -11,7 +11,7 @@ def read(filepath):
     :param filepath: `str`
     :return: `dict`
     """
-    logger.info("Reading data from %s" % filepath)
+    logger.debug("Reading data from %s" % filepath)
     with open(filepath, "r") as f:
         data = json.load(f)
 
@@ -25,9 +25,9 @@ def write(filepath, data):
     :param data: `dict`
     :return: `bool`
     """
-    logger.info("Saving data to %s" % filepath)
+    logger.debug("Saving data to %s" % filepath)
     with open(filepath, "w") as outfile:
         outfile.write(json.dumps(data, sort_keys=True))
 
-    logger.info("Successfully saved data to %s" % filepath)
+    logger.debug("Successfully saved data to %s" % filepath)
     return True

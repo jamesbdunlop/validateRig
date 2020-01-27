@@ -1,8 +1,10 @@
 #  Copyright (c) 2019.  James Dunlop
 # pragma: no cover
 import logging
+
+from validateRig.core.maya import types as vrcm_types
+
 import maya.api.OpenMaya as om2
-from core.maya import types as cm_types
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +14,6 @@ def getMPlugValue(mplug):
 
     pAttribute = mplug.attribute()
     apiType = pAttribute.apiType()
-
     # Float Groups - rotate, translate, scale; Com2pounds
     if apiType in [
         om2.MFn.kAttribute3Double,
@@ -90,31 +91,31 @@ def getMPlugType(mplug):
 
     # Distance
     elif apiType in [om2.MFn.kDoubleLinearAttribute, om2.MFn.kFloatLinearAttribute]:
-        return cm_types.FLOAT
+        return vrcm_types.FLOAT
 
     # Angle
     elif apiType in [om2.MFn.kDoubleAngleAttribute, om2.MFn.kFloatAngleAttribute]:
-        return cm_types.FLOAT
+        return vrcm_types.FLOAT
 
     # TYPED
     elif apiType == om2.MFn.kTypedAttribute:
         pType = om2.MFnTypedAttribute(pAttribute).attrType()
         # Matrix
         if pType == om2.MFnData.kMatrix:
-            return cm_types.MATRIXF44
+            return vrcm_types.MATRIXF44
         # String
         elif pType == om2.MFnData.kString:
-            return cm_types.STRING
+            return vrcm_types.STRING
 
     # MATRIX
     elif apiType == om2.MFn.kMatrixAttribute:
-        return cm_types.MATRIXF44
+        return vrcm_types.MATRIXF44
 
     # NUMBERS
     elif apiType == om2.MFn.kNumericAttribute:
         pType = om2.MFnNumericAttribute(pAttribute).numericType()
         if pType == om2.MFnNumericData.kBoolean:
-            return cm_types.BOOL
+            return vrcm_types.BOOL
 
         elif pType in [
             om2.MFnNumericData.kShort,
@@ -122,21 +123,21 @@ def getMPlugType(mplug):
             om2.MFnNumericData.kLong,
             om2.MFnNumericData.kByte,
         ]:
-            return cm_types.INT
+            return vrcm_types.INT
 
         elif pType in [
             om2.MFnNumericData.kFloat,
             om2.MFnNumericData.kDouble,
             om2.MFnNumericData.kAddr,
         ]:
-            return cm_types.DOUBLE
+            return vrcm_types.DOUBLE
 
     # Enum
     elif apiType == om2.MFn.kEnumAttribute:
-        return cm_types.INT
+        return vrcm_types.INT
 
     elif apiType == om2.MFn.kMessageAttribute:
-        return cm_types.MESSAGE
+        return vrcm_types.MESSAGE
 
 
 def setMPlugValue(mplug, value):
@@ -153,24 +154,24 @@ def setMPlugValue(mplug, value):
                 if not mplug.child(x).isConnected:
                     mplug.child(x).setFloat(value[x])
 
-    elif plugType == cm_types.FLOAT:
+    elif plugType == vrcm_types.FLOAT:
         mplug.setFloat(value)
         status = True
 
-    elif plugType == cm_types.MATRIXF44:
+    elif plugType == vrcm_types.MATRIXF44:
         pass
         # mplug.setMatrix(value)
         # status = True
 
-    elif plugType == cm_types.INT:
+    elif plugType == vrcm_types.INT:
         mplug.setInt(value)
         status = True
 
-    elif plugType == cm_types.BOOL:
+    elif plugType == vrcm_types.BOOL:
         mplug.setBool(value)
         status = True
 
-    elif plugType == cm_types.DOUBLE:
+    elif plugType == vrcm_types.DOUBLE:
         mplug.setDouble(value)
         status = True
 
@@ -181,11 +182,13 @@ def getMPlugFromLongName(nodeLongName, plugName):
     # type: (str, str) -> om2.MPlug
     if isinstance(plugName, list):
         plugName = plugName[0]
+
     mSel = om2.MSelectionList()
     mSel.add(str(nodeLongName))
     mObj = mSel.getDependNode(0)
     mFn = om2.MFnDependencyNode(mObj)
 
+    logger.debug("Finding plug %s on %s" % (plugName, nodeLongName))
     mplug = mFn.findPlug(plugName, False)
 
     return mplug
@@ -223,6 +226,7 @@ def isMPlugIndexed(mPlug):
     isElement = mPlug.isElement
     isChild = mPlug.isChild
     isIndexed = any((isElement, isChild))
+    logger.debug("mPlug: %s isIndexed: %s" % (mPlug.name(), isIndexed))
 
     return isIndexed
 
@@ -235,40 +239,54 @@ def fetchIndexedPlugData(mplug, plgData=None):
         plgData = [[False, True, u'cvs[0]', 0], [True, False, u'jd_hermiteArrayCrv1.cvs', None]]
         plgData = [isElement, isChild, plugName, plgIdx], [isElement, isChild, plugName, plgIdx]]
     """
-    isIndexedMPlug = isMPlugIndexed(mplug)
+    logger.debug("Iter Ascendants: \t\t%s" % mplug.name())
     if plgData is None:
         plgData = list()
 
+    isIndexedMPlug = isMPlugIndexed(mplug)
     currentPlug = [None] * 4
-    if isIndexedMPlug and mplug.isElement:
-        # partialName(includeNodeName=False, includeNonMandatoryIndices=False,
-        # includeInstancedIndices=False, useAlias=False, useFullAttributePath=False,
-        # useLongNames=False)
-        parentPlug = om2.MPlug(mplug.node(), mplug.attribute())
-        for x in range(parentPlug.numElements()):
-            if parentPlug.elementByLogicalIndex(x) == mplug:
-                currentPlug[3] = x
-        currentPlug[2] = mplug.partialName(False, False, False, False, True, True)
+    parentPlug = None
 
-    elif mplug.isChild:
+    if isIndexedMPlug and mplug.isElement:
+        logger.debug("\t\t\t\t\t\t\t\tISELEMENT!")
+        partialName = mplug.partialName(False, False, False, False, True, True)
+        currentPlug[3] = mplug.logicalIndex()
+        logger.debug("\t\t\t\t\t\t\t\tarrayIndex: %s" % mplug.logicalIndex())
+
+    elif isIndexedMPlug and mplug.isChild:
+        logger.debug("\t\t\t\t\t\t\t\tISCHILD!")
+        partialName = mplug.partialName(False, False, False, False, True, True)
         parentPlug = mplug.parent()
-        # partialName(includeNodeName=False, includeNonMandatoryIndices=False,
-        # includeInstancedIndices=False, useAlias=False, useFullAttributePath=False,
-        # useLongNames=False)
-        currentPlug[2] = parentPlug.partialName(False, False, False, False, True, True)
         for x in range(parentPlug.numChildren()):
             if parentPlug.child(x) == mplug:
+                logger.debug("\t\t\t\t\t\t\t\tchildIndex: %s" % x)
                 currentPlug[3] = x
+                break
 
     else:
-        currentPlug[2] = mplug.partialName(False, False, False, False, True, True)
-        currentPlug[3] = None
+        logger.debug("\t\t\t\t\t\t\t\tISFIRST!")
+        partialName = mplug.partialName(False, False, False, False, True, True)
+
+    # And because maya is  DICK and can still leave a [0] in the name.. lets split if we find one.. grrr
+    if "." in partialName:
+        partialName = partialName.split(".")[-1]
+
+    if "[" in partialName:
+        partialName = partialName.split("[")[0]
 
     currentPlug[0] = mplug.isElement
     currentPlug[1] = mplug.isChild
+    currentPlug[2] = partialName
+
+    logger.debug("\t\t\t\t\t\t\t\tcurrentPlug: %s" % currentPlug)
     plgData.append(currentPlug)
+    if parentPlug is None:
+        logger.debug("\t\t\t\t\t\t\t\tPLUG IS NEITHER ELEMENT OR CHILD.")
+        logger.debug("\t\t\t\t\t\t\t\tPLGDATA: %s" % plgData)
+        logger.debug("###########")
+        return plgData
 
-    if currentPlug[1] and isMPlugIndexed(parentPlug):
-        fetchIndexedPlugData(parentPlug, plgData)
+    # Now keep going up the line cause we want the full path to the connected plug which might be a
+    # compound.child(0).array(0) etc
+    return fetchIndexedPlugData(parentPlug, plgData)
 
-    return plgData

@@ -1,12 +1,13 @@
 #  Copyright (c) 2019.  James Dunlop
 import logging
-from PySide2 import QtWidgets, QtCore, QtGui
-import validateRig.inside as c_inside
+from PySide2 import QtWidgets, QtCore
+from validateRig import insideDCC as vr_insideDCC
+from validateRig.const import serialization as c_serialization
 from validateRig.core import validator as c_validator
+from validateRig.core import nodes as c_nodes
 from validateRig.core import parser as c_parser
 from validateRig.core import factory as c_factory
 from validateRig.core.nodes import SourceNode, DefaultValueNode, ConnectionValidityNode
-from validateRig.const import serialization as c_serialization
 from validateRig.uiElements.dialogs import attributeList as uid_attributeList
 
 logger = logging.getLogger(__name__)
@@ -55,24 +56,34 @@ def saveValidatorsToFile(validators, filepath):
 
 
 def updateNodeValuesFromDCC(node):
-    print(node)
+    #type: (c_nodes.Node) -> bool
 
+    nodeType = node.nodeType
+    if vr_insideDCC.insideMaya():
+        if nodeType == c_serialization.NT_DEFAULTVALUE:
+            pass
+        elif nodeType == c_serialization.NT_CONNECTIONVALIDITY:
+            pass
+
+    return False
 
 def getNSFromSelectedInDCC(nameSpaceInput):
     """ App sends signal to this to get the namespace from the DCC """
-    if c_inside.insideMaya():
+    if vr_insideDCC.insideMaya():
         from maya import cmds
         # Smelly find of NS from : in name.
         firstSelected = cmds.ls(sl=True)[0]
         if ":" in firstSelected:
             ns = cmds.ls(sl=True)[0].split(":")[0]
-            logger.info("NS in DCC: %s" % ns)
+            logger.debug("NS in DCC: %s" % ns)
             nameSpaceInput.setText(ns)
 
 
 def selectNodesInDCC(nodeNames, event):
+    # type: (list[str], QEvent) -> None
+
     for eachNode in nodeNames:
-        if c_inside.insideMaya():
+        if vr_insideDCC.insideMaya():
             from maya import cmds
             modifier = event.modifiers()
             if modifier == QtCore.Qt.ControlModifier:
@@ -82,17 +93,17 @@ def selectNodesInDCC(nodeNames, event):
 
 
 def processValidationTreeWidgetDropEvent(nodeNames, validator, parent=None):
-    # type: (list, Validator, QtWidgets.QWidget) -> None
+    # type: (list[str], c_validator.Validator, QtWidgets.QWidget) -> uid_attributeList.MultiSourceNodeListWidgets
     attrWidget = uid_attributeList.MultiSourceNodeListWidgets("SourceNodes", parent)
 
     # Check to see if this exists in the validator we dropped over.
     for longNodeName in nodeNames:
         if not validator().sourceNodeLongNameExists(longNodeName):
-            logger.info("Creating new sourceNode.")
+            logger.debug("Creating new sourceNode.")
             srcNodesWidget = uid_attributeList.MayaValidityNodesSelector(longNodeName=longNodeName, parent=None)
 
         else:
-            logger.info("SourceNode: {} exists!".format(longNodeName))
+            logger.debug("SourceNode: {} exists!".format(longNodeName))
             existingSourceNode = validator().findSourceNodeByLongName(longNodeName)
             srcNodesWidget = uid_attributeList.MayaValidityNodesSelector.fromSourceNode(sourceNode=existingSourceNode, parent=None)
 

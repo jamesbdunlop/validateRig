@@ -1,34 +1,36 @@
 #  Copyright (c) 2020.  James Dunlop
 import logging
 from PySide2 import QtCore, QtWidgets
-from core import nodes as c_nodes
-from uiElements.trees.treeWidgetItems import treewidgetitems
-from const import serialization as c_serialization
-from const import constants as vrc_constants
-import inside as c_inside
+
+from validateRig import insideDCC as vr_insideDCC
+from validateRig.const import serialization as vrc_serialization
+from validateRig.const import constants as vrconst_constants
+from validateRig.core import nodes as vrc_nodes
+from validateRig.uiElements.trees.treeWidgetItems import treewidgetitems as vruiettwi_treewidgetitems
+
 logger = logging.getLogger(__name__)
 
 QTDISPLAYROLE = QtCore.Qt.DisplayRole
 
 
 def treeWidgetItemFromNode(node):
-    # type: (c_nodes.Node) -> QtWidgets.TreeWidgetItem
+    # type: (vrc_nodes.Node) -> QtWidgets.TreeWidgetItem
     """:param node: Instance of Node, SourceNode, etc etc"""
-    twi = treewidgetitems.TreeWidgetItem(node=node)
+    twi = vruiettwi_treewidgetitems.TreeWidgetItem(node=node)
 
     rowdataDict = {
-        vrc_constants.REPORTSTATUS_COLUMN: (QTDISPLAYROLE, node.status),
+        vrconst_constants.REPORTSTATUS_COLUMN: (QTDISPLAYROLE, node.status),
     }
 
-    if node.nodeType == c_serialization.NT_SOURCENODE:
+    if node.nodeType == vrc_serialization.NT_SOURCENODE:
         rowdataDict = appendRowData(
             rowdataDict,
-            ((vrc_constants.SRC_NODENAME_COLUMN, QTDISPLAYROLE, node.displayName),),
+            ((vrconst_constants.SRC_NODENAME_COLUMN, QTDISPLAYROLE, node.displayName),),
         )
 
-    elif node.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
+    elif node.nodeType == vrc_serialization.NT_CONNECTIONVALIDITY:
         data = node.connectionData
-        if c_inside.insideMaya():
+        if vr_insideDCC.insideMaya():
             srcData = data.get("srcData", None)
             destData = data.get("destData", None)
 
@@ -42,32 +44,32 @@ def treeWidgetItemFromNode(node):
             _, _, destPlugName, _ = destPlugData[0]
 
             rowsData = (
-                (vrc_constants.SRC_ATTR_COLUMN, QTDISPLAYROLE, srcAttrName),
-                (vrc_constants.SRC_ATTRVALUE_COLUMN, QTDISPLAYROLE, srcAttrValue),
+                (vrconst_constants.SRC_ATTR_COLUMN, QTDISPLAYROLE, srcAttrName),
+                (vrconst_constants.SRC_ATTRVALUE_COLUMN, QTDISPLAYROLE, srcAttrValue),
 
-                (vrc_constants.DEST_NODENAME_COLUMN, QTDISPLAYROLE, destNodeName),
-                (vrc_constants.DEST_ATTR_COLUMN, QTDISPLAYROLE, destPlugName),
-                (vrc_constants.DEST_ATTRVALUE_COLUMN, QTDISPLAYROLE, destAttrValue),
+                (vrconst_constants.DEST_NODENAME_COLUMN, QTDISPLAYROLE, destNodeName),
+                (vrconst_constants.DEST_ATTR_COLUMN, QTDISPLAYROLE, destPlugName),
+                (vrconst_constants.DEST_ATTRVALUE_COLUMN, QTDISPLAYROLE, destAttrValue),
             )
 
         rowdataDict = appendRowData(rowdataDict, rowsData)
 
-    elif node.nodeType == c_serialization.NT_DEFAULTVALUE:
+    elif node.nodeType == vrc_serialization.NT_DEFAULTVALUE:
         data = node.defaultValueData
         for eachDefaultValue, value in data.iteritems():
             rowsData = (
-                (vrc_constants.SRC_ATTR_COLUMN, QTDISPLAYROLE, eachDefaultValue),
-                (vrc_constants.SRC_ATTRVALUE_COLUMN, QTDISPLAYROLE, str(value)),
+                (vrconst_constants.SRC_ATTR_COLUMN, QTDISPLAYROLE, eachDefaultValue),
+                (vrconst_constants.SRC_ATTRVALUE_COLUMN, QTDISPLAYROLE, str(value)),
                 (
-                    vrc_constants.DEST_NODENAME_COLUMN,
+                    vrconst_constants.DEST_NODENAME_COLUMN,
                     QTDISPLAYROLE,
-                    vrc_constants.SEPARATOR,
+                    vrconst_constants.SEPARATOR,
                 ),
-                (vrc_constants.DEST_ATTR_COLUMN, QTDISPLAYROLE, vrc_constants.SEPARATOR),
+                (vrconst_constants.DEST_ATTR_COLUMN, QTDISPLAYROLE, vrconst_constants.SEPARATOR),
                 (
-                    vrc_constants.DEST_ATTRVALUE_COLUMN,
+                    vrconst_constants.DEST_ATTRVALUE_COLUMN,
                     QTDISPLAYROLE,
-                    vrc_constants.SEPARATOR,
+                    vrconst_constants.SEPARATOR,
                 ),
             )
             rowdataDict = appendRowData(rowdataDict, rowsData)
@@ -92,15 +94,15 @@ def appendRowData(rowdataDict, rowData):
 
 
 def setSourceNodeItemWidgetsFromNode(node, treewidget, twi):
-    # type: (c_nodes.Node, QtWidgets.QTreeWidget, QtWidgets.QTreeWidgetItem) -> None
+    # type: (vrc_nodes.Node, QtWidgets.QTreeWidget, QtWidgets.QTreeWidgetItem) -> None
     setButton = QtWidgets.QPushButton("Set")
 
-    if node.nodeType == c_serialization.NT_SOURCENODE:
+    if node.nodeType == vrc_serialization.NT_SOURCENODE:
         label = QtWidgets.QLabel(node.name)
-        treewidget.setItemWidget(twi, vrc_constants.SRC_NODENAME_COLUMN, label)
+        treewidget.setItemWidget(twi, vrconst_constants.SRC_NODENAME_COLUMN, label)
 
-    elif node.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
-        treewidget.setItemWidget(twi, vrc_constants.SRC_NODENAME_COLUMN, setButton)
+    elif node.nodeType == vrc_serialization.NT_CONNECTIONVALIDITY:
+        treewidget.setItemWidget(twi, vrconst_constants.SRC_NODENAME_COLUMN, setButton)
 
-    elif node.nodeType == c_serialization.NT_DEFAULTVALUE:
-        treewidget.setItemWidget(twi, vrc_constants.SRC_NODENAME_COLUMN, setButton)
+    elif node.nodeType == vrc_serialization.NT_DEFAULTVALUE:
+        treewidget.setItemWidget(twi, vrconst_constants.SRC_NODENAME_COLUMN, setButton)
