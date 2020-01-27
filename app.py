@@ -140,11 +140,7 @@ class ValidationUI(QtWidgets.QMainWindow):
                     child = treeWidgetItem.child(x)
                     cNode = child.node()
                     if cNode.nodeType == vrconst_serialization.NT_CONNECTIONVALIDITY:
-                        if (
-                            searchString not in cNode.name
-                            and searchString not in cNode.srcAttrName
-                            and searchString not in cNode.destAttrName
-                        ):
+                        if (searchString not in cNode.name):
                             child.setHidden(True)
                         else:
                             child.setHidden(False)
