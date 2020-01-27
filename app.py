@@ -11,6 +11,7 @@ from validateRig.core import validator as vrc_validator
 from validateRig.core import parser as vrc_parser
 
 from validateRig.uiElements.themes import factory as vruieth_factory
+from validateRig.const import constants as vrconst_constants
 from validateRig.uiElements.trees import validationTreeWidget as vruiet_validationTreeWidget
 from validateRig.uiElements.trees import factory as vruiett_factory
 from validateRig.uiElements.dialogs import saveToJSONFile as vruied_saveToJSON
@@ -126,31 +127,51 @@ class ValidationUI(QtWidgets.QMainWindow):
 
     # UI Manipulations
     def __filterTreeWidgetItems(self):
+        srcNodeNameCol = vrconst_constants.SRC_NODENAME_COLUMN
         searchString = self.searchInput.text()
-        for eachValidationTreeWidget in self.__iterTreeWidgets():
-            topLevelItems = list(eachValidationTreeWidget.iterTopLevelTreeWidgetItems())
-            for treeWidgetItem in topLevelItems:
-                node = treeWidgetItem.node()
-                if searchString not in node.displayName:
-                    treeWidgetItem.setHidden(True)
-                else:
-                    treeWidgetItem.setHidden(False)
 
-                for x in range(treeWidgetItem.childCount()):
-                    child = treeWidgetItem.child(x)
-                    cNode = child.node()
-                    if cNode.nodeType == vrconst_serialization.NT_CONNECTIONVALIDITY:
-                        if (searchString not in cNode.name):
-                            child.setHidden(True)
-                        else:
-                            child.setHidden(False)
-                            treeWidgetItem.setHidden(False)
-                    elif cNode.nodeType == vrconst_serialization.NT_DEFAULTVALUE:
-                        if searchString not in cNode.name:
-                            child.setHidden(True)
-                        else:
-                            child.setHidden(False)
-                            treeWidgetItem.setHidden(False)
+        treeWidgets = list(self.__iterTreeWidgets())
+
+        for eachValidationTreeWidget in treeWidgets:
+            topLevelItems = list(eachValidationTreeWidget.iterTopLevelTreeWidgetItems())
+
+            for treeWidgetItem in topLevelItems:
+                srcDisplayName = treeWidgetItem.data(srcNodeNameCol, QtCore.Qt.DisplayRole)
+                if searchString in srcDisplayName:
+                    treeWidgetItem.setHidden(False)
+                else:
+                    treeWidgetItem.setHidden(True)
+                self.__filterTWIChildren(treeWidgetItem, searchString)
+
+    def __filterTWIChildren(self, treeWidgetItem, searchString):
+        childCount = treeWidgetItem.childCount()
+        for x in range(childCount):
+            childTWI = treeWidgetItem.child(x)
+            nodeType = childTWI.node().nodeType
+            if nodeType == vrconst_serialization.NT_DEFAULTVALUE:
+                srcAttrNameCol = vrconst_constants.SRC_ATTR_COLUMN
+                srcDisplayName = childTWI.data(srcAttrNameCol, QtCore.Qt.DisplayRole)
+
+                if searchString in srcDisplayName:
+                    childTWI.setHidden(False)
+                else:
+                    childTWI.setHidden(True)
+
+            elif nodeType == vrconst_serialization.NT_CONNECTIONVALIDITY:
+                srcAttrNameCol = vrconst_constants.SRC_ATTR_COLUMN
+                destNodeNameCol = vrconst_constants.DEST_NODENAME_COLUMN
+                destAttrNameCol = vrconst_constants.DEST_ATTR_COLUMN
+                srcDisplayName = childTWI.data(srcAttrNameCol, QtCore.Qt.DisplayRole)
+                destDisplayName = childTWI.data(destNodeNameCol, QtCore.Qt.DisplayRole)
+                destAttrDisplayName = childTWI.data(destAttrNameCol, QtCore.Qt.DisplayRole)
+                if searchString in srcDisplayName or searchString in destDisplayName or searchString in destAttrDisplayName:
+                    treeWidgetItem.setHidden(False)
+                    childTWI.setHidden(False)
+                else:
+                    childTWI.setHidden(True)
+
+            if childTWI.childCount():
+                self.__filterTWIChildren(treeWidgetItem=childTWI, searchString=searchString)
 
     def __clearSearch(self):
         self.searchInput.setText("")
