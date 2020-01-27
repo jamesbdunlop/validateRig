@@ -128,14 +128,14 @@ def __validateConnectionNodes(sourceNode):
         # DEFAULT VALUES OF THE SRC ATTR NOW AS WE CULL DEFAULT VALUE NODES IF THEY'RE ALREADY CONNECTION ATTRS
         resultSrcValue = True
         srcPlugType = vrcm_plugs.getMPlugType(srcMPlug)
-        GETATTR_IGNORESTYPES = (cm_types.MESSAGE, cm_types.MATRIXF44)
+        GETATTR_IGNORESTYPES = (vrcm_types.MESSAGE, vrcm_types.MATRIXF44)
         if srcPlugType not in GETATTR_IGNORESTYPES:
             currentSrcAttrValue = vrcm_plugs.getMPlugValue(srcMPlug)
             resultSrcValue = srcAttrValue == currentSrcAttrValue
 
         resultDestValue = True
         destPlugType = vrcm_plugs.getMPlugType(destMPlug)
-        GETATTR_IGNORESTYPES = (cm_types.MESSAGE, cm_types.MATRIXF44)
+        GETATTR_IGNORESTYPES = (vrcm_types.MESSAGE, vrcm_types.MATRIXF44)
         if destPlugType not in GETATTR_IGNORESTYPES:
             currentDestAttrValue = vrcm_plugs.getMPlugValue(destMPlug)
             resultDestValue = destAttrValue == currentDestAttrValue

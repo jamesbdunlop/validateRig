@@ -1,11 +1,10 @@
 #  Copyright (c) 2019.  James Dunlop
+import logging
 from PySide2 import QtWidgets, QtCore
-import insideDCC as vr_insideDCC
-from validateRig.core.nodes import SourceNode, DefaultValueNode, ConnectionValidityNode
+from validateRig.core.nodes import SourceNode
 from validateRig.uiElements import validityNodeListWidget as vruie_validityNodeListWidget
 
-if vr_insideDCC.insideMaya():
-    from maya import cmds
+logger = logging.getLogger(__name__)
 
 
 class MultiSourceNodeListWidgets(QtWidgets.QWidget):
@@ -91,7 +90,7 @@ class MultiSourceNodeListWidgets(QtWidgets.QWidget):
 
 
 class BaseSourceNodeValidityNodesSelector(QtWidgets.QWidget):
-    SEP = "  --->>  "
+    SEP = " |->| "
 
     def __init__(self, longNodeName=None, sourceNode=None, parent=None):
         # type: (str, SourceNode, QtWidgets.QWidget) -> None
@@ -148,9 +147,7 @@ class BaseSourceNodeValidityNodesSelector(QtWidgets.QWidget):
             self.connsListWidget,
         )
 
-        # Populate listWidgets
-        self._populateDefaultValuesWidget()
-        self._populateConnectionsWidget()
+
 
     def _populateDefaultValuesWidget(self):
         raise NotImplemented("Overload me!")
@@ -169,151 +166,3 @@ class BaseSourceNodeValidityNodesSelector(QtWidgets.QWidget):
         )
 
 
-class MayaValidityNodesSelector(BaseSourceNodeValidityNodesSelector):
-    def __init__(self, longNodeName=None, sourceNode=None, parent=None):
-        # type: (str, SourceNode, QtWidgets.QWidget) -> None
-        super(MayaValidityNodesSelector, self).__init__(
-            longNodeName=longNodeName, sourceNode=sourceNode, parent=parent
-        )
-
-    def _populateDefaultValuesWidget(self):
-        """Populates the listWidget from the longNodeName. This should be a unique name in maya or it will fail."""
-        for eachAttribute in sorted(cmds.listAttr(self._longNodeName)):
-            self.defaultValuesListWidget.addItem(eachAttribute)
-
-        # Select existing
-        if self.sourceNode() is None:
-            return
-
-        nodeDisplayNames = [
-            node.displayName
-            for node in self.sourceNode().iterChildren()
-            if isinstance(node, DefaultValueNode)
-        ]
-        if self.sourceNode() is not None:
-            for displayName in nodeDisplayNames:
-                items = self.defaultValuesListWidget.findItems(
-                    displayName, QtCore.Qt.MatchExactly
-                )
-                for eachItem in items:
-                    if not self.defaultValuesListWidget.isItemSelected(eachItem):
-                        self.defaultValuesListWidget.setItemSelected(eachItem, True)
-
-        return True
-
-    def _populateConnectionsWidget(self):
-        """Populates the listWidget from the nodeName. This should be a unique name in maya or it will fail."""
-        conns = cmds.listConnections(
-            self._longNodeName, c=True, source=False, destination=True, plugs=True
-        )
-        if conns is not None:
-            for x in range(0, len(conns), 2):
-                self.connsListWidget.addItem(
-                    "{}{}{}".format(conns[x], self.SEP, conns[x + 1])
-                )
-
-        # Select existing
-        if self.sourceNode() is not None:
-            for nodeDisplayName in [
-                n.displayName
-                for n in self.sourceNode().iterChildren()
-                if isinstance(n, ConnectionValidityNode)
-            ]:
-                items = self.connsListWidget.findItems(
-                    nodeDisplayName, QtCore.Qt.MatchExactly
-                )
-                for eachItem in items:
-                    if not self.connsListWidget.isItemSelected(eachItem):
-                        self.connsListWidget.setItemSelected(eachItem, True)
-
-    def __getValidityNodesFromDefaultValuesListWidget(self, longNodeName, defaultValuesListWidget):
-        # type: (str, QtWidgets.QListWidget) -> list[DefaultValueNode]
-        """
-        Args:
-            longNodeName: name of the node to query in maya (this is the destinationNode.longName not the sourceNode.longName)
-        """
-        nodes = list()
-        for eachAttr in defaultValuesListWidget.selectedItems():
-            attrName = eachAttr.text()
-            value = cmds.getAttr("{}.{}".format(longNodeName, attrName))
-            dvNode = DefaultValueNode(name=attrName, longName=longNodeName)
-            dvNode.defaultValueData = {attrName: value}
-
-            if self.sourceNode() is None:
-                nodes.append(dvNode)
-                continue
-
-            found = False
-            for validityNode in self.sourceNode().iterChildren():
-                if validityNode.name == attrName:
-                    found = True
-            if found:
-                continue
-
-            nodes.append(dvNode)
-
-        return nodes
-
-    def __getValidityNodesFromConnectionsListWidget(self, connectionsListWidget):
-        # type: (QtWidgets.QListWidget) -> list[ConnectionValidityNode]
-        nodes = list()
-        for eachConnPair in connectionsListWidget.selectedItems():
-            src, dest = eachConnPair.text().split(self.SEP)
-
-            attr = dest.split(".")
-            if len(attr) > 2:
-                destAttrName = ".".join(dest.split(".")[1:])
-            else:
-                destAttrName = dest.split(".")[-1]
-
-            nodeName = dest.split(".")[0].split(":")[-1]
-            longNodeName = dest.split(".")[0]
-            connectionNode = ConnectionValidityNode(
-                name=nodeName, longName=longNodeName
-            )
-
-
-            if self.sourceNode() is None:
-                nodes.append(connectionNode)
-                continue
-
-            found = False
-            for validityNode in self.sourceNode().iterChildren():
-                if validityNode.name == nodeName:
-                    found = True
-            if found:
-                continue
-
-            nodes.append(connectionNode)
-
-        return nodes
-
-    def toSourceNode(self, listWidget=None):
-        # type: (BaseSourceNodeValidityNodesSelector) -> SourceNode
-
-        sourceWidget = self
-        if listWidget is not None:
-            sourceWidget = listWidget
-
-        longNodeName, defaultValuesListWidget, connsListWidget = sourceWidget._nodeData
-        if listWidget is not None:
-            longNodeName, _, _ = self._nodeData
-
-        # Collect validityNode children for the SourceNode into a list
-        validityNodes = list()
-        validityNodes += sourceWidget.__getValidityNodesFromDefaultValuesListWidget(
-            longNodeName, defaultValuesListWidget
-        )
-        validityNodes += sourceWidget.__getValidityNodesFromConnectionsListWidget(
-            connsListWidget
-        )
-
-        if self.sourceNode() is None:
-            return SourceNode(
-                name=longNodeName.split("|")[-1].split(":")[-1],
-                longName=longNodeName,
-                validityNodes=validityNodes,
-            )
-        else:
-            self.sourceNode().addChildren(validityNodes)
-            return self.sourceNode()

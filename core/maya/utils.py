@@ -2,8 +2,9 @@
 import logging
 import maya.cmds as cmds
 from maya.api import OpenMaya as om2
-from core.maya import types as cm_types
-from core.maya import plugs as cm_plugs
+from validateRig.core.maya import types as vrcm_types
+from validateRig.core.maya import plugs as vrcm_plugs
+from validateRig.const import constants as vrconst_constants
 
 logger = logging.getLogger(__name__)
 
@@ -44,3 +45,67 @@ def getUDAttrs(nodeName):
         return []
 
     return ud
+
+
+def createConnectionData(nodeLongName):
+    mSel = om2.MSelectionList()
+    mSel.add(nodeLongName)
+    mObj = mSel.getDependNode(0)
+    mFn = om2.MFnDependencyNode(mObj)
+
+    GETATTR_IGNORESTYPES = (vrcm_types.MESSAGE, vrcm_types.MATRIXF44)
+
+    connections = mFn.getConnections()
+    sourcePlugs = [plg for plg in connections if plg.isSource]
+    logger.debug("%s sourcePlugs:  %s" % (mFn.name(), [plg.name() for plg in sourcePlugs]))
+    if not sourcePlugs:
+        logger.debug("Skipping!! %s has no sourceplugs!" % mFn.name())
+        yield None
+
+    # Find source plugs
+    for eachSourcePlug in sourcePlugs:
+        logger.debug("Processing sourceMPlug: %s ..." % eachSourcePlug.name())
+        srcMPlugType = vrcm_plugs.getMPlugType(eachSourcePlug)
+        srcPlugDataDict = dict()
+
+        # [[isElement, isChild, plugName, plgIdx], [isElement, isChild, plugName, plgIdx]]
+        plgData = vrcm_plugs.fetchIndexedPlugData(eachSourcePlug)
+        logger.debug("%s plgData: %s" % (eachSourcePlug.name(), plgData))
+        _, _, srcPlugName, _ = plgData[0]
+        srcPlugDataDict["nodeLongName"] = mFn.absoluteName()
+        srcPlugDataDict['attrName'] = srcPlugName
+        srcPlugDataDict['plugData'] = plgData
+        if srcMPlugType not in GETATTR_IGNORESTYPES:
+            value = vrcm_plugs.getMPlugValue(eachSourcePlug)
+            logger.debug("attrValue: %s" % value)
+            srcPlugDataDict['attrValue'] = value
+
+        # Dest plugs connected to this plug
+        # Note .destinations() method skips  over any unit conversion nodes
+        destinationPlugs = (mplg for mplg in eachSourcePlug.destinations() if
+                            mplg.node().apiType() not in vrconst_constants.MAYA_CONNECTED_NODETYPES_IGNORES)
+        if not destinationPlugs:
+            logger.debug("%s has no destination connections!" % eachSourcePlug.name())
+            continue
+
+        for eachDestMPlug in destinationPlugs:
+            logger.debug("Processing destination plug: %s" % eachDestMPlug.name())
+            destPlugNodeMFn = om2.MFnDependencyNode(eachDestMPlug.node())
+
+            destPlugData = dict()
+            destPlugData["nodeName"] = destPlugNodeMFn.name()
+            destPlugData["nodeLongName"] = destPlugNodeMFn.absoluteName()
+            destPlugData['plugData'] = vrcm_plugs.fetchIndexedPlugData(eachDestMPlug)
+
+            destPlugType = vrcm_plugs.getMPlugType(eachDestMPlug)
+            if destPlugType not in GETATTR_IGNORESTYPES:
+                destPlugData['attrValue'] = vrcm_plugs.getMPlugValue(eachDestMPlug)
+            logger.debug("destPlugData: %s" % destPlugData)
+
+            connectionData = {"srcData": srcPlugDataDict,
+                              "destData": destPlugData}
+
+            destNodeName = destPlugNodeMFn.name().split(":")[-1]
+            destLongName = destPlugNodeMFn.absoluteName()
+
+            yield destNodeName, destLongName, connectionData

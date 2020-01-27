@@ -3,15 +3,13 @@ import logging
 
 from validateRig.api.vrigCoreApi import *
 from validateRig.const import constants as vrconst_constants
-from validateRig.core.maya import types as vrcm_types
 from validateRig.core.maya import plugs as vrcm_plugs
 from validateRig.core.maya import utils as vrcm_utils
-
-from maya.api import OpenMaya as om2
 
 logger = logging.getLogger(__name__)
 
 reload(vrcm_plugs)
+reload(vrcm_utils)
 """
 # Example Usage:
 # What we're doing in this example...
@@ -100,68 +98,8 @@ def __createConnectionNodes(nodeLongName):
     # type: (str) -> ConnectionValidityNode
 
     # We list only the destinations of these attributes.
-    mSel = om2.MSelectionList()
-    mSel.add(nodeLongName)
-    mObj = mSel.getDependNode(0)
-    mFn = om2.MFnDependencyNode(mObj)
-
-    GETATTR_IGNORESTYPES = (vrcm_types.MESSAGE, vrcm_types.MATRIXF44)
-
-    connections = mFn.getConnections()
-    sourcePlugs = [plg for plg in connections if plg.isSource]
-    logger.debug("%s sourcePlugs:  %s" % (mFn.name(), [plg.name() for plg in sourcePlugs]))
-    if not sourcePlugs:
-        logger.debug("Skipping!! %s has no sourceplugs!" % mFn.name())
-        yield None
-
-    # Find source plugs
-    for eachSourcePlug in sourcePlugs:
-        logger.debug("Processing sourceMPlug: %s ..." % eachSourcePlug.name())
-        srcMPlugType = vrcm_plugs.getMPlugType(eachSourcePlug)
-        srcPlugDataDict = dict()
-
-        # [[isElement, isChild, plugName, plgIdx], [isElement, isChild, plugName, plgIdx]]
-        plgData = vrcm_plugs.fetchIndexedPlugData(eachSourcePlug)
-        logger.debug("%s plgData: %s" % (eachSourcePlug.name(), plgData))
-        _, _, srcPlugName, _ = plgData[0]
-        srcPlugDataDict['attrName'] = srcPlugName
-        srcPlugDataDict['plugData'] = plgData
-        if srcMPlugType not in GETATTR_IGNORESTYPES:
-            value = vrcm_plugs.getMPlugValue(eachSourcePlug)
-            logger.debug("attrValue: %s" % value)
-            srcPlugDataDict['attrValue'] = value
-
-        # Dest plugs connected to this plug
-        # Note .destinations() method skips  over any unit conversion nodes
-        destinationPlugs = (mplg for mplg in eachSourcePlug.destinations() if
-                            mplg.node().apiType() not in vrconst_constants.MAYA_CONNECTED_NODETYPES_IGNORES)
-        if not destinationPlugs:
-            logger.debug("%s has no destination connections!" % eachSourcePlug.name())
-            continue
-
-        for eachDestMPlug in destinationPlugs:
-            logger.debug("Processing destination plug: %s" % eachDestMPlug.name())
-            destPlugData = dict()
-            destPlugData["nodeName"] = om2.MFnDependencyNode(eachDestMPlug.node()).name()
-            # validateRig.api.vrigMayaApi : Processing destination plug: testRigNamespace:jd_hermiteArrayCrv1.cvs[0].worldMtx
-            # core.maya.plugs : mPlug: testRigNamespace:jd_hermiteArrayCrv1.cvs[0].worldMtx isIndexed: True #
-            # core.maya.plugs : Cleaning partialName: cvs[0] #
-            # core.maya.plugs : PLUGDATA: [[False, True, u'cvs', 2]]  #
-            destPlugData['plugData'] = vrcm_plugs.fetchIndexedPlugData(eachDestMPlug)
-
-            destPlugType = vrcm_plugs.getMPlugType(eachDestMPlug)
-            if destPlugType not in GETATTR_IGNORESTYPES:
-                destPlugData['attrValue'] = vrcm_plugs.getMPlugValue(eachDestMPlug)
-            logger.debug("destPlugData: %s" % destPlugData)
-
-            #################
-            # Create Node now
-            destPlugNodeMFn = om2.MFnDependencyNode(eachDestMPlug.node())
-            connectionNode = createConnectionValidityNode(name=destPlugNodeMFn.name().split(":")[-1],
-                                                          longName=destPlugNodeMFn.absoluteName()
-                                                          )
-            connectionNode.connectionData = {"srcData": srcPlugDataDict,
-                                             "destData": destPlugData}
-            logger.debug("ConnectionNode created successfully.")
-            logger.debug("####################################")
-            yield connectionNode
+    for destNodeName, destLongName, connectionData in vrcm_utils.createConnectionData(nodeLongName):
+        connectionNode = createConnectionValidityNode(name=destNodeName, longName=destLongName)
+        connectionNode.connectionData = connectionData
+        logger.debug("ConnectionNode created successfully.")
+        yield connectionNode

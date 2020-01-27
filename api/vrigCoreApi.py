@@ -10,7 +10,7 @@ from validateRig.core import nodes as c_nodes
 from validateRig.core import parser as c_parser
 from validateRig.core import factory as c_factory
 from validateRig.core.nodes import SourceNode, DefaultValueNode, ConnectionValidityNode
-from validateRig.uiElements.dialogs import attributeList as uid_attributeList
+from validateRig.uiElements.dialogs import validityNodeWidgets as uied_validityNodeWidgets
 
 logger = logging.getLogger(__name__)
 
@@ -36,9 +36,7 @@ def createDefaultValueNode(name, longName):
     return node
 
 
-def createConnectionValidityNode(
-    name, longName,
-):
+def createConnectionValidityNode(name, longName):
     # type: (str, str) -> ConnectionValidityNode
 
     node = ConnectionValidityNode(name=name, longName=longName)
@@ -97,6 +95,7 @@ def updateNodeValuesFromDCC(node):
 
     return False
 
+
 def getNSFromSelectedInDCC(nameSpaceInput):
     """ App sends signal to this to get the namespace from the DCC """
     if vr_insideDCC.insideMaya():
@@ -124,7 +123,7 @@ def selectNodesInDCC(nodeNames, event):
 
 def processValidationTreeWidgetDropEvent(nodeNames, validator, parent=None):
     # type: (list[str], c_validator.Validator, QtWidgets.QWidget) -> uid_attributeList.MultiSourceNodeListWidgets
-    attrWidget = uid_attributeList.MultiSourceNodeListWidgets("SourceNodes", parent)
+    attrWidget = uied_validityNodeWidgets.MultiSourceNodeListWidgets("SourceNodes", parent)
 
     # Check to see if this exists in the validator we dropped over.
     for longNodeName in nodeNames:
@@ -135,10 +134,12 @@ def processValidationTreeWidgetDropEvent(nodeNames, validator, parent=None):
 
         srcNodesWidget = None
         if vr_insideDCC.insideMaya():
+            from validateRig.core.maya import validityNodeListWidget as vrcm_validityNodeListWidget
+            reload(vrcm_validityNodeListWidget)
             if existingSourceNode is None:
-                srcNodesWidget = uid_attributeList.MayaValidityNodesSelector(longNodeName=longNodeName, parent=None)
+                srcNodesWidget = vrcm_validityNodeListWidget.MayaValidityNodesSelector(longNodeName=longNodeName, parent=None)
             else:
-                srcNodesWidget = uid_attributeList.MayaValidityNodesSelector.fromSourceNode(sourceNode=existingSourceNode, parent=None)
+                srcNodesWidget = vrcm_validityNodeListWidget.MayaValidityNodesSelector.fromSourceNode(sourceNode=existingSourceNode, parent=None)
 
         if srcNodesWidget is None:
             continue
