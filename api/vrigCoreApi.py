@@ -62,25 +62,25 @@ def updateNodeValuesFromDCC(node):
         from validateRig.core.maya import plugs as vrcm_plugs
 
         if nodeType == c_serialization.NT_DEFAULTVALUE:
-            logger.info("Updating defaultValueNode value from Maya")
+            logger.debug("Updating defaultValueNode value from Maya")
             data = node.defaultValueData
             attrName = data.keys()[0]
             mPlug = vrcm_plugs.getMPlugFromLongName(node.longName, attrName)
             value = vrcm_plugs.getMPlugValue(mPlug)
-            logger.info("MayaName: %s MayaValue: %s" % (mPlug.name(), value))
+            logger.debug("MayaName: %s MayaValue: %s" % (mPlug.name(), value))
             newData = {attrName: value}
 
             node.defaultValueData = newData
 
         elif nodeType == c_serialization.NT_CONNECTIONVALIDITY:
-            logger.info("Updating connectionNode value from Maya")
+            logger.debug("Updating connectionNode value from Maya")
             data = node.connectionData
             srcData = data.get("srcData", list())
             srcPlugData = srcData.get("plugData", list())
             srcNodeName = node.parent.longName
             srcMPlug = vrcm_plugs.fetchMPlugFromConnectionData(srcNodeName, srcPlugData)
             srcValue = vrcm_plugs.getMPlugValue(srcMPlug)
-            logger.info("MayaName: %s MayaValue: %s" % (srcMPlug.name(), srcValue))
+            logger.debug("MayaName: %s MayaValue: %s" % (srcMPlug.name(), srcValue))
             srcData["attrValue"] = srcValue
 
             destData = data.get("destData", list())
@@ -88,7 +88,7 @@ def updateNodeValuesFromDCC(node):
             destNodeName = node.longName
             destMPlug = vrcm_plugs.fetchMPlugFromConnectionData(destNodeName, destPlugData)
             destValue = vrcm_plugs.getMPlugValue(destMPlug)
-            logger.info("MayaName: %s MayaValue: %s" % (destMPlug.name(), destValue))
+            logger.debug("MayaName: %s MayaValue: %s" % (destMPlug.name(), destValue))
             destData["attrValue"] = destValue
 
             node.connectionData = data

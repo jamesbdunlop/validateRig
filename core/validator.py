@@ -100,7 +100,7 @@ class Validator(QtCore.QObject):
 
     def addSourceNode(self, sourceNode, force=False):
         # type: (SourceNode, bool) -> bool
-        logger.info("Adding sourceNode: %s" % sourceNode.longName)
+        logger.debug("Adding sourceNode: %s" % sourceNode.longName)
         if not self.sourceNodeExists(sourceNode):
             self._nodes.append(sourceNode)
             return True
@@ -135,9 +135,9 @@ class Validator(QtCore.QObject):
         for eachSourceNode in self.iterSourceNodes():
             if eachSourceNode == sourceNode:
                 self._nodes.remove(eachSourceNode)
-                logger.info("Removed: %s" % eachSourceNode.longName)
-                logger.info("_nodes: %s" % [n.name for n in self._nodes])
-                logger.info("iterSourceNodes: %s" % [n.name for n in self.iterSourceNodes()])
+                logger.debug("Removed: %s" % eachSourceNode.longName)
+                logger.debug("_nodes: %s" % [n.name for n in self._nodes])
+                logger.debug("iterSourceNodes: %s" % [n.name for n in self.iterSourceNodes()])
                 return True
 
         return False

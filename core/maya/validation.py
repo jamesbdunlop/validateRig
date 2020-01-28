@@ -50,18 +50,18 @@ def __validateDefaultNodes(sourceNode):
 
         data = eachValidationNode.defaultValueData
         defaultNodeLongName = eachValidationNode.longName
-        logger.info("defaultNodeLongName: %s" % defaultNodeLongName)
+        logger.debug("defaultNodeLongName: %s" % defaultNodeLongName)
         dvAttrName = data.keys()[0]
-        logger.info("dvName: %s" % dvAttrName)
+        logger.debug("dvName: %s" % dvAttrName)
 
         dvValue = data.values()[0]
-        logger.info("dvValue: %s" % dvValue)
+        logger.debug("dvValue: %s" % dvValue)
 
         dvMPlug = vrcm_plugs.getMPlugFromLongName(defaultNodeLongName, dvAttrName)
         dvMPlugType = vrcm_plugs.getMPlugType(dvMPlug)
         dvMPlugValue = vrcm_plugs.getMPlugValue(dvMPlug)
-        logger.info("dvMPlugType: %s" % dvMPlugType)
-        logger.info("dvMPlugValue: %s" % dvMPlugValue)
+        logger.debug("dvMPlugType: %s" % dvMPlugType)
+        logger.debug("dvMPlugValue: %s" % dvMPlugValue)
         if dvMPlugType == vrcm_types.MATRIXF44:
             dvValue = om2.MMatrix((
                 (dvValue[0], dvValue[1], dvValue[2], dvValue[3]),
@@ -89,7 +89,6 @@ def __validateConnectionNodes(sourceNode):
 
         data = eachValidationNode.connectionData
         srcData = data.get("srcData", None)
-        destData = data.get("destData", None)
         srcAttrName = srcData.get("attrName", None)
         srcAttrValue = srcData.get("attrValue", None)
         srcPlugData = srcData.get("plugData", None)
@@ -103,6 +102,7 @@ def __validateConnectionNodes(sourceNode):
         else:
             srcMPlug = vrcm_plugs.fetchMPlugFromConnectionData(sourceNode.longName, srcPlugData)
 
+        destData = data.get("destData", None)
         destNodeName = destData.get("nodeName", None)
         destAttrValue = destData.get("attrValue", None)
         destPlugData = destData.get("plugData", None)
@@ -204,8 +204,8 @@ def __repairConnectionNodes(sourceNode):
 
         data = eachValidationNode.connectionData
         srcData = data.get("srcData", None)
-        srcAttrValue = srcData.get("attrName", None)
-        srcAttrName = srcData.get("attrValue", None)
+        srcAttrName = srcData.get("attrName", None)
+        srcAttrValue = srcData.get("attrValue", None)
         srcPlugData = srcData.get("plugData", None)
 
         destData = data.get("destData", None)
@@ -218,7 +218,7 @@ def __repairConnectionNodes(sourceNode):
             srcMPlug = vrcm_plugs.fetchMPlugFromConnectionData(eachValidationNode.longName, srcPlugData)
 
         else:
-            srcMPlug = vrcm_plugs.getMPlugFromLongName(eachValidationNode.longName, srcAttrName)
+            srcMPlug = vrcm_plugs.getMPlugFromLongName(eachValidationNode.parent.longName, srcAttrName)
 
         ############################################################
         destIsElement, destIsChild, destPlugName, _ = destPlugData[0]
@@ -228,7 +228,11 @@ def __repairConnectionNodes(sourceNode):
         else:
             destMPlug = vrcm_plugs.getMPlugFromLongName(destNodeName, destPlugName)
 
-        mDagMod.connect(srcMPlug, destMPlug)
+        try:
+            mDagMod.connect(srcMPlug, destMPlug)
+        except RuntimeError:
+            logger.error("failed to connect %s to %s" % (srcMPlug.name(), destMPlug.name()))
+
         vrcm_plugs.setMPlugValue(srcMPlug, srcAttrValue)
         setValidationStatus(eachValidationNode, True)
 

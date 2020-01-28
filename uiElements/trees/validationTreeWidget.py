@@ -103,7 +103,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         # type: (QtWidgets.QTreeWidgetItem) -> None
         # Kinda annoying but QT sucks at just using childCount() for some reason! Most likely the data changes
         # out from under and it just hangs onto the last one or something odd.
-        logger.info("Removing all twi children")
+        logger.debug("Removing all twi children")
         while treeWidgetItem.childCount():
             for x in range(treeWidgetItem.childCount()):
                 treeWidgetItem.takeChild(x)
@@ -112,11 +112,11 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         # type: (list[SourceNode]) -> None
         for sourceNode in sourceNodesList:
             existingSourceNode = self.validator().findSourceNodeByLongName(sourceNode.longName)
-            logger.info("Found existingSourceNode %s" % existingSourceNode.longName)
+            logger.debug("Found existingSourceNode %s" % existingSourceNode.longName)
             if existingSourceNode is not None:
                 treeWidgetItem = self.__findTreeWidgetItemByExactName(sourceNode.displayName)
                 if treeWidgetItem is None:
-                    logger.info("Didn't find treeWidgetItem for %s" % sourceNode.displayName)
+                    logger.debug("Didn't find treeWidgetItem for %s" % sourceNode.displayName)
                     treeWidgetItem = self.__addTopLevelTreeWidgetItemFromSourceNode(sourceNode)
                     ValidationTreeWidget.addValidityNodesToTreeWidgetItem(sourceNode, treeWidgetItem)
                     continue
