@@ -1,4 +1,4 @@
-#  Copyright (c) 2020.  James Dunlop
+#  Copyright (C) Animal Logic Pty Ltd. All rights reserved.
 import logging
 from PySide2 import QtCore
 from validateRig.uiElements.dialogs import validityNodeWidgets as vruied_validityNodeWidgets
@@ -14,7 +14,8 @@ logger = logging.getLogger(__name__)
 class MayaValidityNodesSelector(vruied_validityNodeWidgets.BaseSourceNodeValidityNodesSelector):
     def __init__(self, longNodeName=None, sourceNode=None, parent=None):
         # type: (str, SourceNode, QtWidgets.QWidget) -> None
-        super(MayaValidityNodesSelector, self).__init__(longNodeName=longNodeName, sourceNode=sourceNode, parent=parent)
+        super(MayaValidityNodesSelector, self).__init__(longNodeName, sourceNode, parent)
+        print("JAMESD!!! : %s" % longNodeName)
         self._connectionData = dict()
 
         # Populate listWidgets
@@ -23,6 +24,10 @@ class MayaValidityNodesSelector(vruied_validityNodeWidgets.BaseSourceNodeValidit
 
     def _populateDefaultValuesWidget(self):
         """Populates the listWidget from the longNodeName. This should be a unique name in maya or it will fail."""
+        if not cmds.objExists(self._longNodeName):
+            logger.warning("%s does not exist!" % self._longNodeName)
+            return
+
         attrs = [attr for attr in cmds.listAttr(self._longNodeName) if attr not in vrconst_constants.MAYA_DEFAULTVALUEATTRIBUTE_IGNORES]
         for eachAttribute in attrs:
             self.defaultValuesListWidget.addItem(eachAttribute)
@@ -55,7 +60,7 @@ class MayaValidityNodesSelector(vruied_validityNodeWidgets.BaseSourceNodeValidit
             srcMPlug = vrcm_plugs.fetchMPlugFromConnectionData(self._longNodeName, srcPlugData)
 
             destData = connectionData["destData"]
-            destNodeName = destData["nodeName"]
+            destNodeName = destData["nodeLongName"]
             destPlugData = destData["plugData"]
             destMPlug = vrcm_plugs.fetchMPlugFromConnectionData(destNodeName, destPlugData)
 

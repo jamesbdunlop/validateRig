@@ -1,4 +1,4 @@
-#  Copyright (c) 2019.  James Dunlop
+#  Copyright (C) Animal Logic Pty Ltd. All rights reserved.
 import logging
 from PySide2 import QtWidgets, QtCore, QtGui
 
@@ -28,8 +28,8 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.widgetUnderMouse = None
         self._validator = validator
-        delegate = Delegate()
-        self.setItemDelegate(delegate)
+        # delegate = Delegate()
+        # self.setItemDelegate(delegate)
 
     def validator(self):
         return self._validator
@@ -193,6 +193,12 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
     def dropEvent(self, QDropEvent):
         super(ValidationTreeWidget, self).dropEvent(QDropEvent)
         nodeNames = QDropEvent.mimeData().text().split("\n")
+        for x, nodeName in enumerate(nodeNames):
+            if "|" in nodeName:
+                newName = "|".join(nodeName.split("|")[3:])
+                nodeNames[x] = newName
+
+        print("NODENAMES: %s" % nodeNames)
         self.attrWidget = vrigCoreApi.processValidationTreeWidgetDropEvent(nodeNames, self.validator, parent=None)
         self.attrWidget.sourceNodesAccepted.connect(self._processSourceNodeAttributeWidgets)
         self.attrWidget.move(QtGui.QCursor.pos())

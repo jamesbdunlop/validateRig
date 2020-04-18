@@ -1,4 +1,4 @@
-#  Copyright (c) 2019.  James Dunlop
+#  Copyright (C) Animal Logic Pty Ltd. All rights reserved.
 import logging
 
 from validateRig.api.vrigCoreApi import *
@@ -7,7 +7,7 @@ from validateRig.core.maya import plugs as vrcm_plugs
 from validateRig.core.maya import utils as vrcm_utils
 
 logger = logging.getLogger(__name__)
-
+reload(vrcm_utils)
 """
 # Example Usage:
 # What we're doing in this example...
@@ -27,12 +27,12 @@ for eachCurve in crvs:
     ud = cmds.listAttr(eachCurve, ud=True)
     if ud is not None:
         attributes += ud
-    
+
     srcNode = vr_maya_api.asSourceNode(nodeLongName=eachCurve, 
                                        attributes=attributes, 
                                        connections=True)
     sourceNodes.append(srcNode)
-    
+
 validator = vr_maya_api.createValidator("testRig")
 validator.nameSpace = vr_vrcm_utils.getNamespaceFromLongName(crvs[0])
 validator.addSourceNodes(sourceNodes, True)

@@ -1,4 +1,4 @@
-#  Copyright (c) 2020.  James Dunlop
+#  Copyright (C) Animal Logic Pty Ltd. All rights reserved.
 import logging
 from PySide2 import QtCore, QtWidgets
 
@@ -37,8 +37,8 @@ def treeWidgetItemFromNode(node):
             srcAttrName = srcData.get("attrName", None)
             srcAttrValue = srcData.get("attrValue", None)
 
-            destNodeName = destData.get("nodeName", None)
             destAttrValue = destData.get("attrValue", None)
+            destNodeName = destData.get("nodeLongName", None)
             destPlugData = destData.get("plugData", None)
 
             _, _, destPlugName, _ = destPlugData[0]

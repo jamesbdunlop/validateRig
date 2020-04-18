@@ -1,4 +1,4 @@
-#  Copyright (c) 2020.  James Dunlop
+#  Copyright (C) Animal Logic Pty Ltd. All rights reserved.
 import logging
 import maya.cmds as cmds
 from maya.api import OpenMaya as om2
@@ -40,7 +40,7 @@ def getUDAttrs(nodeName):
     if lsAttrs is None:
         return []
 
-    ud = [ud for ud in cmds.listAttr(nodeName, ud=True)]
+    ud = [ud for ud in cmds.listAttr(nodeName, ud=True) if "_dba" not in ud and ud != "isBeastNode"]
     if ud is None:
         return []
 
@@ -50,6 +50,7 @@ def getUDAttrs(nodeName):
 def createConnectionData(nodeLongName):
     mSel = om2.MSelectionList()
     mSel.add(nodeLongName)
+
     mObj = mSel.getDependNode(0)
     mFn = om2.MFnDependencyNode(mObj)
 
@@ -72,7 +73,11 @@ def createConnectionData(nodeLongName):
         plgData = vrcm_plugs.fetchIndexedPlugData(eachSourcePlug)
         logger.debug("%s plgData: %s" % (eachSourcePlug.name(), plgData))
         _, _, srcPlugName, _ = plgData[0]
-        srcPlugDataDict["nodeLongName"] = mFn.absoluteName()
+        if mObj.hasFn(om2.MFn.kDagNode):
+            srcPlugDataDict["nodeLongName"] = om2.MDagPath.getAPathTo(mObj).fullPathName()
+        else:
+            srcPlugDataDict["nodeLongName"] = mFn.absoluteName()
+
         srcPlugDataDict['attrName'] = srcPlugName
         srcPlugDataDict['plugData'] = plgData
         if srcMPlugType not in GETATTR_IGNORESTYPES:
@@ -94,7 +99,15 @@ def createConnectionData(nodeLongName):
 
             destPlugData = dict()
             destPlugData["nodeName"] = destPlugNodeMFn.name()
-            destPlugData["nodeLongName"] = destPlugNodeMFn.absoluteName()
+            destMObj = eachDestMPlug.node()
+            if destMObj.hasFn(om2.MFn.kDagNode):
+                nodeName = om2.MDagPath.getAPathTo(eachDestMPlug.node()).fullPathName()
+            else:
+                nodeName = destPlugNodeMFn.absoluteName()
+
+            newLongName = "|".join([n for n in nodeName.split("|") if ":" in n])
+            destPlugData["nodeLongName"] = newLongName
+
             destPlugData['plugData'] = vrcm_plugs.fetchIndexedPlugData(eachDestMPlug)
 
             destPlugType = vrcm_plugs.getMPlugType(eachDestMPlug)

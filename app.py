@@ -524,5 +524,3 @@ fp = "C:/Temp/testMayaValidator.json"
 myWin = vr_app.ValidationUI.from_fileJSON(filepath=fp, parent=getMainWindowPtr())
 myWin.show()
 """
-
-

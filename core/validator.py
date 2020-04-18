@@ -1,4 +1,4 @@
-#  Copyright (c) 2019.  James Dunlop
+#  Copyright (C) Animal Logic Pty Ltd. All rights reserved.
 import logging
 from PySide2 import QtCore
 from PySide2.QtCore import Signal
@@ -193,8 +193,14 @@ class Validator(QtCore.QObject):
 
             for eachChild in eachSrcNode.iterDescendants():
                 if eachChild.nodeType == vrconst_serialization.NT_CONNECTIONVALIDITY:
-                    newLongName = self.replaceNameSpace(eachChild.longName, nameSpace)
-                    eachChild.longName = newLongName
+                    newChildLongName = self.replaceNameSpace(eachChild.longName, nameSpace)
+                    eachChild.longName = newChildLongName
+                    # update namespace in connectionData
+                    data = eachChild.connectionData
+                    destData = data.get("destData", None)
+                    destNodeName = self.replaceNameSpace(destData.get("nodeLongName", None), nameSpace)
+                    destData["nodeLongName"] = destNodeName
+                    eachChild.connectionData = data
 
     def replaceNameSpace(self, nodeLongName, nameSpace):
         # type: (str, str) -> str

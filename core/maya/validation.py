@@ -1,4 +1,4 @@
-#  Copyright (c) 2020.  James Dunlop
+#  Copyright (C) Animal Logic Pty Ltd. All rights reserved.
 import logging
 from validateRig.const import serialization as c_serialization
 from validateRig.const import constants as vrconst_constants
@@ -17,6 +17,7 @@ def validateValidatorSourceNodes(validator):
 
     validator.status = vrconst_constants.NODE_VALIDATION_PASSED
     for eachSourceNode in validator.iterSourceNodes():
+        print("Validating sourceNode: %s" % eachSourceNode.longName)
         eachSourceNode.status = vrconst_constants.NODE_VALIDATION_PASSED
         srcNodeName = eachSourceNode.longName
         if not vrcm_utils.exists(srcNodeName):
@@ -103,7 +104,7 @@ def __validateConnectionNodes(sourceNode):
             srcMPlug = vrcm_plugs.fetchMPlugFromConnectionData(sourceNode.longName, srcPlugData)
 
         destData = data.get("destData", None)
-        destNodeName = destData.get("nodeName", None)
+        destNodeName = destData.get("nodeLongName", None)
         destAttrValue = destData.get("attrValue", None)
         destPlugData = destData.get("plugData", None)
 
@@ -205,20 +206,22 @@ def __repairConnectionNodes(sourceNode):
         data = eachValidationNode.connectionData
         srcData = data.get("srcData", None)
         srcAttrName = srcData.get("attrName", None)
+        srcNodeName = srcData.get("nodeLongName", None)
         srcAttrValue = srcData.get("attrValue", None)
         srcPlugData = srcData.get("plugData", None)
 
         destData = data.get("destData", None)
-        destNodeName = destData.get("nodeName", None)
+        destNodeName = destData.get("nodeLongName", None)
         destPlugData = destData.get("plugData", None)
 
         ############################################################
         srcIsElement, srcIsChild, srcPlugName, _ = srcPlugData[0]
         if srcIsElement or srcIsChild:
-            srcMPlug = vrcm_plugs.fetchMPlugFromConnectionData(eachValidationNode.longName, srcPlugData)
+            logger.debug("SrcPlugData: %s" % srcPlugData)
+            srcMPlug = vrcm_plugs.fetchMPlugFromConnectionData(srcNodeName, srcPlugData)
 
         else:
-            srcMPlug = vrcm_plugs.getMPlugFromLongName(eachValidationNode.parent.longName, srcAttrName)
+            srcMPlug = vrcm_plugs.getMPlugFromLongName(srcNodeName, srcAttrName)
 
         ############################################################
         destIsElement, destIsChild, destPlugName, _ = destPlugData[0]
@@ -229,6 +232,7 @@ def __repairConnectionNodes(sourceNode):
             destMPlug = vrcm_plugs.getMPlugFromLongName(destNodeName, destPlugName)
 
         try:
+            logger.error("connected %s to %s" % (srcMPlug.name(), destMPlug.name()))
             mDagMod.connect(srcMPlug, destMPlug)
         except RuntimeError:
             logger.error("failed to connect %s to %s" % (srcMPlug.name(), destMPlug.name()))

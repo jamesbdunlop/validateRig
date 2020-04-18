@@ -1,4 +1,4 @@
-#  Copyright (c) 2019.  James Dunlop
+#  Copyright (C) Animal Logic Pty Ltd. All rights reserved.
 import logging
 from PySide2 import QtWidgets, QtCore
 from functools import partial
@@ -10,9 +10,12 @@ from validateRig.core import nodes as c_nodes
 from validateRig.core import parser as c_parser
 from validateRig.core import factory as c_factory
 from validateRig.core.nodes import SourceNode, DefaultValueNode, ConnectionValidityNode
-from validateRig.uiElements.dialogs import validityNodeWidgets as uied_validityNodeWidgets
+from validateRig.uiElements.dialogs import (
+    validityNodeWidgets as uied_validityNodeWidgets,
+)
 
 logger = logging.getLogger(__name__)
+
 
 def createValidator(name, data=None):
     # type: (str, dict) -> c_validator.Validator
@@ -56,7 +59,7 @@ def saveValidatorsToFile(validators, filepath):
 
 
 def updateNodeValuesFromDCC(node):
-    #type: (c_nodes.Node) -> bool
+    # type: (c_nodes.Node) -> bool
     nodeType = node.nodeType
     if vr_insideDCC.insideMaya():
         from validateRig.core.maya import plugs as vrcm_plugs
@@ -86,7 +89,9 @@ def updateNodeValuesFromDCC(node):
             destData = data.get("destData", list())
             destPlugData = destData.get("plugData", list())
             destNodeName = node.longName
-            destMPlug = vrcm_plugs.fetchMPlugFromConnectionData(destNodeName, destPlugData)
+            destMPlug = vrcm_plugs.fetchMPlugFromConnectionData(
+                destNodeName, destPlugData
+            )
             destValue = vrcm_plugs.getMPlugValue(destMPlug)
             logger.debug("MayaName: %s MayaValue: %s" % (destMPlug.name(), destValue))
             destData["attrValue"] = destValue
@@ -100,6 +105,7 @@ def getNSFromSelectedInDCC(nameSpaceInput):
     """ App sends signal to this to get the namespace from the DCC """
     if vr_insideDCC.insideMaya():
         from maya import cmds
+
         # Smelly find of NS from : in name.
         firstSelected = cmds.ls(sl=True)[0]
         if ":" in firstSelected:
@@ -114,6 +120,7 @@ def selectNodesInDCC(nodeNames, event):
     for eachNode in nodeNames:
         if vr_insideDCC.insideMaya():
             from maya import cmds
+
             modifier = event.modifiers()
             if modifier == QtCore.Qt.ControlModifier:
                 cmds.select(eachNode, add=True)
@@ -123,6 +130,8 @@ def selectNodesInDCC(nodeNames, event):
 
 def processValidationTreeWidgetDropEvent(nodeNames, validator, parent=None):
     # type: (list[str], c_validator.Validator, QtWidgets.QWidget) -> uid_attributeList.MultiSourceNodeListWidgets
+
+    print("FASFAFDAFAS: %s" % nodeNames)
     attrWidget = uied_validityNodeWidgets.MultiSourceNodeListWidgets("SourceNodes", parent)
 
     # Check to see if this exists in the validator we dropped over.
@@ -130,20 +139,24 @@ def processValidationTreeWidgetDropEvent(nodeNames, validator, parent=None):
         existingSourceNode = None
         if validator().sourceNodeLongNameExists(longNodeName):
             existingSourceNode = validator().findSourceNodeByLongName(longNodeName)
-
+        logger.info("existingSourceNode: %s" % existingSourceNode)
 
         srcNodesWidget = None
         if vr_insideDCC.insideMaya():
-            from validateRig.core.maya import validityNodeListWidget as vrcm_validityNodeListWidget
+            from validateRig.core.maya import (validityNodeListWidget as vrcm_validityNodeListWidget,)
             if existingSourceNode is None:
-                srcNodesWidget = vrcm_validityNodeListWidget.MayaValidityNodesSelector(longNodeName=longNodeName, parent=None)
+                srcNodesWidget = vrcm_validityNodeListWidget.MayaValidityNodesSelector(longNodeName=longNodeName,
+                                                                                       parent=None)
             else:
-                srcNodesWidget = vrcm_validityNodeListWidget.MayaValidityNodesSelector.fromSourceNode(sourceNode=existingSourceNode, parent=None)
+                srcNodesWidget = vrcm_validityNodeListWidget.MayaValidityNodesSelector.fromSourceNode(sourceNode=existingSourceNode,
+                                                                                                      parent=None)
 
         if srcNodesWidget is None:
             continue
 
         attrWidget.addListWidget(srcNodesWidget)
-        attrWidget.sourceNodesAccepted.connect(partial(validator().addSourceNodes, force=True))
+        attrWidget.sourceNodesAccepted.connect(
+            partial(validator().addSourceNodes, force=True)
+        )
 
     return attrWidget

@@ -197,6 +197,7 @@ class SourceNode(Node):
             % (self.name, self.longName, self.displayName, self.nodeType, self.status, [n.name for n in self.iterChildren()])
         )
 
+
 class ConnectionValidityNode(Node):
     def __init__(self, name, longName, parent=None):
         # type: (str, str, Node) -> None

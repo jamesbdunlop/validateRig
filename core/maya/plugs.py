@@ -1,5 +1,4 @@
-#  Copyright (c) 2019.  James Dunlop
-# pragma: no cover
+#  Copyright (C) Animal Logic Pty Ltd. All rights reserved.
 import logging
 
 from validateRig.core.maya import types as vrcm_types
@@ -189,13 +188,20 @@ def getMPlugFromLongName(nodeLongName, plugName):
         plugName = plugName[0]
 
     mSel = om2.MSelectionList()
+    import maya.cmds as cmds
+    if not cmds.objExists(nodeLongName):
+        raise Exception("\t FAILED! %s does not exist!" % nodeLongName)
     try:
         mSel.add(str(nodeLongName))
-        mObj = mSel.getDependNode(0)
-        mFn = om2.MFnDependencyNode(mObj)
+    except RuntimeError:
+        raise Exception("\t FAILED! %s does not exist!" % nodeLongName)
+
+    mObj = mSel.getDependNode(0)
+    mFn = om2.MFnDependencyNode(mObj)
+    logger.info("\tFinding plug: %s on %s" % (plugName, mFn.name()))
+    try: #For missing plugs we need to mark these as failed and not RuntimeError fail!
         mplug = mFn.findPlug(plugName, False)
     except RuntimeError:
-        logger.error("Failed to add to MSelectionList. %s does not exist!" % nodeLongName)
         mplug = om2.MPlug()
 
     return mplug
@@ -309,12 +315,15 @@ def fetchMPlugFromConnectionData(nodeLongName, plugData):
         logger.debug("\t%-- s %s %s %s" % (plgIsElement, plgIsChild, plgPlugName, plgIndex))
 
         if mPlug is None:
+            logger.debug("\tFinding plug: %s on %s " % (plgPlugName, nodeLongName))
             mPlug = getMPlugFromLongName(nodeLongName, plgPlugName)
+            logger.debug("\tmPlug: %s " % (mPlug))
             if plgIsElement:
                 mPlug = mPlug.elementByLogicalIndex(plgIndex)
+                logger.debug("\tFoundIndexedPlug: %s" % (mPlug.name()))
             elif plgIsChild:
                 mPlug = mPlug.child(plgIndex)
-            logger.debug("\tFound starting plug: %s" % (mPlug.name()))
+                logger.debug("\tFoundIndexedPlug: %s" % (mPlug.name()))
 
         elif plgIsElement:
             logger.debug("\t\t%s IsElement" % (plgPlugName))
