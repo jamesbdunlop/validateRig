@@ -15,7 +15,6 @@ class MayaValidityNodesSelector(vruied_validityNodeWidgets.BaseSourceNodeValidit
     def __init__(self, longNodeName=None, sourceNode=None, parent=None):
         # type: (str, SourceNode, QtWidgets.QWidget) -> None
         super(MayaValidityNodesSelector, self).__init__(longNodeName, sourceNode, parent)
-        print("JAMESD!!! : %s" % longNodeName)
         self._connectionData = dict()
 
         # Populate listWidgets
@@ -120,9 +119,7 @@ class MayaValidityNodesSelector(vruied_validityNodeWidgets.BaseSourceNodeValidit
         nodes = list()
         for eachConnPair in connectionsListWidget.selectedItems():
             selectedName = eachConnPair.text()
-            print(selectedName)
             data = self._connectionData.get(selectedName, list())
-            print(data)
             destNodeName, destLongName, connectionData = self._connectionData[eachConnPair.text()]
             if self.sourceNode() is not None:
                 for validityNode in self.sourceNode().iterChildren():

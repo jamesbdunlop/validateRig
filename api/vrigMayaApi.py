@@ -17,7 +17,7 @@ reload(vrcm_utils)
     # Find connections from this ctrlCrv to any other node for validation. 
 
 from maya.api import OpenMaya as om2
-import validateRig.api.vr_maya_api as vr_maya_api
+import validateRig.api.vrigMayaApi as vr_maya_api
 import validateRig.core.maya.utils as vr_vrcm_utils
 #########################################################################################
 sourceNodes = list()
@@ -48,9 +48,11 @@ def asSourceNode(nodeLongName, attributes=None, connections=False):
     validityNodes = list()
     connAttrNames = list()
     if connections:
+        logger.debug("connections: %s" % connections)
         connNodes = list(__createConnectionNodes(nodeLongName))
         validityNodes += connNodes
         connAttrNames = [n.connectionData.get("srcData")["attrName"] for n in connNodes]
+    logger.debug("validityNodes: %s" % validityNodes)
     logger.debug("connAttrNames: %s" % connAttrNames)
     logger.debug("attributes: %s" % connAttrNames)
 
@@ -59,16 +61,18 @@ def asSourceNode(nodeLongName, attributes=None, connections=False):
         for eachAttrName in attributes:
             if eachAttrName not in connAttrNames:
                 validDefaultValueAttributes.append(eachAttrName)
-
     logger.debug("Creating dvNodes for: %s" % validDefaultValueAttributes)
+
     defaultNodes = list(__createDefaultValueNodes(nodeLongName, validDefaultValueAttributes))
     validityNodes += defaultNodes
 
     # Now the sourceNodes
     shortName = vrcm_utils.cleanMayaLongName(nodeLongName)
     sourceNode = createSourceNode(name=shortName, longName=nodeLongName, validityNodes=validityNodes)
-
+    logger.debug("shortName: %s" % shortName)
+    logger.debug("sourceNode: %s" % sourceNode)
     nameSpace = vrcm_utils.getNamespaceFromLongName(nodeLongName)
+    logger.debug("nameSpace: %s" % nameSpace)
     if nameSpace:
         nsShortName = "{}:{}".format(nameSpace, shortName)
         sourceNode.displayName = nsShortName
@@ -100,4 +104,7 @@ def __createConnectionNodes(nodeLongName):
         connectionNode = createConnectionValidityNode(name=destNodeName, longName=destLongName)
         connectionNode.connectionData = connectionData
         logger.debug("ConnectionNode created successfully.")
+        logger.debug("destNodeName: %s" % destNodeName)
+        logger.debug("destLongName: %s" % destLongName)
+        logger.debug("connectionData: ")
         yield connectionNode

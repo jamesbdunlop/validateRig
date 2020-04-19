@@ -17,7 +17,7 @@ def validateValidatorSourceNodes(validator):
 
     validator.status = vrconst_constants.NODE_VALIDATION_PASSED
     for eachSourceNode in validator.iterSourceNodes():
-        print("Validating sourceNode: %s" % eachSourceNode.longName)
+        logger.debug("Validating sourceNode: %s" % eachSourceNode.longName)
         eachSourceNode.status = vrconst_constants.NODE_VALIDATION_PASSED
         srcNodeName = eachSourceNode.longName
         if not vrcm_utils.exists(srcNodeName):
@@ -36,7 +36,6 @@ def validateValidatorSourceNodes(validator):
         if not passed:
             eachSourceNode.status = vrconst_constants.NODE_VALIDATION_FAILED
             validator.status = vrconst_constants.NODE_VALIDATION_FAILED
-
 
 def __validateDefaultNodes(sourceNode):
     # type: (SourceNode) -> bool
@@ -76,7 +75,6 @@ def __validateDefaultNodes(sourceNode):
 
     return passed
 
-
 def __validateConnectionNodes(sourceNode):
     # type: (SourceNode) -> bool
 
@@ -87,35 +85,53 @@ def __validateConnectionNodes(sourceNode):
         if not vrcm_utils.exists(eachValidationNode.longName):
             eachValidationNode.status = vrconst_constants.NODE_VALIDATION_MISSINGDEST
             continue
+        # {'destData': {'attrValue'   : 0.0,
+        #               'nodeLongName': u':testRigNamespace:jd_hermiteArrayCrv1',
+        #               'nodeName'    : u'testRigNamespace:jd_hermiteArrayCrv1',
+        #               'plugData'    : [[False, True, u'inTangentWeight', 0],
+        #                                [True, False, u'cvs', 0]]},
+        #  'srcData' : {'attrName'    : u'translateX',
+        #               'attrValue'   : 0.0,
+        #               'nodeLongName': u'|myChar|rig|testRigNamespace:mycharName_hrc|testRigNamespace:rig'
+        #                               u'|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer'
+        #                               u'|testRigNamespace:body_ctrl',
+        #               'plugData'    : [[False, True, u'translateX', 0],
+        #                                [False, False, u'translate', None]]}}
+        connectionData = eachValidationNode.connectionData
 
-        data = eachValidationNode.connectionData
-        srcData = data.get("srcData", None)
+        srcData = connectionData.get("srcData", None)
         srcAttrName = srcData.get("attrName", None)
+        srcAttrLongName = srcData.get("nodeLongName", None)
         srcAttrValue = srcData.get("attrValue", None)
         srcPlugData = srcData.get("plugData", None)
+        logger.debug("srcAttrName: %s" % srcAttrName)
+        logger.debug("srcAttrValue: %s" % srcAttrValue)
+        logger.debug("srcAttrLongName: %s" % srcAttrLongName)
+        logger.debug("srcPlugData: %s" % srcPlugData)
 
         srcIsElement, srcIsChild, srcPlugName, _ = srcPlugData[0]
-        isSrcIndexed = False
-        if srcIsElement or srcIsChild:
-            isSrcIndexed = True
-        if not isSrcIndexed:
-            srcMPlug = vrcm_plugs.getMPlugFromLongName(sourceNode.longName, srcAttrName)
-        else:
+        isSrcArrayOrCompound = srcIsElement or srcIsChild
+        logger.debug("isSrcArrayOrCompound: %s" % isSrcArrayOrCompound)
+        if isSrcArrayOrCompound:
             srcMPlug = vrcm_plugs.fetchMPlugFromConnectionData(sourceNode.longName, srcPlugData)
+        else:
+            srcMPlug = vrcm_plugs.getMPlugFromLongName(sourceNode.longName, srcAttrName)
 
-        destData = data.get("destData", None)
+        destData = connectionData.get("destData", None)
         destNodeName = destData.get("nodeLongName", None)
         destAttrValue = destData.get("attrValue", None)
         destPlugData = destData.get("plugData", None)
+        logger.debug("destNodeName: %s" % destNodeName)
+        logger.debug("destAttrValue: %s" % destAttrValue)
+        logger.debug("destPlugData: %s" % destPlugData)
 
         destIsElement, destIsChild, destPlugName, _ = destPlugData[0]
-        isDestIndexed = False
-        if destIsElement or destIsChild:
-            isDestIndexed = True
-        if not isDestIndexed:
-            destMPlug = vrcm_plugs.getMPlugFromLongName(destNodeName, destPlugName)
-        else:
+        isDestArrayOrCompound = destIsElement or destIsChild
+        logger.debug("isDestArrayOrCompound: %s" % isDestArrayOrCompound)
+        if isDestArrayOrCompound:
             destMPlug = vrcm_plugs.fetchMPlugFromConnectionData(destNodeName, destPlugData)
+        else:
+            destMPlug = vrcm_plugs.getMPlugFromLongName(destNodeName, destPlugName)
 
         conns = destMPlug.connectedTo(True, False)
         result = False
@@ -123,7 +139,7 @@ def __validateConnectionNodes(sourceNode):
             result = conns[0] == srcMPlug
 
         if not setValidationStatus(eachValidationNode, result):
-            logger.debug("NOT CONNECTED %s %s " % (srcMPlug.name(), destMPlug.name()))
+            logger.info("NOT CONNECTED %s %s " % (srcMPlug.name(), destMPlug.name()))
             passed = False
 
         # DEFAULT VALUES OF THE SRC ATTR NOW AS WE CULL DEFAULT VALUE NODES IF THEY'RE ALREADY CONNECTION ATTRS
@@ -146,6 +162,7 @@ def __validateConnectionNodes(sourceNode):
             logger.debug("NOT AT DEFAULT VALUE %s %s " % (srcMPlug.name(), destMPlug.name()))
             passed = False
 
+    print("passed: %s" % passed)
     return passed
 
 
@@ -168,7 +185,6 @@ def repairValidatorSourceNodes(validator):
         else:
             validator.status = vrconst_constants.NODE_VALIDATION_PASSED
 
-
 def __repairDefaultNodes(sourceNode):
     # type: (SourceNode) -> bool
 
@@ -190,7 +206,6 @@ def __repairDefaultNodes(sourceNode):
         setValidationStatus(eachValidationNode, True)
 
     return True
-
 
 def __repairConnectionNodes(sourceNode):
     # type: (SourceNode) -> bool
@@ -217,33 +232,37 @@ def __repairConnectionNodes(sourceNode):
         ############################################################
         srcIsElement, srcIsChild, srcPlugName, _ = srcPlugData[0]
         if srcIsElement or srcIsChild:
-            logger.debug("SrcPlugData: %s" % srcPlugData)
             srcMPlug = vrcm_plugs.fetchMPlugFromConnectionData(srcNodeName, srcPlugData)
 
         else:
             srcMPlug = vrcm_plugs.getMPlugFromLongName(srcNodeName, srcAttrName)
+        logger.debug("SrcPlugData: %s" % srcPlugData)
+        logger.debug("srcMPlug: %s" % srcMPlug)
 
         ############################################################
         destIsElement, destIsChild, destPlugName, _ = destPlugData[0]
+        logger.debug("destIsElement: %s" % destIsElement)
+        logger.debug("destIsChild: %s" % destIsChild)
+        logger.debug("destPlugName: %s" % destPlugName)
+
         if destIsElement or destIsChild:
             destMPlug = vrcm_plugs.fetchMPlugFromConnectionData(destNodeName, destPlugData)
-
         else:
             destMPlug = vrcm_plugs.getMPlugFromLongName(destNodeName, destPlugName)
 
-        try:
-            logger.error("connected %s to %s" % (srcMPlug.name(), destMPlug.name()))
+        logger.debug("destPlugData: %s" % destPlugData)
+        logger.debug("destMPlug: %s" % destMPlug)
+        if not destMPlug.isDestination:
             mDagMod.connect(srcMPlug, destMPlug)
-        except RuntimeError:
-            logger.error("failed to connect %s to %s" % (srcMPlug.name(), destMPlug.name()))
 
-        vrcm_plugs.setMPlugValue(srcMPlug, srcAttrValue)
+        # This may also be connected to. So we skip setting the default value for this plug.
+        if not srcMPlug.isDestination:
+            vrcm_plugs.setMPlugValue(srcMPlug, srcAttrValue)
+
         setValidationStatus(eachValidationNode, True)
-
-    mDagMod.doIt()
+        mDagMod.doIt()
 
     return True
-
 
 def setValidationStatus(validationNode, result):
     # type: (ValidationNode, bool) -> bool

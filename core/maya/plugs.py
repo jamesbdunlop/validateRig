@@ -1,8 +1,6 @@
 #  Copyright (C) Animal Logic Pty Ltd. All rights reserved.
 import logging
-
 from validateRig.core.maya import types as vrcm_types
-
 import maya.api.OpenMaya as om2
 
 logger = logging.getLogger(__name__)
@@ -145,13 +143,23 @@ def getMPlugType(mplug):
 
 
 def setMPlugValue(mplug, value):
+    logger.debug("setting mplug value: %s" % mplug.name())
+    logger.debug("value: %s" % value)
     plugType = getMPlugType(mplug)
+    logger.debug("plugType: %s" % plugType)
     status = False
     if plugType == "message":
         return
+    if mplug.isDestination:
+        return
 
     pAttribute = mplug.attribute()
+    logger.debug("pAttribute: %s" % pAttribute)
     apiType = pAttribute.apiType()
+    logger.debug("apiType: %s" % apiType)
+    if apiType == om2.MFn.kTypedAttribute:
+        return status
+
     if apiType in [om2.MFn.kAttribute3Double, om2.MFn.kAttribute3Float, om2.MFn.kCompoundAttribute]:
         if mplug.isCompound:
             for x in range(mplug.numChildren()):
@@ -163,9 +171,7 @@ def setMPlugValue(mplug, value):
         status = True
 
     elif plugType == vrcm_types.MATRIXF44:
-        pass
-        # mplug.setMatrix(value)
-        # status = True
+        return status
 
     elif plugType == vrcm_types.INT:
         mplug.setInt(value)
@@ -198,7 +204,7 @@ def getMPlugFromLongName(nodeLongName, plugName):
 
     mObj = mSel.getDependNode(0)
     mFn = om2.MFnDependencyNode(mObj)
-    logger.info("\tFinding plug: %s on %s" % (plugName, mFn.name()))
+    logger.debug("\tFinding plug: %s on %s" % (plugName, mFn.name()))
     try: #For missing plugs we need to mark these as failed and not RuntimeError fail!
         mplug = mFn.findPlug(plugName, False)
     except RuntimeError:

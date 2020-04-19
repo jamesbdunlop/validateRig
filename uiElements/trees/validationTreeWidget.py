@@ -22,6 +22,7 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.__rightClickMenu)
         self.resizeColumnToContents(True)
+        self.setAlternatingRowColors(False)
         self.setAcceptDrops(True)
         self.setColumnCount(8)
         self.setHeaderLabels(vrconst_constants.HEADER_LABELS)
@@ -193,12 +194,6 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
     def dropEvent(self, QDropEvent):
         super(ValidationTreeWidget, self).dropEvent(QDropEvent)
         nodeNames = QDropEvent.mimeData().text().split("\n")
-        for x, nodeName in enumerate(nodeNames):
-            if "|" in nodeName:
-                newName = "|".join(nodeName.split("|")[3:])
-                nodeNames[x] = newName
-
-        print("NODENAMES: %s" % nodeNames)
         self.attrWidget = vrigCoreApi.processValidationTreeWidgetDropEvent(nodeNames, self.validator, parent=None)
         self.attrWidget.sourceNodesAccepted.connect(self._processSourceNodeAttributeWidgets)
         self.attrWidget.move(QtGui.QCursor.pos())
@@ -238,8 +233,11 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
 
             if eachValidityNode.nodeType == c_serialization.NT_CONNECTIONVALIDITY:
                 data = eachValidityNode.connectionData
-                srcData = data.get("srcData", None)
+                srcData = data.get("srcData", {})
                 srcAttrName = srcData.get("attrName", None)
+                if srcAttrName is None:
+                    continue
+
                 if srcAttrName not in connectionAttrSrcNames:
                     connectionAttrSrcNames.append(srcAttrName)
                     sourceNodeTreeWItm.addChild(treewidgetItem)

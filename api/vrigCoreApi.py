@@ -43,7 +43,6 @@ def createConnectionValidityNode(name, longName):
     # type: (str, str) -> ConnectionValidityNode
 
     node = ConnectionValidityNode(name=name, longName=longName)
-
     return node
 
 
@@ -55,7 +54,7 @@ def saveValidatorsToFile(validators, filepath):
 
     c_parser.write(filepath=filepath, data=validatorDataList)
 
-    return True
+    return filepath
 
 
 def updateNodeValuesFromDCC(node):
@@ -131,7 +130,6 @@ def selectNodesInDCC(nodeNames, event):
 def processValidationTreeWidgetDropEvent(nodeNames, validator, parent=None):
     # type: (list[str], c_validator.Validator, QtWidgets.QWidget) -> uid_attributeList.MultiSourceNodeListWidgets
 
-    print("FASFAFDAFAS: %s" % nodeNames)
     attrWidget = uied_validityNodeWidgets.MultiSourceNodeListWidgets("SourceNodes", parent)
 
     # Check to see if this exists in the validator we dropped over.
@@ -139,7 +137,7 @@ def processValidationTreeWidgetDropEvent(nodeNames, validator, parent=None):
         existingSourceNode = None
         if validator().sourceNodeLongNameExists(longNodeName):
             existingSourceNode = validator().findSourceNodeByLongName(longNodeName)
-        logger.info("existingSourceNode: %s" % existingSourceNode)
+        logger.debug("existingSourceNode: %s" % existingSourceNode)
 
         srcNodesWidget = None
         if vr_insideDCC.insideMaya():

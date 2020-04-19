@@ -1,15 +1,547 @@
-{"vN": "TestValidator",
- "vNodes": [{"nDN": "myCtrl_ctrl",
-             "nLN": "myCtrl_ctrl",
-             "nN": "myCtrl_ctrl",
-             "nNS": "myCtrl_ctrl",
-             "nT": 10,
-             "vdn": [{"aN": "visibility",
-                      "aV": true,
-                      "nDN": "geo_hrc",
-                      "nLN": "geo_hrc",
-                      "nN": "geo_hrc",
-                      "nNS": "geo_hrc",
-                      "nT": 20,
-                      "srcAN": "showCloth",
-                      "srcAV": true}]}]}
+{
+  "vN": "testRig",
+  "vNS": "testRigNamespace",
+  "vNodes": [
+    {
+      "nDN": "testRigNamespace:bodyIsh_ctrl",
+      "nLN": "|myChar|rig|testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:bodyIsh_ctrl",
+      "nN": "bodyIsh_ctrl",
+      "nT": 10,
+      "vdn": [
+        {
+          "dvD": {
+            "translate": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "nDN": "translate",
+          "nLN": "|myChar|rig|testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:bodyIsh_ctrl",
+          "nN": "translate",
+          "nT": 30
+        },
+        {
+          "dvD": {
+            "rotate": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "nDN": "rotate",
+          "nLN": "|myChar|rig|testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:bodyIsh_ctrl",
+          "nN": "rotate",
+          "nT": 30
+        },
+        {
+          "dvD": {
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "nDN": "scale",
+          "nLN": "|myChar|rig|testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:bodyIsh_ctrl",
+          "nN": "scale",
+          "nT": 30
+        },
+        {
+          "dvD": {
+            "rotateOrder": 0
+          },
+          "nDN": "rotateOrder",
+          "nLN": "|myChar|rig|testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:bodyIsh_ctrl",
+          "nN": "rotateOrder",
+          "nT": 30
+        }
+      ]
+    },
+    {
+      "nDN": "testRigNamespace:body_ctrl",
+      "nLN": "|myChar|rig|testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:body_ctrl",
+      "nN": "body_ctrl",
+      "nT": 10,
+      "vdn": [
+        {
+          "cND": {
+            "destData": {
+              "attrValue": null,
+              "nodeLongName": ":testRigNamespace:jd_hermiteArrayCrv1",
+              "nodeName": "testRigNamespace:jd_hermiteArrayCrv1",
+              "plugData": [
+                [
+                  false,
+                  false,
+                  "inTangentWeight",
+                  null
+                ]
+              ]
+            },
+            "srcData": {
+              "attrName": "translateX",
+              "attrValue": 0.0,
+              "nodeLongName": "|myChar|rig|testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:body_ctrl",
+              "plugData": [
+                [
+                  false,
+                  true,
+                  "translateX",
+                  0
+                ],
+                [
+                  false,
+                  false,
+                  "translate",
+                  null
+                ]
+              ]
+            }
+          },
+          "nDN": "jd_hermiteArrayCrv1",
+          "nLN": ":testRigNamespace:jd_hermiteArrayCrv1",
+          "nN": "jd_hermiteArrayCrv1",
+          "nT": 20
+        },
+        {
+          "cND": {
+            "destData": {
+              "attrValue": null,
+              "nodeLongName": ":testRigNamespace:jd_hermiteArrayCrv1",
+              "nodeName": "testRigNamespace:jd_hermiteArrayCrv1",
+              "plugData": [
+                [
+                  false,
+                  false,
+                  "worldMtx",
+                  null
+                ]
+              ]
+            },
+            "srcData": {
+              "attrName": "matrix",
+              "nodeLongName": "|myChar|rig|testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:body_ctrl",
+              "plugData": [
+                [
+                  false,
+                  false,
+                  "matrix",
+                  null
+                ]
+              ]
+            }
+          },
+          "nDN": "jd_hermiteArrayCrv1",
+          "nLN": ":testRigNamespace:jd_hermiteArrayCrv1",
+          "nN": "jd_hermiteArrayCrv1",
+          "nT": 20
+        },
+        {
+          "dvD": {
+            "translate": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "nDN": "translate",
+          "nLN": "|myChar|rig|testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:body_ctrl",
+          "nN": "translate",
+          "nT": 30
+        },
+        {
+          "dvD": {
+            "rotate": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "nDN": "rotate",
+          "nLN": "|myChar|rig|testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:body_ctrl",
+          "nN": "rotate",
+          "nT": 30
+        },
+        {
+          "dvD": {
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "nDN": "scale",
+          "nLN": "|myChar|rig|testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:body_ctrl",
+          "nN": "scale",
+          "nT": 30
+        },
+        {
+          "dvD": {
+            "rotateOrder": 0
+          },
+          "nDN": "rotateOrder",
+          "nLN": "|myChar|rig|testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:body_ctrl",
+          "nN": "rotateOrder",
+          "nT": 30
+        }
+      ]
+    },
+    {
+      "nDN": "testRigNamespace:master_ctrl",
+      "nLN": "|myChar|rig|testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:master_ctrl",
+      "nN": "master_ctrl",
+      "nT": 10,
+      "vdn": [
+        {
+          "cND": {
+            "destData": {
+              "attrValue": false,
+              "nodeLongName": "testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:geo|testRigNamespace:fart_geo",
+              "nodeName": "testRigNamespace:fart_geo",
+              "plugData": [
+                [
+                  false,
+                  false,
+                  "visibility",
+                  null
+                ]
+              ]
+            },
+            "srcData": {
+              "attrName": "showCloth",
+              "attrValue": 0.0,
+              "nodeLongName": "|myChar|rig|testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:master_ctrl",
+              "plugData": [
+                [
+                  false,
+                  false,
+                  "showCloth",
+                  null
+                ]
+              ]
+            }
+          },
+          "nDN": "fart_geo",
+          "nLN": ":testRigNamespace:fart_geo",
+          "nN": "fart_geo",
+          "nT": 20
+        },
+        {
+          "cND": {
+            "destData": {
+              "attrValue": false,
+              "nodeLongName": "testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:geo|testRigNamespace:door_geo",
+              "nodeName": "testRigNamespace:door_geo",
+              "plugData": [
+                [
+                  false,
+                  false,
+                  "visibility",
+                  null
+                ]
+              ]
+            },
+            "srcData": {
+              "attrName": "showCloth",
+              "attrValue": 0.0,
+              "nodeLongName": "|myChar|rig|testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:master_ctrl",
+              "plugData": [
+                [
+                  false,
+                  false,
+                  "showCloth",
+                  null
+                ]
+              ]
+            }
+          },
+          "nDN": "door_geo",
+          "nLN": ":testRigNamespace:door_geo",
+          "nN": "door_geo",
+          "nT": 20
+        },
+        {
+          "cND": {
+            "destData": {
+              "attrValue": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "nodeLongName": "testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:bodyIsh_ctrl",
+              "nodeName": "testRigNamespace:bodyIsh_ctrl",
+              "plugData": [
+                [
+                  false,
+                  false,
+                  "translate",
+                  null
+                ]
+              ]
+            },
+            "srcData": {
+              "attrName": "translate",
+              "attrValue": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "nodeLongName": "|myChar|rig|testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:master_ctrl",
+              "plugData": [
+                [
+                  false,
+                  false,
+                  "translate",
+                  null
+                ]
+              ]
+            }
+          },
+          "nDN": "bodyIsh_ctrl",
+          "nLN": ":testRigNamespace:bodyIsh_ctrl",
+          "nN": "bodyIsh_ctrl",
+          "nT": 20
+        },
+        {
+          "cND": {
+            "destData": {
+              "attrValue": 0.0,
+              "nodeLongName": "testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:body_ctrl",
+              "nodeName": "testRigNamespace:body_ctrl",
+              "plugData": [
+                [
+                  false,
+                  true,
+                  "translateX",
+                  0
+                ],
+                [
+                  false,
+                  false,
+                  "translate",
+                  null
+                ]
+              ]
+            },
+            "srcData": {
+              "attrName": "translateX",
+              "attrValue": 0.0,
+              "nodeLongName": "|myChar|rig|testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:master_ctrl",
+              "plugData": [
+                [
+                  false,
+                  true,
+                  "translateX",
+                  0
+                ],
+                [
+                  false,
+                  false,
+                  "translate",
+                  null
+                ]
+              ]
+            }
+          },
+          "nDN": "body_ctrl",
+          "nLN": ":testRigNamespace:body_ctrl",
+          "nN": "body_ctrl",
+          "nT": 20
+        },
+        {
+          "cND": {
+            "destData": {
+              "attrValue": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "nodeLongName": "testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:bodyIsh_ctrl",
+              "nodeName": "testRigNamespace:bodyIsh_ctrl",
+              "plugData": [
+                [
+                  false,
+                  false,
+                  "rotate",
+                  null
+                ]
+              ]
+            },
+            "srcData": {
+              "attrName": "rotate",
+              "attrValue": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "nodeLongName": "|myChar|rig|testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:master_ctrl",
+              "plugData": [
+                [
+                  false,
+                  false,
+                  "rotate",
+                  null
+                ]
+              ]
+            }
+          },
+          "nDN": "bodyIsh_ctrl",
+          "nLN": ":testRigNamespace:bodyIsh_ctrl",
+          "nN": "bodyIsh_ctrl",
+          "nT": 20
+        },
+        {
+          "cND": {
+            "destData": {
+              "attrValue": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "nodeLongName": "testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:bodyIsh_ctrl",
+              "nodeName": "testRigNamespace:bodyIsh_ctrl",
+              "plugData": [
+                [
+                  false,
+                  false,
+                  "scale",
+                  null
+                ]
+              ]
+            },
+            "srcData": {
+              "attrName": "scale",
+              "attrValue": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "nodeLongName": "|myChar|rig|testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:master_ctrl",
+              "plugData": [
+                [
+                  false,
+                  false,
+                  "scale",
+                  null
+                ]
+              ]
+            }
+          },
+          "nDN": "bodyIsh_ctrl",
+          "nLN": ":testRigNamespace:bodyIsh_ctrl",
+          "nN": "bodyIsh_ctrl",
+          "nT": 20
+        },
+        {
+          "cND": {
+            "destData": {
+              "attrValue": null,
+              "nodeLongName": ":testRigNamespace:jd_matrix_toSRT1",
+              "nodeName": "testRigNamespace:jd_matrix_toSRT1",
+              "plugData": [
+                [
+                  false,
+                  false,
+                  "mtxIn",
+                  null
+                ]
+              ]
+            },
+            "srcData": {
+              "attrName": "worldMatrix",
+              "nodeLongName": "|myChar|rig|testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:master_ctrl",
+              "plugData": [
+                [
+                  true,
+                  false,
+                  "worldMatrix",
+                  0
+                ]
+              ]
+            }
+          },
+          "nDN": "jd_matrix_toSRT1",
+          "nLN": ":testRigNamespace:jd_matrix_toSRT1",
+          "nN": "jd_matrix_toSRT1",
+          "nT": 20
+        },
+        {
+          "cND": {
+            "destData": {
+              "attrValue": null,
+              "nodeLongName": ":testRigNamespace:jd_matrix_toSRT2",
+              "nodeName": "testRigNamespace:jd_matrix_toSRT2",
+              "plugData": [
+                [
+                  false,
+                  false,
+                  "mtxIn",
+                  null
+                ]
+              ]
+            },
+            "srcData": {
+              "attrName": "worldMatrix",
+              "nodeLongName": "|myChar|rig|testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:master_ctrl",
+              "plugData": [
+                [
+                  true,
+                  false,
+                  "worldMatrix",
+                  0
+                ]
+              ]
+            }
+          },
+          "nDN": "jd_matrix_toSRT2",
+          "nLN": ":testRigNamespace:jd_matrix_toSRT2",
+          "nN": "jd_matrix_toSRT2",
+          "nT": 20
+        },
+        {
+          "cND": {
+            "destData": {
+              "attrValue": null,
+              "nodeLongName": ":testRigNamespace:jd_hermiteArrayCrv1",
+              "nodeName": "testRigNamespace:jd_hermiteArrayCrv1",
+              "plugData": [
+                [
+                  false,
+                  false,
+                  "worldMtx",
+                  null
+                ]
+              ]
+            },
+            "srcData": {
+              "attrName": "inverseMatrix",
+              "nodeLongName": "|myChar|rig|testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:master_ctrl",
+              "plugData": [
+                [
+                  false,
+                  false,
+                  "inverseMatrix",
+                  null
+                ]
+              ]
+            }
+          },
+          "nDN": "jd_hermiteArrayCrv1",
+          "nLN": ":testRigNamespace:jd_hermiteArrayCrv1",
+          "nN": "jd_hermiteArrayCrv1",
+          "nT": 20
+        },
+        {
+          "dvD": {
+            "rotateOrder": 0
+          },
+          "nDN": "rotateOrder",
+          "nLN": "|myChar|rig|testRigNamespace:mycharName_hrc|testRigNamespace:rig|testRigNamespace:control_layer|testRigNamespace:master_ctrl_srtBuffer|testRigNamespace:master_ctrl",
+          "nN": "rotateOrder",
+          "nT": 30
+        }
+      ]
+    }
+  ]
+}

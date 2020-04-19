@@ -30,28 +30,27 @@ def treeWidgetItemFromNode(node):
 
     elif node.nodeType == vrc_serialization.NT_CONNECTIONVALIDITY:
         data = node.connectionData
-        if vr_insideDCC.insideMaya():
-            srcData = data.get("srcData", None)
-            destData = data.get("destData", None)
+        srcData = data.get("srcData", None)
+        destData = data.get("destData", None)
 
-            srcAttrName = srcData.get("attrName", None)
-            srcAttrValue = srcData.get("attrValue", None)
+        srcAttrName = srcData.get("attrName", None)
+        srcAttrValue = srcData.get("attrValue", None)
 
-            destAttrValue = destData.get("attrValue", None)
-            destNodeName = destData.get("nodeLongName", None)
-            destPlugData = destData.get("plugData", None)
+        destAttrValue = destData.get("attrValue", None)
+        destNodeName = destData.get("nodeName", None)
+        destNodeLongName = destData.get("nodeLongName", None)
+        destPlugData = destData.get("plugData", None)
 
-            _, _, destPlugName, _ = destPlugData[0]
+        _, _, destPlugName, _ = destPlugData[0] #first in the list is actually the last connected plug.
 
-            rowsData = (
-                (vrconst_constants.SRC_ATTR_COLUMN, QTDISPLAYROLE, srcAttrName),
-                (vrconst_constants.SRC_ATTRVALUE_COLUMN, QTDISPLAYROLE, srcAttrValue),
+        rowsData = (
+            (vrconst_constants.SRC_ATTR_COLUMN, QTDISPLAYROLE, srcAttrName),
+            (vrconst_constants.SRC_ATTRVALUE_COLUMN, QTDISPLAYROLE, srcAttrValue),
 
-                (vrconst_constants.DEST_NODENAME_COLUMN, QTDISPLAYROLE, destNodeName),
-                (vrconst_constants.DEST_ATTR_COLUMN, QTDISPLAYROLE, destPlugName),
-                (vrconst_constants.DEST_ATTRVALUE_COLUMN, QTDISPLAYROLE, destAttrValue),
-            )
-
+            (vrconst_constants.DEST_NODENAME_COLUMN, QTDISPLAYROLE, destNodeName),
+            (vrconst_constants.DEST_ATTR_COLUMN, QTDISPLAYROLE, destPlugName),
+            (vrconst_constants.DEST_ATTRVALUE_COLUMN, QTDISPLAYROLE, destAttrValue),
+        )
         rowdataDict = appendRowData(rowdataDict, rowsData)
 
     elif node.nodeType == vrc_serialization.NT_DEFAULTVALUE:
