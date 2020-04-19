@@ -159,6 +159,12 @@ def setMPlugValue(mplug, value):
     logger.debug("apiType: %s" % apiType)
     if apiType == om2.MFn.kTypedAttribute:
         return status
+    
+    if apiType == om2.MFn.kNumericAttribute and isinstance(value, bool):
+        if value:
+            mplug.setFloat(1.0)
+        else:
+            mplug.setFloat(0.0)
 
     if apiType in [om2.MFn.kAttribute3Double, om2.MFn.kAttribute3Float, om2.MFn.kCompoundAttribute]:
         if mplug.isCompound:

@@ -113,11 +113,11 @@ class ValidationTreeWidget(QtWidgets.QTreeWidget):
         # type: (list[SourceNode]) -> None
         for sourceNode in sourceNodesList:
             existingSourceNode = self.validator().findSourceNodeByLongName(sourceNode.longName)
-            logger.debug("Found existingSourceNode %s" % existingSourceNode.longName)
+            logger.info("existingSourceNode %s" % existingSourceNode)
             if existingSourceNode is not None:
                 treeWidgetItem = self.__findTreeWidgetItemByExactName(sourceNode.displayName)
                 if treeWidgetItem is None:
-                    logger.debug("Didn't find treeWidgetItem for %s" % sourceNode.displayName)
+                    logger.info("Didn't find treeWidgetItem for %s" % sourceNode.displayName)
                     treeWidgetItem = self.__addTopLevelTreeWidgetItemFromSourceNode(sourceNode)
                     ValidationTreeWidget.addValidityNodesToTreeWidgetItem(sourceNode, treeWidgetItem)
                     continue

@@ -177,11 +177,14 @@ class MayaValidityNodesSelector(vruied_validityNodeWidgets.BaseSourceNodeValidit
             )
 
         if self.sourceNode() is None:
-            return SourceNode(
+            node =  SourceNode(
                 name=longNodeName.split("|")[-1].split(":")[-1],
                 longName=longNodeName,
                 validityNodes=validityNodes,
                 )
+            node.displayName = longNodeName.split("|")[-1]
+            return node
+
         else:
             self.sourceNode().addChildren(validityNodes)
             return self.sourceNode()

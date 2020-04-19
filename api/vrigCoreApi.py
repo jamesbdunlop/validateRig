@@ -138,7 +138,6 @@ def processValidationTreeWidgetDropEvent(nodeNames, validator, parent=None):
         if vr_insideDCC.insideMaya():
             from validateRig.core.maya import (validityNodeListWidget as vrcm_validityNodeListWidget,)
             import maya.cmds as cmds
-            existingSourceNode = None
 
             longLongNodeName = cmds.ls(longNodeName, l=True)
             if longLongNodeName:
@@ -149,8 +148,10 @@ def processValidationTreeWidgetDropEvent(nodeNames, validator, parent=None):
             logger.debug("longNodeName: %s" % longNodeName)
             logger.debug("longLongNodeName: %s" % longLongNodeName)
 
+            existingSourceNode = None
             if validator().sourceNodeLongNameExists(longLongNodeName):
                 existingSourceNode = validator().findSourceNodeByLongName(longLongNodeName)
+
             if existingSourceNode is None:
                 srcNodesWidget = vrcm_validityNodeListWidget.MayaValidityNodesSelector(longNodeName=longLongNodeName,
                                                                                        parent=None)
@@ -162,8 +163,6 @@ def processValidationTreeWidgetDropEvent(nodeNames, validator, parent=None):
             continue
 
         attrWidget.addListWidget(srcNodesWidget)
-        attrWidget.sourceNodesAccepted.connect(
-            partial(validator().addSourceNodes, force=True)
-        )
+        #attrWidget.sourceNodesAccepted.connect(partial(validator().addSourceNodes, force=True))
 
     return attrWidget
