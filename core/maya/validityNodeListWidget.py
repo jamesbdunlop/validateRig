@@ -86,7 +86,6 @@ class MayaValidityNodesSelector(vruied_validityNodeWidgets.BaseSourceNodeValidit
             destData = connectionData["destData"]
             destNodeName = destData["nodeLongName"]
             destPlugData = destData["plugData"]
-            print(destPlugData)
             destMPlug = vrcm_plugs.fetchMPlugFromConnectionData(destNodeName, destPlugData)
             displayName = "{}{}{}".format(srcMPlug.name(), self.SEP, destMPlug.name())
 

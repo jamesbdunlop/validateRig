@@ -162,7 +162,6 @@ def __validateConnectionNodes(sourceNode):
             logger.debug("NOT AT DEFAULT VALUE %s %s " % (srcMPlug.name(), destMPlug.name()))
             passed = False
 
-    print("passed: %s" % passed)
     return passed
 
 
