@@ -139,7 +139,7 @@ def __validateConnectionNodes(sourceNode):
             result = conns[0] == srcMPlug
 
         if not setValidationStatus(eachValidationNode, result):
-            logger.info("NOT CONNECTED %s %s " % (srcMPlug.name(), destMPlug.name()))
+            logger.debug("NOT CONNECTED %s %s " % (srcMPlug.name(), destMPlug.name()))
             passed = False
 
         # DEFAULT VALUES OF THE SRC ATTR NOW AS WE CULL DEFAULT VALUE NODES IF THEY'RE ALREADY CONNECTION ATTRS

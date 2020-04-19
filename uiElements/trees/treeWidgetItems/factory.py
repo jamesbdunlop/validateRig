@@ -38,19 +38,27 @@ def treeWidgetItemFromNode(node):
 
         destAttrValue = destData.get("attrValue", None)
         destNodeName = destData.get("nodeName", None)
-        destNodeLongName = destData.get("nodeLongName", None)
         destPlugData = destData.get("plugData", None)
 
-        _, _, destPlugName, _ = destPlugData[0] #first in the list is actually the last connected plug.
+        # Create the plugName from the plugData
+        plgName = ""
+        cpyData = destPlugData[:]
+        cpyData.reverse()
+        for eachplug in cpyData:
+            if eachplug[0]:
+                plgName += ".{}[{}]".format(eachplug[2], eachplug[3])
+            else:
+                plgName += ".{}".format(eachplug[2])
 
         rowsData = (
             (vrconst_constants.SRC_ATTR_COLUMN, QTDISPLAYROLE, srcAttrName),
             (vrconst_constants.SRC_ATTRVALUE_COLUMN, QTDISPLAYROLE, srcAttrValue),
 
             (vrconst_constants.DEST_NODENAME_COLUMN, QTDISPLAYROLE, destNodeName),
-            (vrconst_constants.DEST_ATTR_COLUMN, QTDISPLAYROLE, destPlugName),
+            (vrconst_constants.DEST_ATTR_COLUMN, QTDISPLAYROLE, plgName),
             (vrconst_constants.DEST_ATTRVALUE_COLUMN, QTDISPLAYROLE, destAttrValue),
         )
+
         rowdataDict = appendRowData(rowdataDict, rowsData)
 
     elif node.nodeType == vrc_serialization.NT_DEFAULTVALUE:

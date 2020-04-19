@@ -190,11 +190,12 @@ def setMPlugValue(mplug, value):
 
 def getMPlugFromLongName(nodeLongName, plugName):
     # type: (str, str) -> om2.MPlug
+    import maya.cmds as cmds
+
     if isinstance(plugName, list):
         plugName = plugName[0]
 
     mSel = om2.MSelectionList()
-    import maya.cmds as cmds
     if not cmds.objExists(nodeLongName):
         raise Exception("\t FAILED! %s does not exist!" % nodeLongName)
     try:
@@ -204,12 +205,12 @@ def getMPlugFromLongName(nodeLongName, plugName):
 
     mObj = mSel.getDependNode(0)
     mFn = om2.MFnDependencyNode(mObj)
-    logger.debug("\tFinding plug: %s on %s" % (plugName, mFn.name()))
     try: #For missing plugs we need to mark these as failed and not RuntimeError fail!
         mplug = mFn.findPlug(plugName, False)
     except RuntimeError:
         mplug = om2.MPlug()
 
+    logger.debug("\tFound mplug: %s on %s" % (plugName, mFn.name()))
     return mplug
 
 

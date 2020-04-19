@@ -65,22 +65,32 @@ class MayaValidityNodesSelector(vruied_validityNodeWidgets.BaseSourceNodeValidit
 
             displayName = "{}{}{}".format(srcMPlug.name(), self.SEP, destMPlug.name())
             self.connsListWidget.addItem(displayName)
-
             self._connectionData[displayName] = [destNodeName, destLongName, connectionData]
-            self.selectExistingConnections()
+
+        self.selectExistingConnections()
 
     def selectExistingConnections(self):
         if self.sourceNode() is None:
             return
 
-        for nodeDisplayName in [
-            n.displayName
-            for n in self.sourceNode().iterChildren()
-            if isinstance(n, ConnectionValidityNode)
-            ]:
-            items = self.connsListWidget.findItems(
-                nodeDisplayName, QtCore.Qt.MatchExactly
-                )
+        validationNodes = list(self.sourceNode().iterChildren())
+        connectionNodes = [n for n in validationNodes if isinstance(n, ConnectionValidityNode)]
+        for connectionNode in connectionNodes:
+            # Not a big fan of redoing the whole mplug displayName here but leaving it for no
+            # Todo clean this up
+            connectionData = connectionNode.connectionData
+            srcData = connectionData["srcData"]
+            srcPlugData = srcData["plugData"]
+            srcMPlug = vrcm_plugs.fetchMPlugFromConnectionData(self._longNodeName, srcPlugData)
+
+            destData = connectionData["destData"]
+            destNodeName = destData["nodeLongName"]
+            destPlugData = destData["plugData"]
+            print(destPlugData)
+            destMPlug = vrcm_plugs.fetchMPlugFromConnectionData(destNodeName, destPlugData)
+            displayName = "{}{}{}".format(srcMPlug.name(), self.SEP, destMPlug.name())
+
+            items = self.connsListWidget.findItems(displayName, QtCore.Qt.MatchExactly)
             for eachItem in items:
                 if not self.connsListWidget.isItemSelected(eachItem):
                     self.connsListWidget.setItemSelected(eachItem, True)
@@ -117,14 +127,29 @@ class MayaValidityNodesSelector(vruied_validityNodeWidgets.BaseSourceNodeValidit
     def __getValidityNodesFromConnectionsListWidget(self, connectionsListWidget):
         # type: (QtWidgets.QListWidget) -> list[ConnectionValidityNode]
         nodes = list()
+        if self.sourceNode() is not None:
+            connectionNodes = [n for n in self.sourceNode().iterChildren() if isinstance(n, ConnectionValidityNode)]
+
         for eachConnPair in connectionsListWidget.selectedItems():
-            selectedName = eachConnPair.text()
-            data = self._connectionData.get(selectedName, list())
             destNodeName, destLongName, connectionData = self._connectionData[eachConnPair.text()]
+            destData = connectionData["destData"]
+            destPlugData = destData["plugData"]
+            destMPlug = vrcm_plugs.fetchMPlugFromConnectionData(destLongName, destPlugData)
+
+            skip = False
             if self.sourceNode() is not None:
-                for validityNode in self.sourceNode().iterChildren():
-                    if validityNode.name == destNodeName:
-                        continue
+                # Skip existing and only pass along new connectionNodes.
+                for connectionNode in connectionNodes:
+                    cnConData = connectionNode.connectionData
+                    cnDestData = cnConData["destData"]
+                    cnDestNodeName = cnDestData["nodeLongName"]
+                    cdDestPlugData = cnDestData["plugData"]
+                    cnDestMPlug = vrcm_plugs.fetchMPlugFromConnectionData(cnDestNodeName, cdDestPlugData)
+                    if cnDestMPlug.name() == destMPlug.name():
+                        skip = True
+
+            if skip:
+                continue
 
             connectionNode = ConnectionValidityNode(name=destNodeName, longName=destLongName)
             connectionNode.connectionData = connectionData

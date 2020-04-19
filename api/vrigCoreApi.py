@@ -134,16 +134,25 @@ def processValidationTreeWidgetDropEvent(nodeNames, validator, parent=None):
 
     # Check to see if this exists in the validator we dropped over.
     for longNodeName in nodeNames:
-        existingSourceNode = None
-        if validator().sourceNodeLongNameExists(longNodeName):
-            existingSourceNode = validator().findSourceNodeByLongName(longNodeName)
-        logger.debug("existingSourceNode: %s" % existingSourceNode)
-
         srcNodesWidget = None
         if vr_insideDCC.insideMaya():
             from validateRig.core.maya import (validityNodeListWidget as vrcm_validityNodeListWidget,)
+            import maya.cmds as cmds
+            existingSourceNode = None
+
+            longLongNodeName = cmds.ls(longNodeName, l=True)
+            if longLongNodeName:
+                longLongNodeName = longLongNodeName[0]
+            else:
+                logger.error("Can't find node in scene: %s" % longNodeName)
+                continue
+            logger.debug("longNodeName: %s" % longNodeName)
+            logger.debug("longLongNodeName: %s" % longLongNodeName)
+
+            if validator().sourceNodeLongNameExists(longLongNodeName):
+                existingSourceNode = validator().findSourceNodeByLongName(longLongNodeName)
             if existingSourceNode is None:
-                srcNodesWidget = vrcm_validityNodeListWidget.MayaValidityNodesSelector(longNodeName=longNodeName,
+                srcNodesWidget = vrcm_validityNodeListWidget.MayaValidityNodesSelector(longNodeName=longLongNodeName,
                                                                                        parent=None)
             else:
                 srcNodesWidget = vrcm_validityNodeListWidget.MayaValidityNodesSelector.fromSourceNode(sourceNode=existingSourceNode,
