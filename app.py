@@ -77,10 +77,10 @@ class ValidationUI(QtWidgets.QMainWindow):
         self.fixAllButton = QtWidgets.QPushButton("Fix All")
         self.fixAllButton.hide()
 
-        isolateFailedButton = QtWidgets.QRadioButton("Isolate Failed")
-        isolateFailedButton.setChecked(False)
-        isolateFailedButton.toggled.connect(self.__toggleIsolateFailed)
-        isolateFailedButton.hide()
+        self.isolateFailedButton = QtWidgets.QRadioButton("Isolate Failed")
+        self.isolateFailedButton.setChecked(False)
+        self.isolateFailedButton.toggled.connect(self.__toggleIsolateFailed)
+        self.isolateFailedButton.hide()
 
         treeButtons.addWidget(expandAll)
         treeButtons.addWidget(collapseAll)
@@ -88,7 +88,7 @@ class ValidationUI(QtWidgets.QMainWindow):
         treeButtons.addStretch(1)
         treeButtons.addWidget(self.runButton)
         treeButtons.addWidget(self.fixAllButton)
-        treeButtons.addWidget(isolateFailedButton)
+        treeButtons.addWidget(self.isolateFailedButton)
 
         # Namespace / Search Dock
         utilsDockWidget = QtWidgets.QDockWidget()
