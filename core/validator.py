@@ -192,9 +192,9 @@ class Validator(QtCore.QObject):
             eachSrcNode.longName = newLongName
 
             for eachChild in eachSrcNode.iterDescendants():
+                newChildLongName = self.replaceNameSpace(eachChild.longName, nameSpace)
+                eachChild.longName = newChildLongName
                 if eachChild.nodeType == vrconst_serialization.NT_CONNECTIONVALIDITY:
-                    newChildLongName = self.replaceNameSpace(eachChild.longName, nameSpace)
-                    eachChild.longName = newChildLongName
                     # update namespace in connectionData
                     data = eachChild.connectionData
                     destData = data.get("destData", None)

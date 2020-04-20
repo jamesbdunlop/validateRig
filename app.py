@@ -51,6 +51,7 @@ class ValidationUI(QtWidgets.QMainWindow):
 
         self.setMenuBar(self.appMenu)
 
+        #######################################
         mainWidget = QtWidgets.QWidget()
         mainLayout = QtWidgets.QVBoxLayout(mainWidget)
         mainLayout.setObjectName("mainLayout")
@@ -58,15 +59,15 @@ class ValidationUI(QtWidgets.QMainWindow):
         # CENTRAL WIDGET
         subLayout01 = QtWidgets.QVBoxLayout()
 
-        self.groupBoxesLayout = QtWidgets.QVBoxLayout()
+        self.groupBoxesLayout = QtWidgets.QTabWidget()
         self.groupBoxesLayout.setObjectName("groupBoxLayout")
 
         # Buttons
-        self.treeButtons = QtWidgets.QHBoxLayout()
-        self.expandAll = QtWidgets.QPushButton("expand All")
-        self.expandAll.clicked.connect(self.__expandAllTreeWidgets)
-        self.collapseAll = QtWidgets.QPushButton("collapse All")
-        self.collapseAll.clicked.connect(self.__collapseAllTreeWidgets)
+        treeButtons = QtWidgets.QHBoxLayout()
+        expandAll = QtWidgets.QPushButton("expand All")
+        expandAll.clicked.connect(self.__expandAllTreeWidgets)
+        collapseAll = QtWidgets.QPushButton("collapse All")
+        collapseAll.clicked.connect(self.__collapseAllTreeWidgets)
 
         self.showLongName = QtWidgets.QRadioButton("Show LongName")
         self.showLongName.setAutoExclusive(False)
@@ -76,49 +77,54 @@ class ValidationUI(QtWidgets.QMainWindow):
         self.fixAllButton = QtWidgets.QPushButton("Fix All")
         self.fixAllButton.hide()
 
-        self.isolateFailedButton = QtWidgets.QRadioButton("Isolate Failed")
-        self.isolateFailedButton.setChecked(False)
-        self.isolateFailedButton.toggled.connect(self.__toggleIsolateFailed)
-        self.isolateFailedButton.hide()
+        isolateFailedButton = QtWidgets.QRadioButton("Isolate Failed")
+        isolateFailedButton.setChecked(False)
+        isolateFailedButton.toggled.connect(self.__toggleIsolateFailed)
+        isolateFailedButton.hide()
 
-        self.treeButtons.addWidget(self.expandAll)
-        self.treeButtons.addWidget(self.collapseAll)
-        self.treeButtons.addWidget(self.showLongName)
-        self.treeButtons.addStretch(1)
-        self.treeButtons.addWidget(self.runButton)
-        self.treeButtons.addWidget(self.fixAllButton)
-        self.treeButtons.addWidget(self.isolateFailedButton)
+        treeButtons.addWidget(expandAll)
+        treeButtons.addWidget(collapseAll)
+        treeButtons.addWidget(self.showLongName)
+        treeButtons.addStretch(1)
+        treeButtons.addWidget(self.runButton)
+        treeButtons.addWidget(self.fixAllButton)
+        treeButtons.addWidget(isolateFailedButton)
 
-        self.inputsLayout = QtWidgets.QGridLayout()
-        self.nameSpaceLabel = QtWidgets.QLabel("Namespace:")
+        # Namespace / Search Dock
+        utilsDockWidget = QtWidgets.QDockWidget()
+        utilsWidget = QtWidgets.QWidget()
+        inputsLayout = QtWidgets.QGridLayout(utilsWidget)
+        nameSpaceLabel = QtWidgets.QLabel("Namespace:")
         self.nameSpaceInput = QtWidgets.QLineEdit()
-        self.nameSpaceInput.setPlaceholderText(
-            "Will force a namespace across ALL valdiators."
-        )
+        self.nameSpaceInput.setPlaceholderText("Will force a namespace across ALL valdiators.")
         self.nameSpaceInput.textChanged.connect(self.__updateValidatorsNameSpace)
-        self.assignNamespaceButton = QtWidgets.QPushButton("From Selected")
-        self.assignNamespaceButton.clicked.connect(self.__getNameSpaceFromScene)
+        assignNamespaceButton = QtWidgets.QPushButton("From Selected")
+        assignNamespaceButton.clicked.connect(self.__getNameSpaceFromScene)
 
-        self.searchLabel = QtWidgets.QLabel("Search:")
-        self.searchLabel.setFixedWidth(80)
+        searchLabel = QtWidgets.QLabel("Search:")
+        searchLabel.setFixedWidth(80)
         self.searchInput = QtWidgets.QLineEdit()
         self.searchInput.setPlaceholderText("Filter validationNodes by...")
         self.searchInput.textChanged.connect(self.__filterTreeWidgetItems)
-        self.clearSearch = QtWidgets.QPushButton("Clear")
-        self.clearSearch.clicked.connect(self.__clearSearch)
-        self.clearSearch.setFixedWidth(150)
+        clearSearch = QtWidgets.QPushButton("Clear")
+        clearSearch.clicked.connect(self.__clearSearch)
+        clearSearch.setFixedWidth(150)
 
-        self.inputsLayout.addWidget(self.nameSpaceLabel, 0, 0)
-        self.inputsLayout.addWidget(self.nameSpaceInput, 0, 1)
-        self.inputsLayout.addWidget(self.assignNamespaceButton, 0, 2)
-        self.inputsLayout.addWidget(self.searchLabel, 1, 0)
-        self.inputsLayout.addWidget(self.searchInput, 1, 1)
-        self.inputsLayout.addWidget(self.clearSearch, 1, 2)
+        inputsLayout.addWidget(nameSpaceLabel, 0, 0)
+        inputsLayout.addWidget(self.nameSpaceInput, 0, 1)
+        inputsLayout.addWidget(assignNamespaceButton, 0, 2)
+        inputsLayout.addWidget(searchLabel, 1, 0)
+        inputsLayout.addWidget(self.searchInput, 1, 1)
+        inputsLayout.addWidget(clearSearch, 1, 2)
+        inputsLayout.setRowStretch(2, 2)
+
+        utilsDockWidget.setWidget(utilsWidget)
+        self.addDockWidget(QtCore.Qt.TopDockWidgetArea, utilsDockWidget)
 
         # Layout
-        subLayout01.addLayout(self.groupBoxesLayout)
-        subLayout01.addLayout(self.treeButtons)
-        mainLayout.addLayout(self.inputsLayout)
+        # subLayout01.addLayout(self.groupBoxesLayout)
+        subLayout01.addWidget(self.groupBoxesLayout)
+        subLayout01.addLayout(treeButtons)
         mainLayout.addLayout(subLayout01)
 
         self.setCentralWidget(mainWidget)
@@ -437,7 +443,8 @@ class ValidationUI(QtWidgets.QMainWindow):
         groupBox = QtWidgets.QGroupBox(name)
         groupBoxLayout = QtWidgets.QVBoxLayout(groupBox)
         groupBoxLayout.addWidget(treeWidget)
-        self.groupBoxesLayout.addWidget(groupBox)
+        # self.groupBoxesLayout.addWidget(groupBox)
+        self.groupBoxesLayout.addTab(groupBox, name)
 
         return groupBox
 

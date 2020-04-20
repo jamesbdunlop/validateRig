@@ -63,7 +63,7 @@ def treeWidgetItemFromNode(node):
 
     elif node.nodeType == vrc_serialization.NT_DEFAULTVALUE:
         data = node.defaultValueData
-        for eachDefaultValue, value in data.iteritems():
+        for eachDefaultValue, value in data.items():
             rowsData = (
                 (vrconst_constants.SRC_ATTR_COLUMN, QTDISPLAYROLE, eachDefaultValue),
                 (vrconst_constants.SRC_ATTRVALUE_COLUMN, QTDISPLAYROLE, str(value)),
